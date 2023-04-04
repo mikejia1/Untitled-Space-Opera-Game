@@ -11,7 +11,7 @@
 
 ## Motivation
 
-This game involves a snake moving inside a box. If a snake eats the fruit that is present inside the box then it increases in size and the score is increased.
+This game involves a gardener moving inside a box. If a snake eats the fruit that is present inside the box then it increases in size and the score is increased.
 
 If the snake collides with itelf or with the boundaries of the box, then the game is over.
 
