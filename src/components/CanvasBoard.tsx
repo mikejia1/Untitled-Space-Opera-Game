@@ -8,6 +8,7 @@ import {
   MOVE_LEFT,
   MOVE_RIGHT,
   MOVE_UP,
+  MOVE_STOP,
   resetGame,
   RESET_SCORE,
   scoreUpdates,
@@ -28,12 +29,14 @@ export interface ICanvasBoard {
   width: number;
 }
 const CanvasBoard = ({ height, width }: ICanvasBoard) => {
+  //WTF is redux for?
   const dispatch = useDispatch();
   const snake1 = useSelector((state: IGlobalState) => state.snake);
   const disallowedDirection = useSelector(
     (state: IGlobalState) => state.disallowedDirection
   );
 
+  //pull global states into local states
   const [gameEnded, setGameEnded] = useState<boolean>(false);
   const [pos, setPos] = useState<IObjectBody>(
     generateRandomPosition(width - 20, height - 20)
@@ -42,6 +45,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
+  // TODO why use callback?
   const moveSnake = useCallback(
     (dx = 0, dy = 0, ds: string) => {
       if (dx > 0 && dy === 0 && ds !== "RIGHT") {
@@ -59,14 +63,18 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
       if (dx === 0 && dy > 0 && ds !== "DOWN") {
         dispatch(makeMove(dx, dy, MOVE_DOWN));
       }
+      else {
+        console.log("keyup move snake");
+        dispatch(makeMove(dx, dy, MOVE_STOP));
+      }
     },
+    // TODO why dispatch in square brackets?
     [dispatch]
   );
 
-  const handleKeyEvents = useCallback(
+  const handleKeyDownEvents = useCallback(
     (event: KeyboardEvent) => {
-      if (disallowedDirection) {
-        switch (event.key) {
+      switch (event.key) {
           case "w":
             moveSnake(0, -20, disallowedDirection);
             break;
@@ -81,21 +89,21 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
             moveSnake(20, 0, disallowedDirection);
             break;
         }
-      } else {
-        if (
-          disallowedDirection !== "LEFT" &&
-          disallowedDirection !== "UP" &&
-          disallowedDirection !== "DOWN" &&
-          event.key === "d"
-        )
-          moveSnake(20, 0, disallowedDirection); //Move RIGHT at start
-      }
+      },
+    [disallowedDirection, moveSnake]
+  );
+
+  const handleKeyUpEvents = useCallback(
+    (event: KeyboardEvent) => {
+      console.log("keyup");
+      moveSnake(0, 0, MOVE_STOP);
     },
     [disallowedDirection, moveSnake]
   );
 
   const resetBoard = useCallback(() => {
-    window.removeEventListener("keypress", handleKeyEvents);
+    window.removeEventListener("keydown", handleKeyDownEvents);
+    window.removeEventListener("keyup", handleKeyUpEvents);
     dispatch(resetGame());
     dispatch(scoreUpdates(RESET_SCORE));
     clearBoard(context);
@@ -105,9 +113,11 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
       [generateRandomPosition(width - 20, height - 20)],
       "#676FA3"
     ); //Draws object randomly
-    window.addEventListener("keypress", handleKeyEvents);
-  }, [context, dispatch, handleKeyEvents, height, snake1, width]);
+    window.addEventListener("keydown", handleKeyDownEvents);
+    window.addEventListener("keyup", handleKeyUpEvents);
+  }, [context, dispatch, handleKeyDownEvents, height, snake1, width]);
 
+  //check if object is consumed
   useEffect(() => {
     //Generate new object
     if (isConsumed) {
@@ -142,19 +152,21 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
       snake1[0].y <= 0 ||
       snake1[0].y >= height
     ) {
-      setGameEnded(true);
-      dispatch(stopGame());
-      window.removeEventListener("keypress", handleKeyEvents);
+      //setGameEnded(true);
+      //dispatch(stopGame());
+      //window.removeEventListener("keypress", handleKeyEvents);
     } else setGameEnded(false);
-  }, [context, pos, snake1, height, width, dispatch, handleKeyEvents]);
+  }, [context, pos, snake1, height, width, dispatch, handleKeyDownEvents]);
 
   useEffect(() => {
-    window.addEventListener("keypress", handleKeyEvents);
+    window.addEventListener("keypress", handleKeyDownEvents);
+    window.addEventListener("keyup", handleKeyUpEvents);
 
     return () => {
-      window.removeEventListener("keypress", handleKeyEvents);
+      window.removeEventListener("keypress", handleKeyDownEvents);
+      window.removeEventListener("keyup", handleKeyUpEvents);
     };
-  }, [disallowedDirection, handleKeyEvents]);
+  }, [disallowedDirection, handleKeyDownEvents]);
 
   return (
     <>

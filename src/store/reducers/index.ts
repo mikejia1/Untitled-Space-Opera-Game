@@ -8,6 +8,7 @@ import {
   RESET_SCORE,
   RIGHT,
   SET_DIS_DIRECTION,
+  STOP,
   UP,
 } from "../actions";
 
@@ -19,21 +20,20 @@ export interface IGlobalState {
 
 const globalState: IGlobalState = {
   snake: [
-    { x: 580, y: 300 },
-    { x: 560, y: 300 },
-    { x: 540, y: 300 },
-    { x: 520, y: 300 },
     { x: 500, y: 300 },
   ],
   disallowedDirection: "",
   score: 0,
 };
+
+//All actions/index.ts setters are handled here
 const gameReducer = (state = globalState, action: any) => {
   switch (action.type) {
     case RIGHT:
     case LEFT:
     case UP:
-    case DOWN: {
+    case DOWN:
+    case STOP: {
       let newSnake = [...state.snake];
       newSnake = [{
         x: state.snake[0].x + action.payload[0],
@@ -54,10 +54,6 @@ const gameReducer = (state = globalState, action: any) => {
       return {
         ...state,
         snake: [
-          { x: 580, y: 300 },
-          { x: 560, y: 300 },
-          { x: 540, y: 300 },
-          { x: 520, y: 300 },
           { x: 500, y: 300 },
         ],
         disallowedDirection: ""
