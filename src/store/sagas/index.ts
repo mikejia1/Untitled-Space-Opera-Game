@@ -31,32 +31,11 @@ export function* moveSaga(params: {
   | CallEffect<true>
 > {
   //this is the refresh loop!!
-  while (params.type !== RESET && params.type !== STOP_GAME) {
-    yield put({
+  yield put({
       type: params.type.split("_")[1],
       payload: params.payload,
-    });
+    });    
     console.log(params.type.split("_")[1]);
-    switch (params.type.split("_")[1]) {
-      case RIGHT:
-        //set disallowed direction to left
-        yield put(setDisDirection(LEFT));
-        break;
-
-      case LEFT:
-        yield put(setDisDirection(RIGHT));
-        break;
-
-      case UP:
-        yield put(setDisDirection(DOWN));
-        break;
-
-      case DOWN:
-        yield put(setDisDirection(UP));
-        break;
-    }
-    yield delay(100);
-  }
 }
 
 function* watcherSagas() {
