@@ -7,7 +7,7 @@
   margin-right: auto;">
 </img>
 
-<h4 align="center">A simple 2d snake game built using react and typescript</h4>
+<h4 align="center">A simple gardening game built using react and typescript</h4>
 
 ## Motivation
 
