@@ -13,7 +13,6 @@ import {
   RESET_SCORE,
   scoreUpdates,
   stopGame,
-  moveLeft,
 } from "../store/actions";
 import { IGlobalState } from "../store/reducers";
 import {
@@ -46,47 +45,25 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
-  // TODO why use callback?
-  const moveSnake = useCallback(
-    (dx = 0, dy = 0, ds: string) => {
-      if (dx > 0 && dy === 0 && ds !== "RIGHT") {
-        dispatch(makeMove(dx, dy, RIGHT));
-      }
-      if (dx < 0 && dy === 0 && ds !== "LEFT") {
-        dispatch(makeMove(dx, dy, LEFT));
-      }
-
-      if (dx === 0 && dy < 0 && ds !== "UP") {
-        dispatch(makeMove(dx, dy, UP));
-      }
-
-      if (dx === 0 && dy > 0 && ds !== "DOWN") {
-        dispatch(makeMove(dx, dy, DOWN));
-      }
-    },
-    // TODO why dispatch in square brackets?
-    [dispatch]
-  );
-
   const handleKeyDownEvents = useCallback(
     (event: KeyboardEvent) => {
       switch (event.key) {
           case "w":
-            moveSnake(0, -20, disallowedDirection);
+            dispatch(makeMove(0, -20, UP));
             break;
           case "s":
-            moveSnake(0, 20, disallowedDirection);
+            dispatch(makeMove(0, 20, DOWN));
             break;
           case "a":
-            moveSnake(-20, 0, disallowedDirection);
+            dispatch(makeMove(-20, 0, LEFT));
             break;
           case "d":
             event.preventDefault();
-            moveSnake(20, 0, disallowedDirection);
+            dispatch(makeMove(20, 0, RIGHT));
             break;
         }
       },
-    [disallowedDirection, moveSnake]
+    [disallowedDirection, dispatch]
   );
 
   const resetBoard = useCallback(() => {
