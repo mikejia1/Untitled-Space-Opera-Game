@@ -6,21 +6,13 @@ import {
   takeLatest,
 } from "redux-saga/effects";
 import {
-  DOWN,
   ISnakeCoord,
-  LEFT,
-  MOVE_DOWN,
-  MOVE_LEFT,
-  MOVE_RIGHT,
-  MOVE_STOP,
-  MOVE_UP,
   RESET,
-  RIGHT,
-  setDisDirection,
   STOP_GAME,
   UP,
 } from "../actions";
 
+//dummy saga
 export function* moveSaga(params: {
   type: string;
   payload: ISnakeCoord;
@@ -40,7 +32,7 @@ export function* moveSaga(params: {
 
 function* watcherSagas() {
   yield takeLatest(
-    [MOVE_RIGHT, MOVE_LEFT, MOVE_UP, MOVE_DOWN, MOVE_STOP, RESET, STOP_GAME],
+    [RESET, STOP_GAME],
     moveSaga
   );
 }

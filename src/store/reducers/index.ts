@@ -1,3 +1,6 @@
+//Reducers take in the current state and an action and return a new state.
+//They are responsible for processing all game logic.
+
 import {
   DOWN,
   INCREASE_SNAKE,
@@ -8,7 +11,6 @@ import {
   RESET_SCORE,
   RIGHT,
   SET_DIS_DIRECTION,
-  STOP,
   UP,
 } from "../actions";
 
@@ -32,8 +34,7 @@ const gameReducer = (state = globalState, action: any) => {
     case RIGHT:
     case LEFT:
     case UP:
-    case DOWN:
-    case STOP: {
+    case DOWN:{
       let newSnake = [...state.snake];
       newSnake = [{
         x: state.snake[0].x + action.payload[0],

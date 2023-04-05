@@ -1,18 +1,19 @@
+//CanvasBoard takes input from keyboard and updates the visual representation.
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   increaseSnake,
   INCREMENT_SCORE,
   makeMove,
-  MOVE_DOWN,
-  MOVE_LEFT,
-  MOVE_RIGHT,
-  MOVE_UP,
-  MOVE_STOP,
+  DOWN,
+  LEFT,
+  RIGHT,
+  UP,
   resetGame,
   RESET_SCORE,
   scoreUpdates,
   stopGame,
+  moveLeft,
 } from "../store/actions";
 import { IGlobalState } from "../store/reducers";
 import {
@@ -49,23 +50,18 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   const moveSnake = useCallback(
     (dx = 0, dy = 0, ds: string) => {
       if (dx > 0 && dy === 0 && ds !== "RIGHT") {
-        dispatch(makeMove(dx, dy, MOVE_RIGHT));
+        dispatch(makeMove(dx, dy, RIGHT));
       }
-
       if (dx < 0 && dy === 0 && ds !== "LEFT") {
-        dispatch(makeMove(dx, dy, MOVE_LEFT));
+        dispatch(makeMove(dx, dy, LEFT));
       }
 
       if (dx === 0 && dy < 0 && ds !== "UP") {
-        dispatch(makeMove(dx, dy, MOVE_UP));
+        dispatch(makeMove(dx, dy, UP));
       }
 
       if (dx === 0 && dy > 0 && ds !== "DOWN") {
-        dispatch(makeMove(dx, dy, MOVE_DOWN));
-      }
-      else {
-        console.log("keyup move snake");
-        dispatch(makeMove(dx, dy, MOVE_STOP));
+        dispatch(makeMove(dx, dy, DOWN));
       }
     },
     // TODO why dispatch in square brackets?
@@ -93,17 +89,8 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     [disallowedDirection, moveSnake]
   );
 
-  const handleKeyUpEvents = useCallback(
-    (event: KeyboardEvent) => {
-      console.log("keyup");
-      moveSnake(0, 0, MOVE_STOP);
-    },
-    [disallowedDirection, moveSnake]
-  );
-
   const resetBoard = useCallback(() => {
     window.removeEventListener("keydown", handleKeyDownEvents);
-    window.removeEventListener("keyup", handleKeyUpEvents);
     dispatch(resetGame());
     dispatch(scoreUpdates(RESET_SCORE));
     clearBoard(context);
@@ -114,7 +101,6 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
       "#676FA3"
     ); //Draws object randomly
     window.addEventListener("keydown", handleKeyDownEvents);
-    window.addEventListener("keyup", handleKeyUpEvents);
   }, [context, dispatch, handleKeyDownEvents, height, snake1, width]);
 
   //check if object is consumed
@@ -139,6 +125,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     clearBoard(context);
     drawObject(context, snake1, "#91C483");
     drawObject(context, [pos], "#676FA3"); //Draws object randomly
+    //drawing the rest of the objects
 
     //When the object is consumed
     if (snake1[0].x === pos?.x && snake1[0].y === pos?.y) {
@@ -160,11 +147,9 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
 
   useEffect(() => {
     window.addEventListener("keypress", handleKeyDownEvents);
-    window.addEventListener("keyup", handleKeyUpEvents);
 
     return () => {
       window.removeEventListener("keypress", handleKeyDownEvents);
-      window.removeEventListener("keyup", handleKeyUpEvents);
     };
   }, [disallowedDirection, handleKeyDownEvents]);
 

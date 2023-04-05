@@ -1,16 +1,8 @@
-export const MOVE_RIGHT = "MOVE_RIGHT";
-export const MOVE_LEFT = "MOVE_LEFT";
-export const MOVE_UP = "MOVE_UP";
-export const MOVE_DOWN = "MOVE_DOWN";
-export const MOVE_STOP = "MOVE_STOP";
-
+//Actions for the game. Constraint logic is performed here, and if action is illegal, it is ignored.
 export const RIGHT = "RIGHT";
 export const LEFT = "LEFT";
-
 export const UP = "UP";
-
 export const DOWN = "DOWN";
-export const STOP = "STOP";
 export const SET_DIS_DIRECTION = "SET_DIS_DIRECTION";
 
 export const RESET = "RESET";
@@ -24,6 +16,11 @@ export interface ISnakeCoord {
 }
 export const makeMove = (dx: number, dy: number, move: string) => ({
   type: move,
+  payload: [dx, dy]
+});
+
+export const moveLeft = (dx: number, dy: number) => ({
+  type: LEFT,
   payload: [dx, dy]
 });
 
