@@ -9,7 +9,6 @@ import {
   RESET,
   RESET_SCORE,
   RIGHT,
-  SET_DIS_DIRECTION,
   UP,
 } from "../actions";
 
@@ -46,9 +45,6 @@ const gameReducer = (state = globalState, action: any) => {
         snake: newSnake,
       };
     }
-
-    case SET_DIS_DIRECTION:
-      return { ...state, disallowedDirection: action.payload };
 
     case RESET:
       return {
