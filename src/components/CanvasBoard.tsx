@@ -11,13 +11,15 @@ import {
   resetGame,
   RESET_SCORE,
   scoreUpdates,
+  toggleEquip,
 } from "../store/actions";
 import { IGlobalState } from "../store/reducers";
 import {
   clearBoard,
-  drawObject,
+  //drawObject,
+  drawState,
   generateRandomPosition,
-  hasSnakeCollided,
+  //hasSnakeCollided,
   IObjectBody,
 } from "../utils";
 import Instruction from "./Instructions";
@@ -30,6 +32,8 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   //WTF is redux for?
   const dispatch = useDispatch();
   const snake1 = useSelector((state: IGlobalState) => state.gardener);
+  const itemEquipped = useSelector((state: IGlobalState) => state.itemEquipped);
+  const state = useSelector((state: IGlobalState) => state);
 
   //pull global states into local states
   const [gameEnded, setGameEnded] = useState<boolean>(false);
@@ -53,9 +57,11 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
             dispatch(makeMove(-20, 0, LEFT));
             break;
           case "d":
-            event.preventDefault();
+            //event.preventDefault();
             dispatch(makeMove(20, 0, RIGHT));
             break;
+          case "e":
+            dispatch(toggleEquip());
         }
       },
     [dispatch]
@@ -66,34 +72,28 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     dispatch(resetGame());
     dispatch(scoreUpdates(RESET_SCORE));
     clearBoard(context);
+    drawState(context, state);
+    /*
     drawObject(context, snake1, "#91C483");
     drawObject(
       context,
       generateRandomPosition(width - 20, height - 20),
       "#676FA3"
     ); //Draws object randomly
+    */
     window.addEventListener("keydown", handleKeyDownEvents);
   }, [context, dispatch, handleKeyDownEvents, height, snake1, width]);
 
-  //check if object is consumed
-  useEffect(() => {
-    //Generate new object
-    if (isConsumed) {
-      const posi = generateRandomPosition(width - 20, height - 20);
-      setPos(posi);
-      setIsConsumed(false);
-
-      //Increment the score
-      dispatch(scoreUpdates(INCREMENT_SCORE));
-    }
-  }, [isConsumed, pos, height, width, dispatch]);
 
   useEffect(() => {
     //Draw on canvas each time
     setContext(canvasRef.current && canvasRef.current.getContext("2d"));
     clearBoard(context);
+    drawState(context, state);
+    /*
     drawObject(context, snake1, "#91C483");
     drawObject(context, pos, "#676FA3"); //Draws object randomly
+    */
     //drawing the rest of the objects
 
     //When the object is consumed
@@ -114,7 +114,8 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
       //window.removeEventListener("keypress", handleKeyEvents);
     } else setGameEnded(false);
     */
-  }, [context, pos, snake1, height, width, dispatch, handleKeyDownEvents]);
+  }, [context, state, dispatch, handleKeyDownEvents]);
+  //}, [context, itemEquipped, pos, snake1, height, width, dispatch, handleKeyDownEvents]);
 
   useEffect(() => {
     window.addEventListener("keypress", handleKeyDownEvents);

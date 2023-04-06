@@ -1,4 +1,4 @@
-import { Coord } from "../store/reducers";
+import { Coord, IGlobalState } from "../store/reducers";
 
 export const clearBoard = (context: CanvasRenderingContext2D | null) => {
   if (context) {
@@ -11,11 +11,12 @@ export interface IObjectBody {
   y: number;
 }
 
+/*
 export const drawObject = (
   context: CanvasRenderingContext2D | null,
   object: Coord,
   fillColor: string,
-  strokeStyle = "#146356"
+  strokeStyle = 
 ) => {
   if (context) { 
     context.fillStyle = fillColor;
@@ -23,6 +24,26 @@ export const drawObject = (
     context?.fillRect(object.x, object.y, 20, 20);
     context?.strokeRect(object.x, object.y, 20, 20);
   }
+};
+*/
+
+export const drawState = (
+  context: CanvasRenderingContext2D | null,
+  state: IGlobalState
+) => {
+  if (!context) {
+    return;
+  }
+  // Gardener.
+  context.fillStyle = "#FFA500"; // Orange
+  context.strokeStyle = "#146356"; // Dark grey-ish maybe.
+  context?.fillRect(state.gardener.x, state.gardener.y, 20, 20);
+  context?.strokeRect(state.gardener.x, state.gardener.y, 20, 20);
+
+  // Watering Can. 
+  context.fillStyle = "#808080"; // Grey
+  context?.fillRect(state.wateringCan.x + 10, state.wateringCan.y + 10, 10, 10);
+  context?.strokeRect(state.wateringCan.x + 10, state.wateringCan.y + 10, 10, 10);
 };
 
 function randomNumber(min: number, max: number) {

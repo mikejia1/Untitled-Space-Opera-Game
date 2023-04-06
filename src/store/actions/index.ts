@@ -8,10 +8,9 @@ export const RESET = "RESET";
 export const STOP_GAME = "STOP_GAME";
 export const INCREMENT_SCORE = "INCREMENT_SCORE";
 export const RESET_SCORE = "RESET_SCORE";
-export interface ISnakeCoord {
-  x: number;
-  y: number;
-}
+export const TOGGLE_EQUIP = "TOGGLE_EQUIP";
+export const USE_ITEM = "USE_ITEM";
+
 export const makeMove = (dx: number, dy: number, move: string) => ({
   type: move,
   payload: [dx, dy]
@@ -27,4 +26,12 @@ export const stopGame = () => ({
 
 export const scoreUpdates = (type: string) => ({
   type
+});
+
+export const toggleEquip = () => ({
+  type: TOGGLE_EQUIP
+})
+
+export const useItem = () => ({
+  type: USE_ITEM
 });

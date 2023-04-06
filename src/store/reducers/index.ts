@@ -8,7 +8,9 @@ import {
   RESET,
   RESET_SCORE,
   RIGHT,
+  TOGGLE_EQUIP,
   UP,
+  USE_ITEM,
 } from "../actions";
 
 // A coordinate on the grid.
@@ -34,12 +36,16 @@ export interface IGlobalState {
   gardener: Coord;
   score: number;
   facing: Direction;
+  wateringCan: Coord;
+  itemEquipped: boolean;
 }
 
 const globalState: IGlobalState = {
   gardener: new Coord(500, 300),
   score: 0,
   facing: Direction.Up,
+  wateringCan: new Coord(300, 500),
+  itemEquipped: false,
 };
 
 // Return gardener facing direction given current state and action.
@@ -64,12 +70,25 @@ const gameReducer = (state = globalState, action: any) => {
     case LEFT:
     case UP:
     case DOWN:{
+      let pos = new Coord(state.gardener.x + action.payload[0], state.gardener.y + action.payload[1]);
       return {
         ...state,
-        gardener: new Coord(state.gardener.x + action.payload[0], state.gardener.y + action.payload[1]),
+        gardener: pos,
+        wateringCan: state.itemEquipped ? pos : state.wateringCan,
         facing: getFacingDirection(state, action),
       };
     }
+    case TOGGLE_EQUIP:
+      if (state.itemEquipped) {
+        return unequipItem(state);
+      }
+      return tryEquipItem(state);
+
+    case USE_ITEM:
+      if (state.itemEquipped) {
+        return tryUseItem(state);
+      }
+      return state;
 
     case RESET:
       return {
@@ -90,5 +109,33 @@ const gameReducer = (state = globalState, action: any) => {
       return state;
   }
 };
+
+// Drop the item we are carrying. We already know we are carrying it.
+function unequipItem(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    itemEquipped: false,
+    wateringCan: state.gardener,
+  }
+}
+
+function tryEquipItem(state: IGlobalState): IGlobalState {
+  if (!canEquip(state)) {
+    return state;
+  }
+  return {
+      ...state,
+      itemEquipped: true,
+      wateringCan: state.gardener,
+  }
+}
+
+function canEquip(state: IGlobalState): boolean {
+  return true;
+}
+
+function tryUseItem(state: IGlobalState): IGlobalState {
+  return state;
+}
 
 export default gameReducer;
