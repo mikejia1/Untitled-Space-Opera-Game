@@ -14,7 +14,6 @@ import {
 
 export interface IGlobalState {
   snake: ISnakeCoord[] | [];
-  disallowedDirection: string;
   score: number;
 }
 
@@ -22,7 +21,6 @@ const globalState: IGlobalState = {
   snake: [
     { x: 500, y: 300 },
   ],
-  disallowedDirection: "",
   score: 0,
 };
 

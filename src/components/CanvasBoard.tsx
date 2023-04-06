@@ -30,9 +30,6 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   //WTF is redux for?
   const dispatch = useDispatch();
   const snake1 = useSelector((state: IGlobalState) => state.snake);
-  const disallowedDirection = useSelector(
-    (state: IGlobalState) => state.disallowedDirection
-  );
 
   //pull global states into local states
   const [gameEnded, setGameEnded] = useState<boolean>(false);
@@ -61,7 +58,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
             break;
         }
       },
-    [disallowedDirection, dispatch]
+    [dispatch]
   );
 
   const resetBoard = useCallback(() => {
@@ -123,7 +120,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     return () => {
       window.removeEventListener("keypress", handleKeyDownEvents);
     };
-  }, [disallowedDirection, handleKeyDownEvents]);
+  }, [handleKeyDownEvents]);
 
   return (
     <>
