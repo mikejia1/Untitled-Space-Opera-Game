@@ -2,7 +2,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  increaseSnake,
   INCREMENT_SCORE,
   makeMove,
   DOWN,
@@ -12,7 +11,6 @@ import {
   resetGame,
   RESET_SCORE,
   scoreUpdates,
-  stopGame,
 } from "../store/actions";
 import { IGlobalState } from "../store/reducers";
 import {
@@ -87,9 +85,6 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
       const posi = generateRandomPosition(width - 20, height - 20);
       setPos(posi);
       setIsConsumed(false);
-
-      //Increase snake size when object is consumed successfully
-      dispatch(increaseSnake());
 
       //Increment the score
       dispatch(scoreUpdates(INCREMENT_SCORE));
