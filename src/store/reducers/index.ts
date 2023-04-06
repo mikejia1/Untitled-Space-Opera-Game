@@ -1,6 +1,7 @@
 //Reducers take in the current state and an action and return a new state.
 //They are responsible for processing all game logic.
 
+import { getFacingCoord } from "../../utils";
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -13,6 +14,9 @@ import {
   USE_ITEM,
 } from "../actions";
 
+// The number of pixels wide/tall a single spot on the grid occupies.
+export const TILE_SIZE = 20;
+
 // A coordinate on the grid.
 export class Coord {
   x: number;
@@ -21,6 +25,10 @@ export class Coord {
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+
+  equals(other: Coord): boolean {
+    return this.x === other.x && this.y === other.y;
   }
 }
 
@@ -32,11 +40,27 @@ export enum Direction {
   Right,
 }
 
+// A plant that needs watering to grow.
+export class Plant {
+  pos: Coord;
+  health: number;
+
+  constructor(pos: Coord, initialHealth: number) {
+    this.pos = pos;
+    this.health = initialHealth;
+  }
+
+  absorbWater() {
+    this.health += 3;
+  }
+}
+
 export interface IGlobalState {
   gardener: Coord;
   score: number;
   facing: Direction;
   wateringCan: Coord;
+  plants: Plant[];
   itemEquipped: boolean;
 }
 
@@ -45,6 +69,7 @@ const globalState: IGlobalState = {
   score: 0,
   facing: Direction.Up,
   wateringCan: new Coord(300, 500),
+  plants: [new Plant(new Coord(100, 100), 10)],
   itemEquipped: false,
 };
 
@@ -134,8 +159,22 @@ function canEquip(state: IGlobalState): boolean {
   return true;
 }
 
+// Attempt to use the watering can. We already know we have it equipped.
 function tryUseItem(state: IGlobalState): IGlobalState {
-  return state;
+  console.log("Trying to use item");
+  //var newPlants: Plant[] = [];
+  let waterDest = getFacingCoord(state.gardener, state.facing);
+  state.plants.forEach(function (plant) {
+    if (waterDest.equals(plant.pos)) {
+      console.log("Absorbing water");
+      plant.absorbWater();
+    }
+    //newPlants = [...newPlants, plant];
+  });
+  return {
+    ...state,
+    plants: state.plants,
+  };
 }
 
 export default gameReducer;

@@ -12,6 +12,8 @@ import {
   RESET_SCORE,
   scoreUpdates,
   toggleEquip,
+  useItem,
+  USE_ITEM,
 } from "../store/actions";
 import { IGlobalState } from "../store/reducers";
 import {
@@ -62,6 +64,12 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
             break;
           case "e":
             dispatch(toggleEquip());
+            break;
+          case "f":
+            dispatch({
+              type: USE_ITEM
+            });
+            break;
         }
       },
     [dispatch]

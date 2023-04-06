@@ -1,4 +1,4 @@
-import { Coord, IGlobalState } from "../store/reducers";
+import { Coord, Direction, IGlobalState, TILE_SIZE } from "../store/reducers";
 
 export const clearBoard = (context: CanvasRenderingContext2D | null) => {
   if (context) {
@@ -34,6 +34,15 @@ export const drawState = (
   if (!context) {
     return;
   }
+  // Plants.
+  state.plants.forEach(function (plant) {
+    context.fillStyle = "#00FF00"; // Green
+    context.strokeStyle = "#146356"; // Dark grey-ish maybe.
+    let psize = plant.health > 20 ? TILE_SIZE : (plant.health / 20 * TILE_SIZE);
+    context?.fillRect(plant.pos.x + 10 - (psize / 2), plant.pos.y + 10 - (psize / 2), psize, psize);
+    context?.strokeRect(plant.pos.x + 10 - (psize / 2), plant.pos.y + 10 - (psize / 2), psize, psize);
+  });
+
   // Gardener.
   context.fillStyle = "#FFA500"; // Orange
   context.strokeStyle = "#146356"; // Dark grey-ish maybe.
@@ -71,3 +80,16 @@ export const hasSnakeCollided = (
 
   return flag;
 };
+
+export function getFacingCoord(pos: Coord, facing: Direction): Coord {
+  switch (facing) {
+    case Direction.Up:
+      return new Coord(pos.x, pos.y - TILE_SIZE);
+    case Direction.Down:
+      return new Coord(pos.x, pos.y + TILE_SIZE);
+    case Direction.Left:
+      return new Coord(pos.x - TILE_SIZE, pos.y);
+    case Direction.Right:
+      return new Coord(pos.x + TILE_SIZE, pos.y);
+  }
+}
