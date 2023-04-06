@@ -12,9 +12,18 @@ import {
   UP,
 } from "../actions";
 
+// An enum for the directions.
+export enum Direction {
+  Up,
+  Down,
+  Left,
+  Right,
+}
+
 export interface IGlobalState {
   snake: ISnakeCoord[] | [];
   score: number;
+  facing: Direction;
 }
 
 const globalState: IGlobalState = {
@@ -22,7 +31,23 @@ const globalState: IGlobalState = {
     { x: 500, y: 300 },
   ],
   score: 0,
+  facing: Direction.Up,
 };
+
+// Return gardener facing direction given current state and action.
+function getFacingDirection(state: IGlobalState, action: any): Direction {
+  switch (action.type) {
+    case RIGHT:
+      return Direction.Right;
+    case LEFT:
+      return Direction.Left;
+    case UP:
+      return Direction.Up;
+    case DOWN:
+      return Direction.Down;
+  }
+  return state.facing;
+}
 
 //All actions/index.ts setters are handled here
 const gameReducer = (state = globalState, action: any) => {
@@ -41,6 +66,7 @@ const gameReducer = (state = globalState, action: any) => {
       return {
         ...state,
         snake: newSnake,
+        facing: getFacingDirection(state, action),
       };
     }
 
@@ -50,7 +76,7 @@ const gameReducer = (state = globalState, action: any) => {
         snake: [
           { x: 500, y: 300 },
         ],
-        disallowedDirection: ""
+        facing: Direction.Up,
       };
 
     case RESET_SCORE:
