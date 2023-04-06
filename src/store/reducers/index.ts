@@ -4,13 +4,23 @@
 import {
   DOWN,
   INCREMENT_SCORE,
-  ISnakeCoord,
   LEFT,
   RESET,
   RESET_SCORE,
   RIGHT,
   UP,
 } from "../actions";
+
+// A coordinate on the grid.
+export class Coord {
+  x: number;
+  y: number;
+
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+}
 
 // An enum for the directions.
 export enum Direction {
@@ -21,15 +31,13 @@ export enum Direction {
 }
 
 export interface IGlobalState {
-  snake: ISnakeCoord[] | [];
+  gardener: Coord;
   score: number;
   facing: Direction;
 }
 
 const globalState: IGlobalState = {
-  snake: [
-    { x: 500, y: 300 },
-  ],
+  gardener: new Coord(500, 300),
   score: 0,
   facing: Direction.Up,
 };
@@ -56,16 +64,9 @@ const gameReducer = (state = globalState, action: any) => {
     case LEFT:
     case UP:
     case DOWN:{
-      let newSnake = [...state.snake];
-      newSnake = [{
-        x: state.snake[0].x + action.payload[0],
-        y: state.snake[0].y + action.payload[1],
-      }, ...newSnake];
-      newSnake.pop();
-
       return {
         ...state,
-        snake: newSnake,
+        gardener: new Coord(state.gardener.x + action.payload[0], state.gardener.y + action.payload[1]),
         facing: getFacingDirection(state, action),
       };
     }
@@ -73,9 +74,7 @@ const gameReducer = (state = globalState, action: any) => {
     case RESET:
       return {
         ...state,
-        snake: [
-          { x: 500, y: 300 },
-        ],
+        gardener: new Coord(500, 300),
         facing: Direction.Up,
       };
 

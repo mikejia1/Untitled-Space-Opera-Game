@@ -1,24 +1,26 @@
 import {
   CallEffect,
-  delay,
+  //delay,
   put,
   PutEffect,
   takeLatest,
 } from "redux-saga/effects";
 import {
-  ISnakeCoord,
   RESET,
   STOP_GAME,
   UP,
 } from "../actions";
+import {
+  Coord,
+} from "../reducers";
 
 //dummy saga
 export function* moveSaga(params: {
   type: string;
-  payload: ISnakeCoord;
+  payload: Coord;
   //how does this relate to the actions and reducers?
 }): Generator<
-  | PutEffect<{ type: string; payload: ISnakeCoord }>
+  | PutEffect<{ type: string; payload: Coord }>
   | PutEffect<{ type: string; payload: string }>
   | CallEffect<true>
 > {

@@ -29,7 +29,7 @@ export interface ICanvasBoard {
 const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   //WTF is redux for?
   const dispatch = useDispatch();
-  const snake1 = useSelector((state: IGlobalState) => state.snake);
+  const snake1 = useSelector((state: IGlobalState) => state.gardener);
 
   //pull global states into local states
   const [gameEnded, setGameEnded] = useState<boolean>(false);
@@ -69,7 +69,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     drawObject(context, snake1, "#91C483");
     drawObject(
       context,
-      [generateRandomPosition(width - 20, height - 20)],
+      generateRandomPosition(width - 20, height - 20),
       "#676FA3"
     ); //Draws object randomly
     window.addEventListener("keydown", handleKeyDownEvents);
@@ -93,14 +93,15 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     setContext(canvasRef.current && canvasRef.current.getContext("2d"));
     clearBoard(context);
     drawObject(context, snake1, "#91C483");
-    drawObject(context, [pos], "#676FA3"); //Draws object randomly
+    drawObject(context, pos, "#676FA3"); //Draws object randomly
     //drawing the rest of the objects
 
     //When the object is consumed
-    if (snake1[0].x === pos?.x && snake1[0].y === pos?.y) {
+    if (snake1.x === pos?.x && snake1.y === pos?.y) {
       setIsConsumed(true);
     }
 
+    /*
     if (
       hasSnakeCollided(snake1, snake1[0]) ||
       snake1[0].x >= width ||
@@ -112,6 +113,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
       //dispatch(stopGame());
       //window.removeEventListener("keypress", handleKeyEvents);
     } else setGameEnded(false);
+    */
   }, [context, pos, snake1, height, width, dispatch, handleKeyDownEvents]);
 
   useEffect(() => {
