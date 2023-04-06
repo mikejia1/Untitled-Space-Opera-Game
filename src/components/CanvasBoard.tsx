@@ -15,13 +15,11 @@ import {
   useItem,
   USE_ITEM,
 } from "../store/actions";
-import { IGlobalState } from "../store/reducers";
+import { IGlobalState, TILE_SIZE } from "../store/reducers";
 import {
   clearBoard,
-  //drawObject,
   drawState,
   generateRandomPosition,
-  //hasSnakeCollided,
   IObjectBody,
 } from "../utils";
 import Instruction from "./Instructions";
@@ -33,7 +31,7 @@ export interface ICanvasBoard {
 const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   //WTF is redux for?
   const dispatch = useDispatch();
-  const snake1 = useSelector((state: IGlobalState) => state.gardener);
+  const gardener = useSelector((state: IGlobalState) => state.gardener);
   const itemEquipped = useSelector((state: IGlobalState) => state.itemEquipped);
   const state = useSelector((state: IGlobalState) => state);
 
@@ -50,17 +48,16 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     (event: KeyboardEvent) => {
       switch (event.key) {
           case "w":
-            dispatch(makeMove(0, -20, UP));
+            dispatch(makeMove(0, -TILE_SIZE, UP));
             break;
           case "s":
-            dispatch(makeMove(0, 20, DOWN));
+            dispatch(makeMove(0, TILE_SIZE, DOWN));
             break;
           case "a":
-            dispatch(makeMove(-20, 0, LEFT));
+            dispatch(makeMove(-TILE_SIZE, 0, LEFT));
             break;
           case "d":
-            //event.preventDefault();
-            dispatch(makeMove(20, 0, RIGHT));
+            dispatch(makeMove(TILE_SIZE, 0, RIGHT));
             break;
           case "e":
             dispatch(toggleEquip());
@@ -81,16 +78,8 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     dispatch(scoreUpdates(RESET_SCORE));
     clearBoard(context);
     drawState(context, state);
-    /*
-    drawObject(context, snake1, "#91C483");
-    drawObject(
-      context,
-      generateRandomPosition(width - 20, height - 20),
-      "#676FA3"
-    ); //Draws object randomly
-    */
     window.addEventListener("keydown", handleKeyDownEvents);
-  }, [context, dispatch, handleKeyDownEvents, height, snake1, width]);
+  }, [context, dispatch, handleKeyDownEvents, height, gardener, width]);
 
 
   useEffect(() => {
@@ -98,32 +87,13 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     setContext(canvasRef.current && canvasRef.current.getContext("2d"));
     clearBoard(context);
     drawState(context, state);
-    /*
-    drawObject(context, snake1, "#91C483");
-    drawObject(context, pos, "#676FA3"); //Draws object randomly
-    */
-    //drawing the rest of the objects
 
     //When the object is consumed
-    if (snake1.x === pos?.x && snake1.y === pos?.y) {
+    if (gardener.x === pos?.x && gardener.y === pos?.y) {
       setIsConsumed(true);
     }
 
-    /*
-    if (
-      hasSnakeCollided(snake1, snake1[0]) ||
-      snake1[0].x >= width ||
-      snake1[0].x <= 0 ||
-      snake1[0].y <= 0 ||
-      snake1[0].y >= height
-    ) {
-      //setGameEnded(true);
-      //dispatch(stopGame());
-      //window.removeEventListener("keypress", handleKeyEvents);
-    } else setGameEnded(false);
-    */
   }, [context, state, dispatch, handleKeyDownEvents]);
-  //}, [context, itemEquipped, pos, snake1, height, width, dispatch, handleKeyDownEvents]);
 
   useEffect(() => {
     window.addEventListener("keypress", handleKeyDownEvents);
