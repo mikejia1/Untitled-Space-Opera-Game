@@ -10,6 +10,7 @@ export const INCREMENT_SCORE = "INCREMENT_SCORE";
 export const RESET_SCORE = "RESET_SCORE";
 export const TOGGLE_EQUIP = "TOGGLE_EQUIP";
 export const USE_ITEM = "USE_ITEM";
+export const TICK = "TICK";
 
 export const makeMove = (dx: number, dy: number, move: string) => ({
   type: move,
@@ -35,3 +36,6 @@ export const toggleEquip = () => ({
 export const useItem = () => ({
   type: USE_ITEM
 });
+
+// An animation loop event that updates state.currentFrame.
+export const tick = () => ({type: TICK});

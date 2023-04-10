@@ -34,6 +34,7 @@ export const drawState = (
   if (!context) {
     return;
   }
+
   // Plants.
   state.plants.forEach(function (plant) {
     context.fillStyle = "#00FF00"; // Green
@@ -92,4 +93,9 @@ export function getFacingCoord(pos: Coord, facing: Direction): Coord {
     case Direction.Right:
       return new Coord(pos.x + TILE_SIZE, pos.y);
   }
+}
+
+// Current frame number is just current epoch quarter second.
+export function computeCurrentFrame(): number {
+  return  Math.floor(Date.now() / 250);
 }

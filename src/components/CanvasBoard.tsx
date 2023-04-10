@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   INCREMENT_SCORE,
   makeMove,
+  tick,
   DOWN,
   LEFT,
   RIGHT,
@@ -18,6 +19,7 @@ import {
 import { IGlobalState, TILE_SIZE } from "../store/reducers";
 import {
   clearBoard,
+  computeCurrentFrame,
   drawState,
   generateRandomPosition,
   IObjectBody,
@@ -28,6 +30,7 @@ export interface ICanvasBoard {
   height: number;
   width: number;
 }
+
 const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   //WTF is redux for?
   const dispatch = useDispatch();
@@ -79,10 +82,12 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     clearBoard(context);
     drawState(context, state);
     window.addEventListener("keydown", handleKeyDownEvents);
-  }, [context, dispatch, handleKeyDownEvents, height, gardener, width]);
+  }, [context, dispatch, handleKeyDownEvents, height, state, width]);
 
+  // Paint the canvas and dispatch tick() to trigger next paint event.
+  const animate = () => {
+    console.log("Paint frame: ", state.currentFrame);
 
-  useEffect(() => {
     //Draw on canvas each time
     setContext(canvasRef.current && canvasRef.current.getContext("2d"));
     clearBoard(context);
@@ -92,8 +97,9 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     if (gardener.x === pos?.x && gardener.y === pos?.y) {
       setIsConsumed(true);
     }
+  };
 
-  }, [context, state, dispatch, handleKeyDownEvents]);
+  useEffect(animate, [context, state, dispatch, handleKeyDownEvents]);  
 
   useEffect(() => {
     window.addEventListener("keypress", handleKeyDownEvents);
@@ -102,6 +108,21 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
       window.removeEventListener("keypress", handleKeyDownEvents);
     };
   }, [handleKeyDownEvents]);
+
+  // Check whether time has reached a new frame. If so, paint the canvas.
+  const paintCheck = (time: number) => {
+    var f = computeCurrentFrame();
+    if (f != state.currentFrame) {
+      dispatch(tick());
+    }
+    requestAnimationFrame(paintCheck);
+  }
+
+  // Kick off the paintCheck tight loop, above.
+  useEffect(() => {
+    var ref = requestAnimationFrame(paintCheck);
+    return () => cancelAnimationFrame(ref);
+  }, []); // Make sure the effect runs only once
 
   return (
     <>

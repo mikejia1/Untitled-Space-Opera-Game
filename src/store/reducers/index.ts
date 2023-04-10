@@ -1,11 +1,12 @@
 //Reducers take in the current state and an action and return a new state.
 //They are responsible for processing all game logic.
 
-import { getFacingCoord } from "../../utils";
+import { computeCurrentFrame, getFacingCoord } from "../../utils";
 import {
   DOWN,
   INCREMENT_SCORE,
   LEFT,
+  TICK,
   RESET,
   RESET_SCORE,
   RIGHT,
@@ -50,20 +51,26 @@ export class Plant {
     this.health = initialHealth;
   }
 
-  absorbWater() {
-    this.health += 3;
+  // Absorb water and return a new plant because state is supposed to be immutable.
+  absorbWater(): Plant {
+    var h = this.health + 3;
+    h = h > 20 ? 20 : h;
+    return new Plant(this.pos, h);
   }
 }
 
+// Interface for full game state object.
 export interface IGlobalState {
-  gardener: Coord;
-  score: number;
-  facing: Direction;
-  wateringCan: Coord;
-  plants: Plant[];
-  itemEquipped: boolean;
+  gardener: Coord;        // The gardener (controlled by player)
+  score: number;          // The current game score
+  facing: Direction;      // The current direction faced by the gardener
+  wateringCan: Coord;     // The watering can that the gardener uses to water plants
+  plants: Plant[];        // All the plants currently living
+  itemEquipped: boolean;  // Whether or not the player currently carries an item (like the watering can)
+  currentFrame: number;   // The current animation frame number (current epoch quarter second number)
 }
 
+// Initial game state object.
 const globalState: IGlobalState = {
   gardener: new Coord(500, 300),
   score: 0,
@@ -71,6 +78,7 @@ const globalState: IGlobalState = {
   wateringCan: new Coord(300, 500),
   plants: [new Plant(new Coord(100, 100), 10)],
   itemEquipped: false,
+  currentFrame: 0,
 };
 
 // Return gardener facing direction given current state and action.
@@ -130,6 +138,14 @@ const gameReducer = (state = globalState, action: any) => {
         ...state,
         score: state.score + 1,
       };
+
+    case TICK:
+      // Current frame is epoch quarter seconds.
+      return {
+        ...state,
+        currentFrame: computeCurrentFrame(),
+      };
+
     default:
       return state;
   }
@@ -162,18 +178,19 @@ function canEquip(state: IGlobalState): boolean {
 // Attempt to use the watering can. We already know we have it equipped.
 function tryUseItem(state: IGlobalState): IGlobalState {
   console.log("Trying to use item");
-  //var newPlants: Plant[] = [];
+  var newPlants: Plant[] = [];
   let waterDest = getFacingCoord(state.gardener, state.facing);
   state.plants.forEach(function (plant) {
     if (waterDest.equals(plant.pos)) {
       console.log("Absorbing water");
-      plant.absorbWater();
+      newPlants = [...newPlants, plant.absorbWater()];
+    } else {
+      newPlants = [...newPlants, plant];
     }
-    //newPlants = [...newPlants, plant];
   });
   return {
     ...state,
-    plants: state.plants,
+    plants: newPlants,//state.plants,
   };
 }
 
