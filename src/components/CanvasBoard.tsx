@@ -22,7 +22,6 @@ import {
   computeCurrentFrame,
   drawState,
   generateRandomPosition,
-  IObjectBody,
 } from "../utils";
 import Instruction from "./Instructions";
 
@@ -32,18 +31,11 @@ export interface ICanvasBoard {
 }
 
 const CanvasBoard = ({ height, width }: ICanvasBoard) => {
-  //WTF is redux for?
   const dispatch = useDispatch();
-  const gardener = useSelector((state: IGlobalState) => state.gardener);
-  const itemEquipped = useSelector((state: IGlobalState) => state.itemEquipped);
   const state = useSelector((state: IGlobalState) => state);
 
-  //pull global states into local states
+  // Pull global states into local states
   const [gameEnded, setGameEnded] = useState<boolean>(false);
-  const [pos, setPos] = useState<IObjectBody>(
-    generateRandomPosition(width - 20, height - 20)
-  );
-  const [isConsumed, setIsConsumed] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
@@ -92,11 +84,6 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     setContext(canvasRef.current && canvasRef.current.getContext("2d"));
     clearBoard(context);
     drawState(context, state);
-
-    //When the object is consumed
-    if (gardener.x === pos?.x && gardener.y === pos?.y) {
-      setIsConsumed(true);
-    }
   };
 
   useEffect(animate, [context, state, dispatch, handleKeyDownEvents]);  
@@ -109,7 +96,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     };
   }, [handleKeyDownEvents]);
 
-  // Check whether time has reached a new frame. If so, paint the canvas.
+  // Repeatedly check whether time has reached a new frame. If so, paint the canvas.
   const paintCheck = (time: number) => {
     var f = computeCurrentFrame();
     if (f != state.currentFrame) {

@@ -1,25 +1,13 @@
 import {
   CallEffect,
-  delay,
   put,
   PutEffect,
   takeLatest,
 } from "redux-saga/effects";
-import {
-  DOWN,
-  tick,
-  TICK,
-  LEFT,
-  RESET,
-  RIGHT,
-  STOP_GAME,
-  UP,
-} from "../actions";
-import {
-  Coord,
-} from "../reducers";
+import { RESET, STOP_GAME } from "../actions";
+import { Coord } from "../classes";
 
-//dummy saga
+// Dummy saga.
 export function* moveSaga(params: {
   type: string;
   payload: Coord;
