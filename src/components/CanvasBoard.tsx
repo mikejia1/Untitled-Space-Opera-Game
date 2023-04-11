@@ -2,7 +2,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  INCREMENT_SCORE,
   makeMove,
   tick,
   DOWN,
@@ -13,16 +12,10 @@ import {
   RESET_SCORE,
   scoreUpdates,
   toggleEquip,
-  useItem,
   USE_ITEM,
 } from "../store/actions";
 import { IGlobalState, TILE_SIZE } from "../store/reducers";
-import {
-  clearBoard,
-  computeCurrentFrame,
-  drawState,
-  generateRandomPosition,
-} from "../utils";
+import { clearBoard, computeCurrentFrame, drawState } from "../utils";
 import Instruction from "./Instructions";
 
 export interface ICanvasBoard {

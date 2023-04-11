@@ -103,7 +103,7 @@ function canEquip(state: IGlobalState): boolean {
 }
 
 // Use currently equipped item, if possible.
-// Note: Named "utilise" instead of "use" because function with that prefix are special.
+// Note: Named "utilise" instead of "use" because "useItem" exists elsewhere.
 function utiliseItem(state: IGlobalState): IGlobalState {
   if (!state.gardener.itemEquipped) {
     return state;

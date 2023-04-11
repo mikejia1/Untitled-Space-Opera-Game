@@ -7,21 +7,12 @@ export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
   }
 };
 
-/*
-export interface IObjectBody {
-  x: number;
-  y: number;
-}
-*/
-
 // Paint the scene, given a canvas and the current game state.
 export const drawState = (
   canvas: CanvasRenderingContext2D | null,
   state: IGlobalState
 ) => {
-  if (!canvas) {
-    return;
-  }
+  if (!canvas) return;
 
   // Plants.
   state.plants.forEach(plant => plant.paint(canvas));
@@ -39,10 +30,11 @@ function randomNumber(min: number, max: number) {
   let random = Math.random() * max;
   return random - (random % 20);
 }
-
+/*
 export const generateRandomPosition = (width: number, height: number) => {
   return new Coord(randomNumber(0, width), randomNumber(0, height));
 };
+*/
 
 // Given a position and a direction, return the adjacent position in that direction.
 export function getFacingCoord(pos: Coord, facing: Direction): Coord {
