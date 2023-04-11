@@ -11,5 +11,9 @@ export class Coord {
     equals(other: Coord): boolean {
       return this.x === other.x && this.y === other.y;
     }
+
+    plus(deltaX: number, deltaY: number): Coord {
+      return new Coord(this.x + deltaX, this.y + deltaY);
+    }
   }
   

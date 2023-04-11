@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { computeCurrentFrame, getFacingCoord } from "../../utils";
+import { computeCurrentFrame, getFacingDetectionRect } from "../../utils";
 import { Coord, Plant, Gardener } from "../classes";
 import {
   DOWN,
@@ -159,14 +159,26 @@ function utiliseItem(state: IGlobalState): IGlobalState {
     return state;
   }
   var newPlants: Plant[] = [];
-  let waterDest = getFacingCoord(state.gardener.pos, state.gardener.facing);
-  state.plants.forEach(function (plant) {
-    if (waterDest.equals(plant.pos)) {
+  let rect = getFacingDetectionRect(state.gardener.pos, state.gardener.facing);
+  let alreadyAbsorbed = false;
+  for (let i = 0; i < state.plants.length; i++) {
+    let plant = state.plants[i];
+    let plantRect = { a: plant.pos, b: plant.pos.plus(TILE_SIZE, TILE_SIZE) };
+    if (!alreadyAbsorbed && rectanglesOverlap(rect.a, rect.b, plantRect.a, plantRect.b)) {
       newPlants = [...newPlants, plant.absorbWater()];
+      alreadyAbsorbed = true;
+      //console.log("(", rect.a, ",", rect.b, ") (", garRect.a, ",", garRect.b, ")");
     } else {
       newPlants = [...newPlants, plant];
     }
-  });
+  }
+  //state.plants.forEach(function (plant) {
+  //  if (waterDest.equals(plant.pos)) {
+  //    newPlants = [...newPlants, plant.absorbWater()];
+  //  } else {
+  //    newPlants = [...newPlants, plant];
+  //  }
+  //});
   return {
     ...state,
     plants: newPlants,

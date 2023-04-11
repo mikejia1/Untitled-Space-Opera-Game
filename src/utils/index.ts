@@ -37,16 +37,30 @@ export const generateRandomPosition = (width: number, height: number) => {
 */
 
 // Given a position and a direction, return the adjacent position in that direction.
-export function getFacingCoord(pos: Coord, facing: Direction): Coord {
+// Return value represents a rectangle of TILE_SIZE by TILE_SIZE pixels by giving its
+// top-left and bottom-right Coord values.
+export function getFacingDetectionRect(pos: Coord, facing: Direction): any {
   switch (facing) {
     case Direction.Up:
-      return new Coord(pos.x, pos.y - TILE_SIZE);
+      return {
+        a: new Coord(pos.x, pos.y - TILE_SIZE),
+        b: new Coord(pos.x + TILE_SIZE, pos.y),
+      };
     case Direction.Down:
-      return new Coord(pos.x, pos.y + TILE_SIZE);
+      return {
+        a: new Coord(pos.x, pos.y + TILE_SIZE),
+        b: new Coord(pos.x + TILE_SIZE, pos.y + (TILE_SIZE * 2)),
+      };
     case Direction.Left:
-      return new Coord(pos.x - TILE_SIZE, pos.y);
+      return {
+        a: new Coord(pos.x - TILE_SIZE, pos.y),
+        b: new Coord(pos.x, pos.y + TILE_SIZE),
+      };
     case Direction.Right:
-      return new Coord(pos.x + TILE_SIZE, pos.y);
+      return {
+        a: new Coord(pos.x + TILE_SIZE, pos.y),
+        b: new Coord(pos.x + (TILE_SIZE * 2), pos.y + TILE_SIZE),
+      };
   }
 }
 
