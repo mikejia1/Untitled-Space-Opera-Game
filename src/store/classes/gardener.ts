@@ -44,6 +44,7 @@ export class Gardener {
             case Direction.Right:
                 row = 3; break;
         }
+        // The -20s and 60s here stretch the sprite and place it exactly where you'd expect it to be.
         canvas.drawImage(state.gimage, frame * 48, row * 48, 48, 48, this.pos.x - 20, this.pos.y - 20, 60, 60);
     
         //canvas.fillStyle = "#FFA500";   // Orange

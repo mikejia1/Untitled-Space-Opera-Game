@@ -1,6 +1,6 @@
 import { ChakraProvider, Container, Heading } from "@chakra-ui/react";
 import { Provider } from "react-redux";
-import CanvasBoard from "./components/CanvasBoard";
+import CanvasBoard, { CANVAS_WIDTH, CANVAS_HEIGHT } from "./components/CanvasBoard";
 import ScoreCard from "./components/ScoreCard";
 import store from "./store";
 
@@ -11,7 +11,7 @@ const App = () => {
         <Container maxW="container.lg" centerContent>
           <Heading as="h1" size="xl">GARDEN TENDING GAME</Heading>
           <ScoreCard />
-          <CanvasBoard height={600} width={1000} />
+          <CanvasBoard height={CANVAS_HEIGHT} width={CANVAS_WIDTH} />
         </Container>
       </ChakraProvider>
     </Provider>

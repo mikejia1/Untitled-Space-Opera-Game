@@ -14,9 +14,13 @@ import {
   toggleEquip,
   USE_ITEM,
 } from "../store/actions";
-import { IGlobalState, TILE_SIZE } from "../store/reducers";
+import { IGlobalState, MOVE_SIZE } from "../store/reducers";
 import { clearBoard, computeCurrentFrame, drawState } from "../utils";
 import Instruction from "./Instructions";
+
+// Width and height of the 2D canvas;
+export const CANVAS_WIDTH = 1000;
+export const CANVAS_HEIGHT = 600;
 
 export interface ICanvasBoard {
   height: number;
@@ -36,16 +40,16 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     (event: KeyboardEvent) => {
       switch (event.key) {
           case "w":
-            dispatch(makeMove(0, -TILE_SIZE, UP));
+            dispatch(makeMove(0, -MOVE_SIZE, UP));
             break;
           case "s":
-            dispatch(makeMove(0, TILE_SIZE, DOWN));
+            dispatch(makeMove(0, MOVE_SIZE, DOWN));
             break;
           case "a":
-            dispatch(makeMove(-TILE_SIZE, 0, LEFT));
+            dispatch(makeMove(-MOVE_SIZE, 0, LEFT));
             break;
           case "d":
-            dispatch(makeMove(TILE_SIZE, 0, RIGHT));
+            dispatch(makeMove(MOVE_SIZE, 0, RIGHT));
             break;
           case "e":
             dispatch(toggleEquip());
