@@ -35,7 +35,7 @@ export class Gardener {
     // Paint the gardener on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         // If the gardener is moving, animate the sprite. 
-        let frame = this.moving ? state.currentFrame % 4 : 0;
+        let frame = this.moving ? Math.floor(state.currentFrame % 24 / 6) : 0;
         let row = 0;
         switch (this.facing) {
             case Direction.Down:

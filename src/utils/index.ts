@@ -52,5 +52,5 @@ export function getFacingCoord(pos: Coord, facing: Direction): Coord {
 
 // Current frame number is just current epoch quarter second.
 export function computeCurrentFrame(): number {
-  return  Math.floor(Date.now() / 250);
+  return  Math.floor(Date.now() / 42);  // Roughly 24 fps.
 }
