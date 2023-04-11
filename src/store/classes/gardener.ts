@@ -26,6 +26,11 @@ export class Gardener {
       let newPos = new Coord(this.pos.x + action.payload[0], this.pos.y + action.payload[1]);
       return new Gardener(newPos, this.getFacingDirection(action), this.itemEquipped, action.type == STOP ? false : true);
     }
+
+    // Change facing direction of the gardener but without changing its position.
+    changeFacingDirection(action: any): Gardener {
+        return new Gardener(this.pos, this.getFacingDirection(action), this.itemEquipped, action.type == STOP ? false : true);
+    }
   
     // Set value of itemEquipped. Return new gardener.
     setItemEquipped(itemEquipped: boolean): Gardener {

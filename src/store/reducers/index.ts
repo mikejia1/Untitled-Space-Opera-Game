@@ -88,7 +88,11 @@ function moveGardener(state: IGlobalState, action: any): IGlobalState {
   // If new gardener is in collision with anything, we abort the move.
   if (collisionDetected(state, newGar)) {
     console.log("Bump!");
-    return state;
+    // If you can't move because of a collision, you still change your facing direction.
+    return {
+      ...state,
+      gardener: state.gardener.changeFacingDirection(action),
+    };
   }
   // All clear. Commit the move to the global state.
   return {
