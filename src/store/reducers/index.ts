@@ -52,7 +52,6 @@ const globalState: IGlobalState = initialGameState();
 
 // All actions/index.ts setters are handled here
 const gameReducer = (state = globalState, action: any) => {
-  let gar = state.gardener;
   switch (action.type) {
     case RIGHT:
     case LEFT:
