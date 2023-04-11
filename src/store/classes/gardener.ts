@@ -1,7 +1,6 @@
 import { Coord } from './coord';
 import { Direction, IGlobalState } from '../reducers';
 import { LEFT, RIGHT, UP, DOWN } from '../actions';
-//import gardenerwalkcycle from '../images/gardenerwalkcycle.png';
 
 // The gardener who tends the garden.
 export class Gardener {
