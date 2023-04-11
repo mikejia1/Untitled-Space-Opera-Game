@@ -34,16 +34,24 @@ export interface IGlobalState {
   wateringCan: Coord;     // The watering can that the gardener uses to water plants
   plants: Plant[];        // All the plants currently living
   currentFrame: number;   // The current animation frame number (current epoch quarter second number)
+  gimage: any; 
 }
 
 // Generate the game starting state.
 function initialGameState(): IGlobalState {
+  const image = new Image(192, 192);
+  image.src = require('../images/gardenerwalkcycle.png');
+  image.onload = () => {
+      console.log("(Image onload running)");
+  };
+
   return {
     gardener: Gardener.initialState(),
     score: 0,
     wateringCan: new Coord(300, 500),
     plants: [new Plant(new Coord(100, 100), 10)],
-    currentFrame: 0,  
+    currentFrame: 0,
+    gimage: image,
   }
 }
 

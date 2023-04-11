@@ -18,7 +18,7 @@ export const drawState = (
   state.plants.forEach(plant => plant.paint(canvas));
 
   // Gardener.
-  state.gardener.paint(canvas);
+  state.gardener.paint(canvas, state);
 
   // Watering Can. 
   canvas.fillStyle = "#808080"; // Grey

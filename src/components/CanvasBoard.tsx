@@ -71,7 +71,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
 
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
-    console.log("Paint frame: ", state.currentFrame);
+    //console.log("Paint frame: ", state.currentFrame);
 
     //Draw on canvas each time
     setContext(canvasRef.current && canvasRef.current.getContext("2d"));

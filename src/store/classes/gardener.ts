@@ -1,6 +1,7 @@
 import { Coord } from './coord';
-import { Direction } from '../reducers';
+import { Direction, IGlobalState } from '../reducers';
 import { LEFT, RIGHT, UP, DOWN } from '../actions';
+//import gardenerwalkcycle from '../images/gardenerwalkcycle.png';
 
 // The gardener who tends the garden.
 export class Gardener {
@@ -30,11 +31,26 @@ export class Gardener {
       return new Gardener(this.pos, this.facing, itemEquipped);
     }
   
-    paint(canvas: CanvasRenderingContext2D): void {
-      canvas.fillStyle = "#FFA500";   // Orange
-      canvas.strokeStyle = "#146356"; // Dark grey-ish maybe.
-      canvas.fillRect(this.pos.x, this.pos.y, 20, 20);
-      canvas.strokeRect(this.pos.x, this.pos.y, 20, 20);
+    // Paint the gardener on the canvas.
+    paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
+        let frame = state.currentFrame % 4;
+        let row = 0;
+        switch (this.facing) {
+            case Direction.Up:
+                row = 1; break;
+            case Direction.Down:
+                row = 0; break;
+            case Direction.Left:
+                row = 2; break;
+            case Direction.Right:
+                row = 3; break;
+        }
+        canvas.drawImage(state.gimage, frame * 48, row * 48, 48, 48, this.pos.x - 20, this.pos.y - 20, 60, 60);
+    
+        //canvas.fillStyle = "#FFA500";   // Orange
+        //canvas.strokeStyle = "#146356"; // Dark grey-ish maybe.
+        //canvas.fillRect(this.pos.x, this.pos.y, 20, 20);
+        //canvas.strokeRect(this.pos.x, this.pos.y, 20, 20);
     }
   
     // Return would-be resulting facing direction given an action.
