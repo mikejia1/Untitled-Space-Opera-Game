@@ -14,6 +14,7 @@ import {
   TOGGLE_EQUIP,
   UP,
   USE_ITEM,
+  STOP,
 } from "../actions";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../../components/CanvasBoard";
 
@@ -67,7 +68,8 @@ const gameReducer = (state = globalState, action: any) => {
     case RIGHT:
     case LEFT:
     case UP:
-    case DOWN:            return moveGardener(state, action);
+    case DOWN:
+    case STOP:            return moveGardener(state, action);
     case TOGGLE_EQUIP:    return toggleEquip(state);
     case USE_ITEM:        return utiliseItem(state);
     case RESET:           return initialGameState();

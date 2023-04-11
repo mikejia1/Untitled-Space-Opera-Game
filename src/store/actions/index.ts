@@ -3,6 +3,7 @@ export const RIGHT = "RIGHT";
 export const LEFT = "LEFT";
 export const UP = "UP";
 export const DOWN = "DOWN";
+export const STOP = "STOP";
 
 export const RESET = "RESET";
 export const STOP_GAME = "STOP_GAME";
