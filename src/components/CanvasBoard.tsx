@@ -8,6 +8,7 @@ import {
   LEFT,
   RIGHT,
   UP,
+  STOP,
   resetGame,
   RESET_SCORE,
   scoreUpdates,
@@ -32,6 +33,9 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
+  const handleKeyUpEvents = useCallback(
+    () => {dispatch(makeMove(0, 0, STOP))}, [dispatch]
+  );
   const handleKeyDownEvents = useCallback(
     (event: KeyboardEvent) => {
       switch (event.key) {
@@ -67,7 +71,8 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     clearBoard(context);
     drawState(context, state);
     window.addEventListener("keydown", handleKeyDownEvents);
-  }, [context, dispatch, handleKeyDownEvents, height, state, width]);
+    window.addEventListener("keyup", handleKeyUpEvents);
+  }, [context, dispatch, handleKeyDownEvents, handleKeyUpEvents, height, state, width]);
 
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
@@ -79,15 +84,17 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     drawState(context, state);
   };
 
-  useEffect(animate, [context, state, dispatch, handleKeyDownEvents]);  
+  useEffect(animate, [context, state, dispatch, handleKeyDownEvents, handleKeyUpEvents]);  
 
   useEffect(() => {
     window.addEventListener("keypress", handleKeyDownEvents);
+    window.addEventListener("keyup", handleKeyUpEvents);
 
     return () => {
       window.removeEventListener("keypress", handleKeyDownEvents);
+      window.removeEventListener("keyup", handleKeyUpEvents);
     };
-  }, [handleKeyDownEvents]);
+  }, [handleKeyDownEvents, handleKeyUpEvents]);
 
   // Repeatedly check whether time has reached a new frame. If so, paint the canvas.
   const paintCheck = (time: number) => {

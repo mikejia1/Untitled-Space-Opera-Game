@@ -1,17 +1,19 @@
 import { Coord } from './coord';
 import { Direction, IGlobalState } from '../reducers';
-import { LEFT, RIGHT, UP, DOWN } from '../actions';
+import { LEFT, RIGHT, UP, DOWN, STOP } from '../actions';
 
 // The gardener who tends the garden.
 export class Gardener {
     pos: Coord;             // Position of the gardener in the environment.
     facing: Direction;      // Direction the gardener is currently facing.
     itemEquipped: boolean;  // Whether or not the gardener has an item equipped.
+    moving: boolean;        // Whether or not the gardener is moving.
   
-    constructor(pos: Coord, facing: Direction, itemEquipped: boolean) {
+    constructor(pos: Coord, facing: Direction, itemEquipped: boolean=false, moving: boolean=false) {
       this.pos = pos;
       this.facing = facing;
       this.itemEquipped = itemEquipped;
+      this.moving = moving;
     }
   
     // Default gardener starting state.
@@ -22,7 +24,7 @@ export class Gardener {
     // Move the gardener according to given x and y deltas. Return new gardener.
     move(action: any): Gardener {
       let newPos = new Coord(this.pos.x + action.payload[0], this.pos.y + action.payload[1]);
-      return new Gardener(newPos, this.getFacingDirection(action), this.itemEquipped);
+      return new Gardener(newPos, this.getFacingDirection(action), this.itemEquipped, action.type == STOP ? false : true);
     }
   
     // Set value of itemEquipped. Return new gardener.
@@ -32,13 +34,14 @@ export class Gardener {
   
     // Paint the gardener on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
-        let frame = state.currentFrame % 4;
+        // If the gardener is moving, animate the sprite. 
+        let frame = this.moving ? state.currentFrame % 4 : 0;
         let row = 0;
         switch (this.facing) {
-            case Direction.Up:
-                row = 1; break;
             case Direction.Down:
                 row = 0; break;
+            case Direction.Up:
+                row = 1; break;
             case Direction.Left:
                 row = 2; break;
             case Direction.Right:

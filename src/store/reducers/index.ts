@@ -14,6 +14,7 @@ import {
   TOGGLE_EQUIP,
   UP,
   USE_ITEM,
+  STOP,
 } from "../actions";
 
 // The number of pixels wide/tall a single spot on the grid occupies.
@@ -64,7 +65,8 @@ const gameReducer = (state = globalState, action: any) => {
     case RIGHT:
     case LEFT:
     case UP:
-    case DOWN:            return moveGardener(state, action);
+    case DOWN:
+    case STOP:            return moveGardener(state, action);
     case TOGGLE_EQUIP:    return toggleEquip(state);
     case USE_ITEM:        return utiliseItem(state);
     case RESET:           return initialGameState();
@@ -77,6 +79,7 @@ const gameReducer = (state = globalState, action: any) => {
 
 // Move the gardener according to move action LEFT, RIGHT, UP, or DOWN.
 function moveGardener(state: IGlobalState, action: any): IGlobalState {
+  console.log(action);
   let newGar = state.gardener.move(action);
   return {
     ...state,
