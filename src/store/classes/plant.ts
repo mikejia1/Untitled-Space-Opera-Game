@@ -1,4 +1,4 @@
-import { Coord } from './coord';
+import { Coord } from './';
 import { TILE_WIDTH, TILE_HEIGHT } from '../reducers';
 
 // Initial, min, and max value for plant health.

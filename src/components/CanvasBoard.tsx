@@ -16,7 +16,7 @@ import {
   USE_ITEM,
 } from "../store/actions";
 import { IGlobalState, MOVE_HORZ, MOVE_VERT } from "../store/reducers";
-import { clearBoard, computeCurrentFrame, drawState } from "../utils";
+import { clearBoard, drawState } from "../utils";
 import Instruction from "./Instructions";
 
 // Width and height of the 2D canvas;
@@ -80,8 +80,6 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
 
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
-    //console.log("Paint frame: ", state.currentFrame);
-
     //Draw on canvas each time
     setContext(canvasRef.current && canvasRef.current.getContext("2d"));
     clearBoard(context);
@@ -100,12 +98,9 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     };
   }, [handleKeyDownEvents, handleKeyUpEvents]);
 
-  // Repeatedly check whether time has reached a new frame. If so, paint the canvas.
+  // Every time the browser is ready for a new animation frame, dispatch tick().
   const paintCheck = (time: number) => {
-    var f = computeCurrentFrame();
-    if (f != state.currentFrame) {
-      dispatch(tick());
-    }
+    dispatch(tick());
     requestAnimationFrame(paintCheck);
   }
 

@@ -1,7 +1,6 @@
-import { Coord } from './coord';
+import { Coord, Rect, Collider, Paintable } from './';
 import { Direction, IGlobalState } from '../reducers';
 import { LEFT, RIGHT, UP, DOWN, STOP } from '../actions';
-import { Paintable } from './paintable';
 import { TILE_HEIGHT, TILE_WIDTH } from '../reducers';
 import { shiftRect } from '../../utils';
 
@@ -9,7 +8,7 @@ import { shiftRect } from '../../utils';
 export const GARDENER_HEIGHT = 20;
 
 // The gardener who tends the garden.
-export class Gardener implements Paintable {
+export class Gardener implements Paintable, Collider {
     pos: Coord;             // Position of the gardener in the environment.
     facing: Direction;      // Direction the gardener is currently facing.
     itemEquipped: boolean;  // Whether or not the gardener has an item equipped.
@@ -83,7 +82,7 @@ export class Gardener implements Paintable {
     }
 
     // Return the invisible rectangle that determines collision behaviour for the gardener.
-    collisionRect(): any {
+    collisionRect(): Rect {
         return {
             a: this.pos.plus(0, -TILE_HEIGHT),
             b: this.pos.plus(TILE_WIDTH, 0),
@@ -91,7 +90,7 @@ export class Gardener implements Paintable {
     }
 
     // Return a rectangle adjacent to the gardener in the direction it is facing.
-    getFacingDetectionRect(): any {
+    getFacingDetectionRect(): Rect {
         let rect = this.collisionRect();
         switch (this.facing) {
             case Direction.Up:    return shiftRect(rect, 0, -TILE_HEIGHT);

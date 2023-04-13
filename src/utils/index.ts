@@ -1,7 +1,8 @@
-import { Direction, IGlobalState, TILE_WIDTH, TILE_HEIGHT } from "../store/reducers";
-import { Coord } from "../store/classes";
+import { IGlobalState, TILE_HEIGHT } from "../store/reducers";
+import { Coord, Rect, InvisibleCollider } from "../store/classes";
 import { Paintable } from "../store/classes/paintable";
 import { TypedPriorityQueue } from "../store/classes/priorityqueue";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../components/CanvasBoard";
 
 export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
   if (canvas) {
@@ -55,9 +56,19 @@ export function computeCurrentFrame(): number {
 }
 
 // Given a rectangle, return a new one that is shifted by a given x and y delta.
-export function shiftRect(rect: any, deltaX: number, deltaY: number): any {
+export function shiftRect(rect: Rect, deltaX: number, deltaY: number): Rect {
   return {
     a: rect.a.plus(deltaX, deltaY),
     b: rect.b.plus(deltaX, deltaY),
   }
+}
+
+// Four invisible colliders to stop gardener from wandering beyond edge of canvas.
+export function worldBoundaryColliders(): InvisibleCollider[] {
+  return [
+    new InvisibleCollider({a: new Coord(-50, 0), b: new Coord(CANVAS_WIDTH, -1)}),                           // Above canvas
+    new InvisibleCollider({a: new Coord(0, CANVAS_HEIGHT), b: new Coord(CANVAS_WIDTH, CANVAS_HEIGHT + 50)}), // Below canvas
+    new InvisibleCollider({a: new Coord(-50, 0), b: new Coord(0, CANVAS_HEIGHT)}),                           // Left of canvas
+    new InvisibleCollider({a: new Coord(CANVAS_WIDTH, 0), b: new Coord(CANVAS_WIDTH + 50, CANVAS_HEIGHT)}),  // Right of canvas
+  ];
 }

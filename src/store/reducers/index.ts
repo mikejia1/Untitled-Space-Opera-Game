@@ -1,8 +1,8 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { computeCurrentFrame } from "../../utils";
-import { Coord, Plant, Gardener, INITIAL_PLANT_HEALTH } from "../classes";
+import { computeCurrentFrame, worldBoundaryColliders } from "../../utils";
+import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, GARDENER_HEIGHT } from "../classes";
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -16,8 +16,6 @@ import {
   USE_ITEM,
   STOP,
 } from "../actions";
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../../components/CanvasBoard";
-import { GARDENER_HEIGHT } from "../classes";
 
 // The number of pixels wide/tall a single spot on the grid occupies.
 export const TILE_WIDTH = 20;
@@ -36,12 +34,12 @@ export enum Direction {
 
 // Interface for full game state object.
 export interface IGlobalState {
-  gardener: Gardener;     // The gardener tending the garden. Controlled by the player.
-  score: number;          // The current game score
-  wateringCan: Coord;     // The watering can that the gardener uses to water plants
-  plants: Plant[];        // All the plants currently living
-  currentFrame: number;   // The current animation frame number (current epoch quarter second number)
-  gimage: any;            // The walkcycle sprite source image.
+  gardener: Gardener;            // The gardener tending the garden. Controlled by the player.
+  score: number;                 // The current game score
+  wateringCan: Coord;            // The watering can that the gardener uses to water plants
+  plants: Plant[];               // All the plants currently living
+  currentFrame: number;          // The current animation frame number (current epoch quarter second number)
+  gimage: any;                   // The walkcycle sprite source image.
 }
 
 // Generate the game starting state.
@@ -78,10 +76,25 @@ const gameReducer = (state = globalState, action: any) => {
     case RESET:           return initialGameState();
     case RESET_SCORE:     return { ...state, score: 0 };
     case INCREMENT_SCORE: return { ...state, score: state.score + 1 };
-    case TICK:            return { ...state, currentFrame: computeCurrentFrame() };
+    case TICK:            return tickCheck(state);
     default:              return state;
   }
 };
+
+// TODO: See if we can animate from within a saga instead of the way we're doing it now.
+
+// Check whether or not the current frame number should change. If not, return the
+// state unchanged.
+function tickCheck(state: IGlobalState): IGlobalState {
+  let f = computeCurrentFrame();
+  if (f != state.currentFrame) {
+    return {
+      ...state,
+      currentFrame: f,
+    };
+  }
+  return state;
+}
 
 // Move the gardener according to move action LEFT, RIGHT, UP, or DOWN.
 // This will be aborted if the would-be new position overlaps with a plant.
@@ -106,25 +119,18 @@ function moveGardener(state: IGlobalState, action: any): IGlobalState {
   }
 }
 
-// TODO: Create a "Collider" interface so we can just check the gardener against
-// all Colliders instead of checking plants, then rocks, then walls, etc.
-
-// TODO: Create 4 invisible colliders just above, below, to the left, and to the right
-// of the visible canvas. Just throw those into the mix when checking collisions. i.e.
-// no special logic for world boundaries. It will be as if there are walls just off screen.
-
 // Check whether the given gardener overlaps (collides) with anything it shouldn't.
 function collisionDetected(state: IGlobalState, gar: Gardener): boolean {
+  // Gather all colliders into one array.
+  let colliders: Array<Collider> = [];
+  state.plants.forEach(plant => colliders.push(plant));
+  worldBoundaryColliders().forEach(col => colliders.push(col));
   let gRect = gar.collisionRect();
-  // First, check for collisions with plants.
-  for (let i = 0; i < state.plants.length; i++) {
-    let pRect = state.plants[i].collisionRect();
-    if (rectanglesOverlap(gRect, pRect)) return true;
-  }
 
-  // Second, check for collision with environment boundaries;
-  if (gar.pos.x < 0 || gar.pos.y < GARDENER_HEIGHT) return true;
-  if (gar.pos.x + TILE_WIDTH >= CANVAS_WIDTH || gar.pos.y >= CANVAS_HEIGHT) return true;
+  // Check all colliders and stop if and when any collision is found.
+  for (let i = 0; i < colliders.length; i++) {
+    if (rectanglesOverlap(gRect, colliders[i].collisionRect())) return true;
+  }
 
   // No collisions detected.
   return false;

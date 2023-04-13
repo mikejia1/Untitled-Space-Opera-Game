@@ -23,7 +23,6 @@
          } // will print 0 1 3 4 5
          x.trim(); // (optional) optimizes memory usage
  */
-         "use strict";
 
          // the provided comparator function should take a, b and return *true* when a < b
          export class TypedPriorityQueue<T> {

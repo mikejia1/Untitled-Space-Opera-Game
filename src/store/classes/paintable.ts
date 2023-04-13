@@ -1,4 +1,4 @@
-import { Coord } from './coord';
+import { Coord } from './';
 import { IGlobalState } from '../reducers';
 
 // A Paintable has a position, so we can order the painting events to fake some 3D,
