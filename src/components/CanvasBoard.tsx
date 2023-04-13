@@ -18,7 +18,7 @@ import {
   STOP_LEFT,
   STOP_RIGHT,
 } from "../store/actions";
-import { IGlobalState} from "../store/reducers";
+import { IGlobalState, MOVE_HORZ, MOVE_VERT } from "../store/reducers";
 import { clearBoard, drawState } from "../utils";
 import Instruction from "./Instructions";
 
@@ -44,16 +44,16 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     (event: KeyboardEvent) => {
       switch (event.key) {
           case "w":
-            dispatch(makeMove(STOP_UP));
+            dispatch(makeMove(0, -MOVE_VERT, STOP_UP));
             break;
           case "s":
-            dispatch(makeMove(STOP_DOWN));
+            dispatch(makeMove(0, MOVE_VERT, STOP_DOWN));
             break;
           case "a":
-            dispatch(makeMove(STOP_LEFT));
+            dispatch(makeMove(-MOVE_HORZ, 0, STOP_LEFT));
             break;
           case "d":
-            dispatch(makeMove(STOP_RIGHT));
+            dispatch(makeMove(MOVE_HORZ, 0, STOP_RIGHT));
             break;
         }
       },
@@ -63,16 +63,16 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     (event: KeyboardEvent) => {
       switch (event.key) {
           case "w":
-            dispatch(makeMove(UP));
+            dispatch(makeMove(0, -MOVE_VERT, UP));
             break;
           case "s":
-            dispatch(makeMove(DOWN));
+            dispatch(makeMove(0, MOVE_VERT, DOWN));
             break;
           case "a":
-            dispatch(makeMove(LEFT));
+            dispatch(makeMove(-MOVE_HORZ, 0, LEFT));
             break;
           case "d":
-            dispatch(makeMove(RIGHT));
+            dispatch(makeMove(MOVE_HORZ, 0, RIGHT));
             break;
           case "e":
             dispatch(toggleEquip());

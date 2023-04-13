@@ -12,8 +12,8 @@ export class Gardener implements Paintable, Collider {
     facing: Direction;      // Direction the gardener is currently facing.
     itemEquipped: boolean;  // Whether or not the gardener has an item equipped.
     moving: boolean;        // Whether or not the gardener is moving.
-    vPixelSpeed = 3;
-    hPixelSpeed = 3;
+    vPixelSpeed = 1;
+    hPixelSpeed = 1;
   
     constructor(pos: Coord, facing: Direction, itemEquipped: boolean=false, moving: boolean=false) {
       this.pos = pos;

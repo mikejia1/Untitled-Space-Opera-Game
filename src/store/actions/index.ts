@@ -16,8 +16,10 @@ export const TOGGLE_EQUIP = "TOGGLE_EQUIP";
 export const USE_ITEM = "USE_ITEM";
 export const TICK = "TICK";
 
-export const makeMove = (move: string) => ({
+//TODO: remove dx dy payload
+export const makeMove = (dx: number, dy: number, move: string) => ({
   type: move,
+  payload: [dx, dy]
 });
 
 export const resetGame = () => ({
