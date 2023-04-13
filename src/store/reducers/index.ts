@@ -194,7 +194,14 @@ function toggleEquip(state: IGlobalState): IGlobalState {
 
 // Check whether or not an item can be equipped right now.
 function canEquip(state: IGlobalState): boolean {
-  return true;
+  // Rectangle for the direction the gardener is facing.
+  let faceRect = state.gardener.getFacingDetectionRect();
+  // Rectangle for the watering can.
+  let canRect = {
+    a: state.wateringCan.plus(0, -TILE_HEIGHT),
+    b: state.wateringCan.plus(TILE_WIDTH, 0),
+  };
+  return rectanglesOverlap(faceRect, canRect);
 }
 
 // Use currently equipped item, if possible.
