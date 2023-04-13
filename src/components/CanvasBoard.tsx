@@ -55,14 +55,6 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
           case "d":
             dispatch(makeMove(MOVE_HORZ, 0, STOP_RIGHT));
             break;
-          case "e":
-            dispatch(toggleEquip());
-            break;
-          case "f":
-            dispatch({
-              type: USE_ITEM
-            });
-            break;
         }
       },
     [dispatch]
