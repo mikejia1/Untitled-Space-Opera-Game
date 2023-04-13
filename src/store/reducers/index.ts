@@ -108,9 +108,9 @@ function collisionDetected(state: IGlobalState, gar: Gardener): boolean {
   // First, check for collisions with plants.
   for (let i = 0; i < state.plants.length; i++) {
     let plant = state.plants[i];
-    let a = new Coord(plant.pos.x, plant.pos.y);
+    let a = new Coord(plant.pos.x, plant.pos.y + (TILE_SIZE - 5));
     let b = new Coord(plant.pos.x + TILE_SIZE, plant.pos.y + TILE_SIZE);
-    let c = new Coord(gar.pos.x, gar.pos.y);
+    let c = new Coord(gar.pos.x, gar.pos.y + (TILE_SIZE - 5));
     let d = new Coord(gar.pos.x + TILE_SIZE, gar.pos.y + TILE_SIZE);
     if (rectanglesOverlap(a, b, c, d)) return true;
   }
@@ -176,13 +176,7 @@ function utiliseItem(state: IGlobalState): IGlobalState {
       newPlants = [...newPlants, plant];
     }
   }
-  //state.plants.forEach(function (plant) {
-  //  if (waterDest.equals(plant.pos)) {
-  //    newPlants = [...newPlants, plant.absorbWater()];
-  //  } else {
-  //    newPlants = [...newPlants, plant];
-  //  }
-  //});
+  
   return {
     ...state,
     plants: newPlants,

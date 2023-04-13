@@ -1,9 +1,10 @@
 import { Coord } from './coord';
 import { Direction, IGlobalState } from '../reducers';
 import { LEFT, RIGHT, UP, DOWN, STOP } from '../actions';
+import { Paintable } from './paintable';
 
 // The gardener who tends the garden.
-export class Gardener {
+export class Gardener implements Paintable {
     pos: Coord;             // Position of the gardener in the environment.
     facing: Direction;      // Direction the gardener is currently facing.
     itemEquipped: boolean;  // Whether or not the gardener has an item equipped.

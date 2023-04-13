@@ -1,5 +1,7 @@
 import { Direction, IGlobalState, TILE_SIZE } from "../store/reducers";
 import { Coord } from "../store/classes";
+import { Paintable } from "../store/classes/paintable";
+import { TypedPriorityQueue } from "../store/classes/priorityqueue";
 
 export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
   if (canvas) {
@@ -14,11 +16,22 @@ export const drawState = (
 ) => {
   if (!canvas) return;
 
-  // Plants.
-  state.plants.forEach(plant => plant.paint(canvas));
+  // Put all paintable objects into a heap-based priority queue.
+  // They'll come out sorted by ascending y coordinate for taking 3D.
+  let pq = new TypedPriorityQueue<Paintable>(
+    function (a: Paintable, b: Paintable) {
+      return a.pos.y < b.pos.y;
+    }
+  );
+  state.plants.forEach(plant => pq.add(plant));
+  pq.add(state.gardener);
+  while (!pq.isEmpty()) {
+    let ptbl = pq.poll();
+    if (ptbl === undefined) continue;
+    ptbl.paint(canvas, state);
+  }
 
-  // Gardener.
-  state.gardener.paint(canvas, state);
+  // TODO: Should the watering can be a special case?
 
   // Watering Can. 
   canvas.fillStyle = "#808080"; // Grey
