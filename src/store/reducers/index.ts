@@ -45,6 +45,16 @@ export interface IGlobalState {
   gimage: any;                   // The walkcycle sprite source image.
 }
 
+// Default gardener starting state.
+function initialGardener(): Gardener {
+  return new Gardener(new Coord(500, 300), Direction.Up, false);
+}
+
+// Create watering can for start of game.
+function initialWateringCan(): WateringCan {
+  return new WateringCan(new Coord(410, 300), false);
+}
+
 // Generate the game starting state.
 function initialGameState(): IGlobalState {
   const image = new Image(192, 192);
@@ -54,20 +64,17 @@ function initialGameState(): IGlobalState {
   };
 
   return {
-    gardener: Gardener.initialState(),
+    gardener: initialGardener(),
     score: 0,
-    wateringCan: WateringCan.initialState(),
+    wateringCan: initialWateringCan(),
     plants: [new Plant(new Coord(200, 200), INITIAL_PLANT_HEALTH)],
     currentFrame: 0,
     gimage: image,
   }
 }
 
-// Game starts in state provided by initialGameState function.
-const globalState: IGlobalState = initialGameState();
-
 // All actions/index.ts setters are handled here
-const gameReducer = (state = globalState, action: any) => {
+const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
     case RIGHT:           return moveGardener(state, Direction.Right);
     case LEFT:            return moveGardener(state, Direction.Left);

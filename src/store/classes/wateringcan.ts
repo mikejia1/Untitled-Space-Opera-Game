@@ -11,11 +11,6 @@ export class WateringCan implements Paintable {
       this.isEquipped = isEquipped;
     }
 
-    // Create watering can for start of game.
-    static initialState(): WateringCan {
-        return new WateringCan(new Coord(410, 300), false);
-    }
-
     // Paint the plant on the canvas.
     paint(canvas: CanvasRenderingContext2D): void {
         let base: Coord;

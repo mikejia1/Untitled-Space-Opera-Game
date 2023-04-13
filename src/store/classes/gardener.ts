@@ -5,7 +5,7 @@ import { shiftRect } from '../../utils';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
-
+  
 // The gardener who tends the garden.
 export class Gardener implements Paintable, Collider {
     pos: Coord;             // Position of the gardener in the environment.
@@ -21,12 +21,7 @@ export class Gardener implements Paintable, Collider {
       this.itemEquipped = itemEquipped;
       this.moving = moving;
     }
-  
-    // Default gardener starting state.
-    static initialState(): Gardener {
-      return new Gardener(new Coord(500, 300), Direction.Up, false);
-    }
-  
+    
     // Move the gardener along the direction its currently facing. Return new gardener.
     move(): Gardener {
       //move payload to gardeners

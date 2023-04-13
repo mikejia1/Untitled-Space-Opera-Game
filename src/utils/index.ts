@@ -2,7 +2,9 @@ import { IGlobalState, TILE_HEIGHT, TILE_WIDTH } from "../store/reducers";
 import { Coord, Rect, InvisibleCollider } from "../store/classes";
 import { Paintable } from "../store/classes/paintable";
 import { TypedPriorityQueue } from "../store/classes/priorityqueue";
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../components/CanvasBoard";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../utils";
+
+export * from './constants';
 
 export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
   if (canvas) {

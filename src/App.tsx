@@ -1,8 +1,9 @@
 import { ChakraProvider, Container, Heading } from "@chakra-ui/react";
 import { Provider } from "react-redux";
-import CanvasBoard, { CANVAS_WIDTH, CANVAS_HEIGHT } from "./components/CanvasBoard";
+import CanvasBoard from "./components/CanvasBoard";
 import ScoreCard from "./components/ScoreCard";
 import store from "./store";
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from './utils';
 
 const App = () => {
   return (
