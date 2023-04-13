@@ -6,3 +6,4 @@ export * from './paintable';
 export * from './priorityqueue';
 export * from './rect';
 export * from './invisiblecollider';
+export * from './wateringcan';

@@ -2,7 +2,7 @@
 // They are responsible for processing all game logic.
 
 import { computeCurrentFrame, worldBoundaryColliders } from "../../utils";
-import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, GARDENER_HEIGHT } from "../classes";
+import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan } from "../classes";
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -39,7 +39,7 @@ export enum Direction {
 export interface IGlobalState {
   gardener: Gardener;            // The gardener tending the garden. Controlled by the player.
   score: number;                 // The current game score
-  wateringCan: Coord;            // The watering can that the gardener uses to water plants
+  wateringCan: WateringCan;      // The watering can that the gardener uses to water plants
   plants: Plant[];               // All the plants currently living
   currentFrame: number;          // The current animation frame number (current epoch quarter second number)
   gimage: any;                   // The walkcycle sprite source image.
@@ -56,7 +56,7 @@ function initialGameState(): IGlobalState {
   return {
     gardener: Gardener.initialState(),
     score: 0,
-    wateringCan: new Coord(300, 500),
+    wateringCan: WateringCan.initialState(),
     plants: [new Plant(new Coord(200, 200), INITIAL_PLANT_HEALTH)],
     currentFrame: 0,
     gimage: image,
@@ -124,7 +124,7 @@ function moveGardenerOnFrame(state: IGlobalState, direction: Direction): IGlobal
     ...state,
     gardener: newGar,
     // Watering can moves with gardener if the item is equipped.
-    wateringCan: newGar.itemEquipped ? newGar.pos : state.wateringCan,
+    wateringCan: state.wateringCan.isEquipped ? state.wateringCan.moveWithGardener(newGar) : state.wateringCan,
     currentFrame: computeCurrentFrame(),
   }
 }
@@ -182,7 +182,7 @@ function toggleEquip(state: IGlobalState): IGlobalState {
     return {
       ...state,
       gardener: state.gardener.setItemEquipped(false),
-      wateringCan: state.gardener.pos,
+      wateringCan: state.wateringCan.layOnTheGround(),
     }
   }
   if (!canEquip(state)) {
@@ -191,7 +191,7 @@ function toggleEquip(state: IGlobalState): IGlobalState {
   return {
       ...state,
       gardener: state.gardener.setItemEquipped(true),
-      wateringCan: state.gardener.pos,
+      wateringCan: state.wateringCan.moveWithGardener(state.gardener),
   }
 }
 
@@ -199,10 +199,12 @@ function toggleEquip(state: IGlobalState): IGlobalState {
 function canEquip(state: IGlobalState): boolean {
   // Rectangle for the direction the gardener is facing.
   let faceRect = state.gardener.getFacingDetectionRect();
+  let span = Math.max(TILE_WIDTH, TILE_HEIGHT);
+  let centre = state.wateringCan.pos.plus(TILE_WIDTH / 2, TILE_HEIGHT / 2);
   // Rectangle for the watering can.
   let canRect = {
-    a: state.wateringCan.plus(0, -TILE_HEIGHT),
-    b: state.wateringCan.plus(TILE_WIDTH, 0),
+    a: centre.plus(-span * 2, -span * 2),
+    b: centre.plus(span * 2, span * 2),
   };
   return rectanglesOverlap(faceRect, canRect);
 }
@@ -218,7 +220,7 @@ function utiliseItem(state: IGlobalState): IGlobalState {
   let alreadyAbsorbed = false;
   for (let i = 0; i < state.plants.length; i++) {
     let plant = state.plants[i];
-    let plantRect = plant.collisionRect();
+    let plantRect = plant.wateringRect();
     if (!alreadyAbsorbed && rectanglesOverlap(faceRect, plantRect)) {
       newPlants = [...newPlants, plant.absorbWater()];
       alreadyAbsorbed = true;

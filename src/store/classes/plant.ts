@@ -1,4 +1,4 @@
-import { Coord } from './';
+import { Coord, Rect } from './';
 import { TILE_WIDTH, TILE_HEIGHT } from '../reducers';
 
 // Initial, min, and max value for plant health.
@@ -54,10 +54,20 @@ export class Plant {
     }
 
     // Return the invisible rectangle that determines collision behaviour for the plant.
-    collisionRect(): any {
+    collisionRect(): Rect {
         return {
             a: this.pos.plus(0, -TILE_HEIGHT),
             b: this.pos.plus(TILE_WIDTH, 0),
         }
     }
+
+    // Return the invisible rectangle that determines how close you need to be to water the plant.
+    wateringRect(): Rect {
+        let span = Math.max(TILE_WIDTH, TILE_HEIGHT);
+        let base = this.pos.plus(TILE_WIDTH / 2, 0);
+        return {
+            a: base.plus(-span * 2, -span * 2),
+            b: base.plus(span * 2, span * 2),
+        }
+    } 
   }

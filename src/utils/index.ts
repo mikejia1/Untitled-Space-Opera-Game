@@ -26,18 +26,12 @@ export const drawState = (
   );
   state.plants.forEach(plant => pq.add(plant));
   pq.add(state.gardener);
+  pq.add(state.wateringCan);
   while (!pq.isEmpty()) {
     let ptbl = pq.poll();
     if (ptbl === undefined) continue;
     ptbl.paint(canvas, state);
   }
-
-  // TODO: Should the watering can be a special case?
-
-  // Watering Can. 
-  canvas.fillStyle = "#808080"; // Grey
-  canvas.fillRect(  state.wateringCan.x + (TILE_WIDTH * 0.4), state.wateringCan.y - 20, TILE_WIDTH * 0.2, 5);
-  canvas.strokeRect(state.wateringCan.x + (TILE_WIDTH * 0.4), state.wateringCan.y - 20, TILE_WIDTH * 0.2, 5);
 };
 
 function randomNumber(min: number, max: number) {
