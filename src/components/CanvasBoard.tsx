@@ -8,12 +8,15 @@ import {
   LEFT,
   RIGHT,
   UP,
-  STOP,
   resetGame,
   RESET_SCORE,
   scoreUpdates,
   toggleEquip,
   USE_ITEM,
+  STOP_UP,
+  STOP_DOWN,
+  STOP_LEFT,
+  STOP_RIGHT,
 } from "../store/actions";
 import { IGlobalState, MOVE_HORZ, MOVE_VERT } from "../store/reducers";
 import { clearBoard, drawState } from "../utils";
@@ -38,7 +41,31 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
   const handleKeyUpEvents = useCallback(
-    () => {dispatch(makeMove(0, 0, STOP))}, [dispatch]
+    (event: KeyboardEvent) => {
+      switch (event.key) {
+          case "w":
+            dispatch(makeMove(0, -MOVE_VERT, STOP_UP));
+            break;
+          case "s":
+            dispatch(makeMove(0, MOVE_VERT, STOP_DOWN));
+            break;
+          case "a":
+            dispatch(makeMove(-MOVE_HORZ, 0, STOP_LEFT));
+            break;
+          case "d":
+            dispatch(makeMove(MOVE_HORZ, 0, STOP_RIGHT));
+            break;
+          case "e":
+            dispatch(toggleEquip());
+            break;
+          case "f":
+            dispatch({
+              type: USE_ITEM
+            });
+            break;
+        }
+      },
+    [dispatch]
   );
   const handleKeyDownEvents = useCallback(
     (event: KeyboardEvent) => {

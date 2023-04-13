@@ -14,7 +14,10 @@ import {
   TOGGLE_EQUIP,
   UP,
   USE_ITEM,
-  STOP,
+  STOP_RIGHT,
+  STOP_LEFT,
+  STOP_UP,
+  STOP_DOWN,
 } from "../actions";
 
 // The number of pixels wide/tall a single spot on the grid occupies.
@@ -22,7 +25,7 @@ export const TILE_WIDTH = 20;
 export const TILE_HEIGHT = 5;
 // The number of pixels left/right/up/down that the gardener moves on WASD input.
 export const MOVE_HORZ = 5;
-export const MOVE_VERT = 5;
+export const MOVE_VERT = 1;
 
 // An enum for the directions.
 export enum Direction {
@@ -66,49 +69,55 @@ const globalState: IGlobalState = initialGameState();
 // All actions/index.ts setters are handled here
 const gameReducer = (state = globalState, action: any) => {
   switch (action.type) {
-    case RIGHT:
-    case LEFT:
-    case UP:
-    case DOWN:
-    case STOP:            return moveGardener(state, action);
+    case RIGHT:           return moveGardener(state, Direction.Right);
+    case LEFT:            return moveGardener(state, Direction.Left);
+    case UP:              return moveGardener(state, Direction.Up);
+    case DOWN:            return moveGardener(state, Direction.Down);
+    case STOP_RIGHT:      return stopGardener(state, Direction.Right);
+    case STOP_LEFT:       return stopGardener(state, Direction.Left);
+    case STOP_UP:         return stopGardener(state, Direction.Up);
+    case STOP_DOWN:       return stopGardener(state, Direction.Down);
     case TOGGLE_EQUIP:    return toggleEquip(state);
     case USE_ITEM:        return utiliseItem(state);
     case RESET:           return initialGameState();
     case RESET_SCORE:     return { ...state, score: 0 };
     case INCREMENT_SCORE: return { ...state, score: state.score + 1 };
-    case TICK:            return tickCheck(state);
+    case TICK:            return updateFrame(state);
     default:              return state;
   }
 };
 
-// TODO: See if we can animate from within a saga instead of the way we're doing it now.
-
-// Check whether or not the current frame number should change. If not, return the
-// state unchanged.
-function tickCheck(state: IGlobalState): IGlobalState {
-  let f = computeCurrentFrame();
-  if (f != state.currentFrame) {
-    return {
-      ...state,
-      currentFrame: f,
-    };
+// Stop the gardener if the keyup direction matches the current gardener direction.
+function stopGardener(state: IGlobalState, direction: Direction): IGlobalState {
+  //Only stop gardener if the keyup direction matches the current gardener direction.
+  if(state.gardener.moving && state.gardener.facing === direction) {
+    return { ...state, gardener: state.gardener.stop()}
   }
   return state;
 }
 
-// Move the gardener according to move action LEFT, RIGHT, UP, or DOWN.
+// Only move the gardener if the keypress changes the gardener direction.
+function moveGardener(state: IGlobalState, direction: Direction): IGlobalState {
+  // This is a spurious keypress. Ignore it.
+  if(state.gardener.moving && state.gardener.facing === direction) {
+    return state;
+  }
+  return moveGardenerOnFrame(state, direction);
+}
+
+// Move the gardener according to the direction given. Triggered on TICK or on new keypress direction.
 // This will be aborted if the would-be new position overlaps with a plant.
-function moveGardener(state: IGlobalState, action: any): IGlobalState {
+function moveGardenerOnFrame(state: IGlobalState, direction: Direction): IGlobalState {
   // Would-be new post-move gardener.
-  let newGar = state.gardener.move(action);
+  let newGar = state.gardener.changeFacingDirection(direction).move();
   // If new gardener is in collision with anything, we abort the move.
   if (collisionDetected(state, newGar)) {
     console.log("Bump!");
-    // If you can't move because of a collision, you still change your facing direction.
     return {
       ...state,
-      gardener: state.gardener.changeFacingDirection(action),
-    };
+      gardener: state.gardener.changeFacingDirection(direction),
+      currentFrame: computeCurrentFrame(),
+    }
   }
   // All clear. Commit the move to the global state.
   return {
@@ -116,6 +125,24 @@ function moveGardener(state: IGlobalState, action: any): IGlobalState {
     gardener: newGar,
     // Watering can moves with gardener if the item is equipped.
     wateringCan: newGar.itemEquipped ? newGar.pos : state.wateringCan,
+    currentFrame: computeCurrentFrame(),
+  }
+}
+
+// TODO: See if we can animate from within a saga instead of the way we're doing it now.
+function updateFrame(state: IGlobalState): IGlobalState {
+  let f = computeCurrentFrame();
+  if (f === state.currentFrame) {
+    return state;
+  }
+  // Move the gardener if it is moving.
+  var frame = computeCurrentFrame();
+  if (state.gardener.moving) {
+    return moveGardenerOnFrame(state, state.gardener.facing)
+  }
+  return {
+    ...state,
+    currentFrame: frame,
   }
 }
 

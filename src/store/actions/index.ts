@@ -3,7 +3,10 @@ export const RIGHT = "RIGHT";
 export const LEFT = "LEFT";
 export const UP = "UP";
 export const DOWN = "DOWN";
-export const STOP = "STOP";
+export const STOP_RIGHT = "STOP_RIGHT";
+export const STOP_LEFT = "STOP_LEFT";
+export const STOP_UP = "STOP_UP";
+export const STOP_DOWN = "STOP_DOWN";
 
 export const RESET = "RESET";
 export const STOP_GAME = "STOP_GAME";
@@ -13,6 +16,7 @@ export const TOGGLE_EQUIP = "TOGGLE_EQUIP";
 export const USE_ITEM = "USE_ITEM";
 export const TICK = "TICK";
 
+//TODO: remove dx dy payload
 export const makeMove = (dx: number, dy: number, move: string) => ({
   type: move,
   payload: [dx, dy]
