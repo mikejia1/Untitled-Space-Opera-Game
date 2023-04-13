@@ -103,6 +103,9 @@ function moveGardener(state: IGlobalState, action: any): IGlobalState {
   }
 }
 
+// TODO: Create a "Collider" interface so we can just check the gardener against
+// all Colliders instead of checking plants, then rocks, then walls, etc.
+
 // Check whether the given gardener overlaps (collides) with anything it shouldn't.
 function collisionDetected(state: IGlobalState, gar: Gardener): boolean {
   // First, check for collisions with plants.
@@ -176,7 +179,7 @@ function utiliseItem(state: IGlobalState): IGlobalState {
       newPlants = [...newPlants, plant];
     }
   }
-  
+
   return {
     ...state,
     plants: newPlants,
