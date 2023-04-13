@@ -1,4 +1,4 @@
-import { IGlobalState, TILE_HEIGHT } from "../store/reducers";
+import { IGlobalState, TILE_HEIGHT, TILE_WIDTH } from "../store/reducers";
 import { Coord, Rect, InvisibleCollider } from "../store/classes";
 import { Paintable } from "../store/classes/paintable";
 import { TypedPriorityQueue } from "../store/classes/priorityqueue";
@@ -36,8 +36,8 @@ export const drawState = (
 
   // Watering Can. 
   canvas.fillStyle = "#808080"; // Grey
-  canvas.fillRect(  state.wateringCan.x + 10, state.wateringCan.y + 10 - (TILE_HEIGHT * 2), 10, 10);
-  canvas.strokeRect(state.wateringCan.x + 10, state.wateringCan.y + 10 - (TILE_HEIGHT * 2), 10, 10);
+  canvas.fillRect(  state.wateringCan.x + (TILE_WIDTH * 0.4), state.wateringCan.y - 20, TILE_WIDTH * 0.2, 5);
+  canvas.strokeRect(state.wateringCan.x + (TILE_WIDTH * 0.4), state.wateringCan.y - 20, TILE_WIDTH * 0.2, 5);
 };
 
 function randomNumber(min: number, max: number) {
