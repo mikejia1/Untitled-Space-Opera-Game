@@ -15,7 +15,7 @@ import {
   toggleEquip,
   USE_ITEM,
 } from "../store/actions";
-import { IGlobalState, MOVE_SIZE } from "../store/reducers";
+import { IGlobalState, MOVE_HORZ, MOVE_VERT } from "../store/reducers";
 import { clearBoard, computeCurrentFrame, drawState } from "../utils";
 import Instruction from "./Instructions";
 
@@ -44,16 +44,16 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     (event: KeyboardEvent) => {
       switch (event.key) {
           case "w":
-            dispatch(makeMove(0, -MOVE_SIZE, UP));
+            dispatch(makeMove(0, -MOVE_VERT, UP));
             break;
           case "s":
-            dispatch(makeMove(0, MOVE_SIZE, DOWN));
+            dispatch(makeMove(0, MOVE_VERT, DOWN));
             break;
           case "a":
-            dispatch(makeMove(-MOVE_SIZE, 0, LEFT));
+            dispatch(makeMove(-MOVE_HORZ, 0, LEFT));
             break;
           case "d":
-            dispatch(makeMove(MOVE_SIZE, 0, RIGHT));
+            dispatch(makeMove(MOVE_HORZ, 0, RIGHT));
             break;
           case "e":
             dispatch(toggleEquip());

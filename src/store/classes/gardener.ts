@@ -2,6 +2,11 @@ import { Coord } from './coord';
 import { Direction, IGlobalState } from '../reducers';
 import { LEFT, RIGHT, UP, DOWN, STOP } from '../actions';
 import { Paintable } from './paintable';
+import { TILE_HEIGHT, TILE_WIDTH } from '../reducers';
+import { shiftRect } from '../../utils';
+
+// The height of the gardener in pixels.
+export const GARDENER_HEIGHT = 20;
 
 // The gardener who tends the garden.
 export class Gardener implements Paintable {
@@ -54,7 +59,7 @@ export class Gardener implements Paintable {
                 row = 3; break;
         }
         // The -20s and 60s here stretch the sprite and place it exactly where you'd expect it to be.
-        canvas.drawImage(state.gimage, frame * 48, row * 48, 48, 48, this.pos.x - 20, this.pos.y - 20, 60, 60);
+        canvas.drawImage(state.gimage, frame * 48, row * 48, 48, 48, this.pos.x - 20, this.pos.y - 20 - GARDENER_HEIGHT, 60, 60);
     
         //canvas.fillStyle = "#FFA500";   // Orange
         //canvas.strokeStyle = "#146356"; // Dark grey-ish maybe.
@@ -75,5 +80,24 @@ export class Gardener implements Paintable {
           return Direction.Down;
       }
       return this.facing;
+    }
+
+    // Return the invisible rectangle that determines collision behaviour for the gardener.
+    collisionRect(): any {
+        return {
+            a: this.pos.plus(0, -TILE_HEIGHT),
+            b: this.pos.plus(TILE_WIDTH, 0),
+        }
+    }
+
+    // Return a rectangle adjacent to the gardener in the direction it is facing.
+    getFacingDetectionRect(): any {
+        let rect = this.collisionRect();
+        switch (this.facing) {
+            case Direction.Up:    return shiftRect(rect, 0, -TILE_HEIGHT);
+            case Direction.Down:  return shiftRect(rect, 0, TILE_HEIGHT);
+            case Direction.Left:  return shiftRect(rect, -TILE_WIDTH, 0);
+            case Direction.Right: return shiftRect(rect, TILE_WIDTH, 0);
+        }
     }
   }

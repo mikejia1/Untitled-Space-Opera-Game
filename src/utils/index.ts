@@ -1,4 +1,4 @@
-import { Direction, IGlobalState, TILE_SIZE } from "../store/reducers";
+import { Direction, IGlobalState, TILE_WIDTH, TILE_HEIGHT } from "../store/reducers";
 import { Coord } from "../store/classes";
 import { Paintable } from "../store/classes/paintable";
 import { TypedPriorityQueue } from "../store/classes/priorityqueue";
@@ -35,8 +35,8 @@ export const drawState = (
 
   // Watering Can. 
   canvas.fillStyle = "#808080"; // Grey
-  canvas.fillRect(state.wateringCan.x + 10, state.wateringCan.y + 10, 10, 10);
-  canvas.strokeRect(state.wateringCan.x + 10, state.wateringCan.y + 10, 10, 10);
+  canvas.fillRect(  state.wateringCan.x + 10, state.wateringCan.y + 10 - (TILE_HEIGHT * 2), 10, 10);
+  canvas.strokeRect(state.wateringCan.x + 10, state.wateringCan.y + 10 - (TILE_HEIGHT * 2), 10, 10);
 };
 
 function randomNumber(min: number, max: number) {
@@ -49,35 +49,15 @@ export const generateRandomPosition = (width: number, height: number) => {
 };
 */
 
-// Given a position and a direction, return the adjacent position in that direction.
-// Return value represents a rectangle of TILE_SIZE by TILE_SIZE pixels by giving its
-// top-left and bottom-right Coord values.
-export function getFacingDetectionRect(pos: Coord, facing: Direction): any {
-  switch (facing) {
-    case Direction.Up:
-      return {
-        a: new Coord(pos.x, pos.y - TILE_SIZE),
-        b: new Coord(pos.x + TILE_SIZE, pos.y),
-      };
-    case Direction.Down:
-      return {
-        a: new Coord(pos.x, pos.y + TILE_SIZE),
-        b: new Coord(pos.x + TILE_SIZE, pos.y + (TILE_SIZE * 2)),
-      };
-    case Direction.Left:
-      return {
-        a: new Coord(pos.x - TILE_SIZE, pos.y),
-        b: new Coord(pos.x, pos.y + TILE_SIZE),
-      };
-    case Direction.Right:
-      return {
-        a: new Coord(pos.x + TILE_SIZE, pos.y),
-        b: new Coord(pos.x + (TILE_SIZE * 2), pos.y + TILE_SIZE),
-      };
-  }
-}
-
 // Current frame number is just current epoch quarter second.
 export function computeCurrentFrame(): number {
   return  Math.floor(Date.now() / 42);  // Roughly 24 fps.
+}
+
+// Given a rectangle, return a new one that is shifted by a given x and y delta.
+export function shiftRect(rect: any, deltaX: number, deltaY: number): any {
+  return {
+    a: rect.a.plus(deltaX, deltaY),
+    b: rect.b.plus(deltaX, deltaY),
+  }
 }

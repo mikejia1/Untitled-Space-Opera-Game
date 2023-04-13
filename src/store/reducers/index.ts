@@ -1,8 +1,8 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { computeCurrentFrame, getFacingDetectionRect } from "../../utils";
-import { Coord, Plant, Gardener } from "../classes";
+import { computeCurrentFrame } from "../../utils";
+import { Coord, Plant, Gardener, INITIAL_PLANT_HEALTH } from "../classes";
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -17,11 +17,14 @@ import {
   STOP,
 } from "../actions";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../../components/CanvasBoard";
+import { GARDENER_HEIGHT } from "../classes";
 
 // The number of pixels wide/tall a single spot on the grid occupies.
-export const TILE_SIZE = 20;
+export const TILE_WIDTH = 20;
+export const TILE_HEIGHT = 5;
 // The number of pixels left/right/up/down that the gardener moves on WASD input.
-export const MOVE_SIZE = 5;
+export const MOVE_HORZ = 5;
+export const MOVE_VERT = 5;
 
 // An enum for the directions.
 export enum Direction {
@@ -53,7 +56,7 @@ function initialGameState(): IGlobalState {
     gardener: Gardener.initialState(),
     score: 0,
     wateringCan: new Coord(300, 500),
-    plants: [new Plant(new Coord(200, 200), 10)],
+    plants: [new Plant(new Coord(200, 200), INITIAL_PLANT_HEALTH)],
     currentFrame: 0,
     gimage: image,
   }
@@ -106,28 +109,33 @@ function moveGardener(state: IGlobalState, action: any): IGlobalState {
 // TODO: Create a "Collider" interface so we can just check the gardener against
 // all Colliders instead of checking plants, then rocks, then walls, etc.
 
+// TODO: Create 4 invisible colliders just above, below, to the left, and to the right
+// of the visible canvas. Just throw those into the mix when checking collisions. i.e.
+// no special logic for world boundaries. It will be as if there are walls just off screen.
+
 // Check whether the given gardener overlaps (collides) with anything it shouldn't.
 function collisionDetected(state: IGlobalState, gar: Gardener): boolean {
+  let gRect = gar.collisionRect();
   // First, check for collisions with plants.
   for (let i = 0; i < state.plants.length; i++) {
-    let plant = state.plants[i];
-    let a = new Coord(plant.pos.x, plant.pos.y + (TILE_SIZE - 5));
-    let b = new Coord(plant.pos.x + TILE_SIZE, plant.pos.y + TILE_SIZE);
-    let c = new Coord(gar.pos.x, gar.pos.y + (TILE_SIZE - 5));
-    let d = new Coord(gar.pos.x + TILE_SIZE, gar.pos.y + TILE_SIZE);
-    if (rectanglesOverlap(a, b, c, d)) return true;
+    let pRect = state.plants[i].collisionRect();
+    if (rectanglesOverlap(gRect, pRect)) return true;
   }
 
   // Second, check for collision with environment boundaries;
-  if (gar.pos.x < 0 || gar.pos.y < 0) return true;
-  if (gar.pos.x + TILE_SIZE >= CANVAS_WIDTH || gar.pos.y + TILE_SIZE >= CANVAS_HEIGHT) return true;
+  if (gar.pos.x < 0 || gar.pos.y < GARDENER_HEIGHT) return true;
+  if (gar.pos.x + TILE_WIDTH >= CANVAS_WIDTH || gar.pos.y >= CANVAS_HEIGHT) return true;
 
   // No collisions detected.
   return false;
 }
 
 // Given two rectangles (via their bottom-left and top-right coordinates), check if they overlap.
-function rectanglesOverlap(a: Coord, b: Coord, c: Coord, d: Coord): boolean {
+function rectanglesOverlap(rect1: any, rect2: any): boolean {
+  let a = rect1.a;
+  let b = rect1.b;
+  let c = rect2.a;
+  let d = rect2.b;
   if (Math.max(a.x, b.x) < Math.min(c.x, d.x)) return false;
   if (Math.min(a.x, b.x) > Math.max(c.x, d.x)) return false;
   if (Math.max(a.y, b.y) < Math.min(c.y, d.y)) return false;
@@ -166,15 +174,14 @@ function utiliseItem(state: IGlobalState): IGlobalState {
     return state;
   }
   var newPlants: Plant[] = [];
-  let rect = getFacingDetectionRect(state.gardener.pos, state.gardener.facing);
+  let faceRect = state.gardener.getFacingDetectionRect();
   let alreadyAbsorbed = false;
   for (let i = 0; i < state.plants.length; i++) {
     let plant = state.plants[i];
-    let plantRect = { a: plant.pos, b: plant.pos.plus(TILE_SIZE, TILE_SIZE) };
-    if (!alreadyAbsorbed && rectanglesOverlap(rect.a, rect.b, plantRect.a, plantRect.b)) {
+    let plantRect = plant.collisionRect();
+    if (!alreadyAbsorbed && rectanglesOverlap(faceRect, plantRect)) {
       newPlants = [...newPlants, plant.absorbWater()];
       alreadyAbsorbed = true;
-      //console.log("(", rect.a, ",", rect.b, ") (", garRect.a, ",", garRect.b, ")");
     } else {
       newPlants = [...newPlants, plant];
     }
