@@ -74,12 +74,19 @@ export class Gardener implements Paintable, Collider {
                 row = 3; break;
         }
         // The -20s and 60s here stretch the sprite and place it exactly where you'd expect it to be.
-        canvas.drawImage(state.gimage, frame * 48, row * 48, 48, 48, this.pos.x - 20, this.pos.y - 20 - GARDENER_HEIGHT, 60, 60);
+        canvas.drawImage(
+            state.gimage,            // Sprite source image
+            frame * 48, row * 48,    // Top-left corner of frame in source
+            48, 48,                  // Size of frame in source
+            this.pos.x - 7,          // X position of top-left corner on canvas
+            this.pos.y - 20,         // Y position of top-left corner on canvas
+            30, 30);                 // Sprite size on canvas
     
         //canvas.fillStyle = "#FFA500";   // Orange
-        //canvas.strokeStyle = "#146356"; // Dark grey-ish maybe.
+        canvas.strokeStyle = "#146356"; // Dark grey-ish maybe.
         //canvas.fillRect(this.pos.x, this.pos.y, 20, 20);
-        //canvas.strokeRect(this.pos.x, this.pos.y, 20, 20);
+        canvas.strokeRect(this.pos.x, this.pos.y - TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+        //canvas.strokeRect(this.pos.x, this.pos.y - TILE_WIDTH,  TILE_WIDTH, TILE_WIDTH);
     }
   
 

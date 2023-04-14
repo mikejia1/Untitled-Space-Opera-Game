@@ -21,8 +21,8 @@ import {
 } from "../actions";
 
 // The number of pixels wide/tall a single spot on the grid occupies.
-export const TILE_WIDTH = 20;
-export const TILE_HEIGHT = 5;
+export const TILE_WIDTH = 16;
+export const TILE_HEIGHT = 8;
 // The number of pixels left/right/up/down that the gardener moves on WASD input.
 export const MOVE_HORZ = 5;
 export const MOVE_VERT = 1;
