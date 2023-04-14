@@ -6,6 +6,8 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../utils";
 
 export * from './constants';
 
+export const FPS = 24;
+
 export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
   if (canvas) {
     canvas.clearRect(0, 0, 1000, 600);
@@ -48,7 +50,7 @@ export const generateRandomPosition = (width: number, height: number) => {
 
 // Current frame number is just current epoch quarter second.
 export function computeCurrentFrame(): number {
-  return  Math.floor(Date.now() / 42);  // Roughly 24 fps.
+  return  Math.floor(Date.now() * FPS / 1000); 
 }
 
 // Given a rectangle, return a new one that is shifted by a given x and y delta.

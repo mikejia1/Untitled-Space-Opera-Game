@@ -1,8 +1,8 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { computeCurrentFrame, worldBoundaryColliders } from "../../utils";
-import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan } from "../classes";
+import { computeCurrentFrame, worldBoundaryColliders, FPS } from "../../utils";
+import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, GARDENER_HEIGHT, WateringCan } from "../classes";
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -67,7 +67,10 @@ function initialGameState(): IGlobalState {
     gardener: initialGardener(),
     score: 0,
     wateringCan: initialWateringCan(),
-    plants: [new Plant(new Coord(200, 200), INITIAL_PLANT_HEALTH)],
+    plants: [new Plant(new Coord(200, 200), INITIAL_PLANT_HEALTH),
+      new Plant(new Coord(150, 200), INITIAL_PLANT_HEALTH),
+      new Plant(new Coord(300, 100), INITIAL_PLANT_HEALTH),
+      new Plant(new Coord(50, 300), INITIAL_PLANT_HEALTH)],
     currentFrame: 0,
     gimage: image,
   }
