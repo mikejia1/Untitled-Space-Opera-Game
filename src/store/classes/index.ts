@@ -7,3 +7,4 @@ export * from './priorityqueue';
 export * from './rect';
 export * from './invisiblecollider';
 export * from './wateringcan';
+export * from './globalstate';

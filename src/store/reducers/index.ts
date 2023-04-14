@@ -1,8 +1,8 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { computeCurrentFrame, worldBoundaryColliders, FPS } from "../../utils";
-import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, GARDENER_HEIGHT, WateringCan } from "../classes";
+import { Direction, computeCurrentFrame, worldBoundaryColliders, TILE_WIDTH, TILE_HEIGHT } from "../../utils";
+import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan, IGlobalState } from "../classes";
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -19,33 +19,6 @@ import {
   STOP_UP,
   STOP_DOWN,
 } from "../actions";
-
-// The number of pixels wide/tall a single spot on the grid occupies.
-export const TILE_WIDTH = 16;
-export const TILE_HEIGHT = 8;
-// The number of pixels left/right/up/down that the gardener moves on WASD input.
-export const MOVE_HORZ = 5;
-export const MOVE_VERT = 1;
-
-// An enum for the directions.
-export enum Direction {
-  Up,
-  Down,
-  Left,
-  Right,
-}
-
-// Interface for full game state object.
-export interface IGlobalState {
-  gardener: Gardener;            // The gardener tending the garden. Controlled by the player.
-  score: number;                 // The current game score
-  wateringCan: WateringCan;      // The watering can that the gardener uses to water plants
-  plants: Plant[];               // All the plants currently living
-  currentFrame: number;          // The current animation frame number (current epoch quarter second number)
-  gimage: any;                   // The walkcycle sprite source image.
-  backgroundImage: any;          // The background image.
-  wateringCanImage: any;         // The watering can image.
-}
 
 // Default gardener starting state.
 function initialGardener(): Gardener {
@@ -74,7 +47,6 @@ function initialGameState(): IGlobalState {
   wateringcan.onload = () => {
       console.log("watering can image loaded.");
   };
-
 
   return {
     gardener: initialGardener(),

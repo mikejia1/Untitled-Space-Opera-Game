@@ -1,7 +1,4 @@
-import { IGlobalState, TILE_HEIGHT, TILE_WIDTH } from "../store/reducers";
-import { Coord, Rect, InvisibleCollider } from "../store/classes";
-import { Paintable } from "../store/classes/paintable";
-import { TypedPriorityQueue } from "../store/classes/priorityqueue";
+import { Coord, Rect, InvisibleCollider, IGlobalState, Paintable, TypedPriorityQueue } from "../store/classes";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../utils";
 
 export * from './constants';

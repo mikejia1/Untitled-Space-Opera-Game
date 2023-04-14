@@ -18,7 +18,7 @@ import {
   STOP_LEFT,
   STOP_RIGHT,
 } from "../store/actions";
-import { IGlobalState } from "../store/reducers";
+import { IGlobalState } from "../store/classes";
 import { clearBoard, drawState } from "../utils";
 import Instruction from "./Instructions";
 

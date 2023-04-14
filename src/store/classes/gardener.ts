@@ -1,6 +1,7 @@
 import { Coord, Rect, Collider, Paintable } from './';
-import { Direction, IGlobalState } from '../reducers';
-import { TILE_HEIGHT, TILE_WIDTH } from '../reducers';
+import { IGlobalState } from '../classes';
+import { Direction } from '../../utils';
+import { TILE_HEIGHT, TILE_WIDTH } from '../../utils';
 import { shiftRect } from '../../utils';
 
 // The height of the gardener in pixels.

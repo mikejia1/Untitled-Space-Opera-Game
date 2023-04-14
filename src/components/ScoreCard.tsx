@@ -1,6 +1,6 @@
 import { Heading } from "@chakra-ui/react";
 import { useSelector } from "react-redux";
-import { IGlobalState } from "../store/reducers";
+import { IGlobalState } from "../store/classes";
 
 const ScoreCard = () => {
     const score = useSelector((state: IGlobalState) => state.score);

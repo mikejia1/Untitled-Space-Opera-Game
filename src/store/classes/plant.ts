@@ -1,6 +1,5 @@
 import { Coord, Rect } from './';
-import { TILE_WIDTH, TILE_HEIGHT } from '../reducers';
-import { FPS, computeCurrentFrame } from '../../utils';
+import { TILE_WIDTH, TILE_HEIGHT, FPS, computeCurrentFrame } from '../../utils';
 
 // Initial, min, and max value for plant health.
 export const INITIAL_PLANT_HEALTH = 0;

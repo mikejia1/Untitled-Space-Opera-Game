@@ -1,5 +1,5 @@
-import { IGlobalState, TILE_HEIGHT, TILE_WIDTH } from '../reducers';
-import { Coord, Gardener, Paintable, GARDENER_HEIGHT } from './';
+import { TILE_HEIGHT, TILE_WIDTH } from '../../utils';
+import { Coord, Gardener, Paintable, IGlobalState } from './';
 
 // The watering can.
 export class WateringCan implements Paintable {
