@@ -28,6 +28,7 @@ export const drawState = (
       return a.pos.y < b.pos.y;
     }
   );
+  canvas.drawImage(state.backgroundImage, 0,0);
   state.plants.forEach(plant => pq.add(plant));
   pq.add(state.gardener);
   pq.add(state.wateringCan);

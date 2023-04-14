@@ -43,25 +43,38 @@ export interface IGlobalState {
   plants: Plant[];               // All the plants currently living
   currentFrame: number;          // The current animation frame number (current epoch quarter second number)
   gimage: any;                   // The walkcycle sprite source image.
+  backgroundImage: any;          // The background image.
+  wateringCanImage: any;         // The watering can image.
 }
 
 // Default gardener starting state.
 function initialGardener(): Gardener {
-  return new Gardener(new Coord(500, 300), Direction.Up, false);
+  return new Gardener(new Coord(200, 150), Direction.Up, false);
 }
 
 // Create watering can for start of game.
 function initialWateringCan(): WateringCan {
-  return new WateringCan(new Coord(410, 300), false);
+  return new WateringCan(new Coord(200, 150), false);
 }
 
 // Generate the game starting state.
 function initialGameState(): IGlobalState {
-  const image = new Image(192, 192);
-  image.src = require('../images/gardenerwalkcycle.png');
-  image.onload = () => {
+  const avatar = new Image(192, 192);
+  const background = new Image(400, 240);
+  const wateringcan = new Image(16, 16);
+  avatar.src = require('../images/gardenerwalkcycle.png');
+  avatar.onload = () => {
       console.log("Walkcycle source image loaded.");
   };
+  background.src = require('../images/Canvas.png');
+  background.onload = () => {
+      console.log("Background image loaded.");
+  };
+  wateringcan.src = require('../images/wateringcan.png');
+  wateringcan.onload = () => {
+      console.log("watering can image loaded.");
+  };
+
 
   return {
     gardener: initialGardener(),
@@ -70,9 +83,11 @@ function initialGameState(): IGlobalState {
     plants: [new Plant(new Coord(200, 200), INITIAL_PLANT_HEALTH),
       new Plant(new Coord(150, 200), INITIAL_PLANT_HEALTH),
       new Plant(new Coord(300, 100), INITIAL_PLANT_HEALTH),
-      new Plant(new Coord(50, 300), INITIAL_PLANT_HEALTH)],
+      new Plant(new Coord(50, 70), INITIAL_PLANT_HEALTH)],
     currentFrame: 0,
-    gimage: image,
+    gimage: avatar,
+    backgroundImage: background,
+    wateringCanImage: wateringcan,
   }
 }
 

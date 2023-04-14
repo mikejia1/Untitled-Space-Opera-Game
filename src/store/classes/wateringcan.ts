@@ -1,4 +1,4 @@
-import { TILE_WIDTH } from '../reducers';
+import { IGlobalState, TILE_WIDTH } from '../reducers';
 import { Coord, Gardener, Paintable, GARDENER_HEIGHT } from './';
 
 // The watering can.
@@ -12,7 +12,7 @@ export class WateringCan implements Paintable {
     }
 
     // Paint the plant on the canvas.
-    paint(canvas: CanvasRenderingContext2D): void {
+    paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         let base: Coord;
         if (this.isEquipped) {
             // Above head of gardener.
@@ -21,10 +21,12 @@ export class WateringCan implements Paintable {
             // On the ground.
             base = this.pos.plus(TILE_WIDTH / 2, 0);
         }
+        canvas.drawImage(state.wateringCanImage, this.pos.x, this.pos.y-32);
+        /*
         canvas.fillStyle = "#808080"; // Grey
         canvas.strokeStyle = "#146356"; // Dark grey-ish maybe.
         canvas.fillRect(  base.x - (TILE_WIDTH * 0.4), base.y - 5, TILE_WIDTH * 0.2, 5);
-        canvas.strokeRect(base.x - (TILE_WIDTH * 0.4), base.y - 5, TILE_WIDTH * 0.2, 5);
+        canvas.strokeRect(base.x - (TILE_WIDTH * 0.4), base.y - 5, TILE_WIDTH * 0.2, 5);*/
     }
 
     // A new watering can that is equipped by the gardener and moving with him/her.
