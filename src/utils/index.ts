@@ -1,5 +1,6 @@
 import { Coord, Rect, InvisibleCollider, IGlobalState, Paintable, TypedPriorityQueue } from "../store/classes";
-import { CANVAS_HEIGHT, CANVAS_WIDTH, TILE_HEIGHT, TILE_WIDTH } from "../utils";
+import { MAP_TILE_SIZE } from "../store/data/collisions";
+import { Colour, CANVAS_HEIGHT, CANVAS_WIDTH, TILE_HEIGHT, TILE_WIDTH } from "../utils";
 
 export * from './constants';
 
@@ -33,6 +34,11 @@ export const drawState = (
     let ptbl = pq.poll();
     if (ptbl === undefined) continue;
     ptbl.paint(canvas, state);
+  }
+
+  // Extra debug display.
+  if (state.debugSettings.showCollisionRects) {
+    state.invisibleColliders.forEach(ic => outlineRect(canvas, ic.collisionRect(), Colour.COLLISION_RECT));
   }
 };
 
@@ -80,5 +86,14 @@ export function positionRect(obj: Paintable): Rect {
   return {
     a: obj.pos.plus(0, -TILE_HEIGHT),
     b: obj.pos.plus(TILE_WIDTH, 0),
+  };
+}
+
+// Rectangle corresponding to a given row and column on the map.
+// See collisions.tsx for map and tile dimensions.
+export function tileRect(row: number, col: number): Rect {
+  return {
+    a: new Coord(col * MAP_TILE_SIZE, row * MAP_TILE_SIZE),
+    b: new Coord((col + 1) * MAP_TILE_SIZE, (row + 1) * MAP_TILE_SIZE),
   };
 }

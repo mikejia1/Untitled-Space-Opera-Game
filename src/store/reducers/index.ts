@@ -1,8 +1,8 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, worldBoundaryColliders, TILE_WIDTH, TILE_HEIGHT } from "../../utils";
-import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan, IGlobalState } from "../classes";
+import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, TILE_WIDTH, TILE_HEIGHT } from "../../utils";
+import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan, IGlobalState, InvisibleCollider } from "../classes";
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -19,6 +19,7 @@ import {
   STOP_UP,
   STOP_DOWN,
 } from "../actions";
+import { V_TILE_COUNT, H_TILE_COUNT, collisions } from "../data/collisions";
 
 // Default gardener starting state.
 function initialGardener(): Gardener {
@@ -60,6 +61,7 @@ function initialGameState(): IGlobalState {
     gimage: avatar,
     backgroundImage: background,
     wateringCanImage: wateringcan,
+    invisibleColliders: invisibleCollidersForMapBoundary(),
     debugSettings: {
       showCollisionRects: true,   // Collision rectangles for colliders.
       showPositionRects: true,    // Position rectangles for paintables.
@@ -68,6 +70,20 @@ function initialGameState(): IGlobalState {
       showEquipRects: true,       // Equipping interaction rectangle for watering can.
     },
   }
+}
+
+// Return an array of invisible colliders based on store/data/collision.tsx
+function invisibleCollidersForMapBoundary(): Collider[] {
+  let all: Collider[] = [];
+  for (let r = 0; r < V_TILE_COUNT; r++) {
+    for (let c = 0; c < H_TILE_COUNT; c++) {
+      let i = (r * H_TILE_COUNT) + c;
+      if (collisions[i] != 179) continue;
+      let ic = new InvisibleCollider(tileRect(r,c));
+      all = [...all, ic];
+    }
+  }
+  return all;
 }
 
 // All actions/index.ts setters are handled here
@@ -156,6 +172,7 @@ function collisionDetected(state: IGlobalState, gar: Gardener): boolean {
   let colliders: Array<Collider> = [];
   state.plants.forEach(plant => colliders.push(plant));
   worldBoundaryColliders().forEach(col => colliders.push(col));
+  state.invisibleColliders.forEach(ic => colliders.push(ic));
   let gRect = gar.collisionRect();
 
   // Check all colliders and stop if and when any collision is found.
