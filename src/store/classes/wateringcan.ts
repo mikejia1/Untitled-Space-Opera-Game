@@ -36,8 +36,8 @@ export class WateringCan implements Paintable {
 
     // Rectangle that determines how close you need to be to equip the watering can.
     equipRect(): Rect {
-        let centre = this.pos.plus(TILE_WIDTH / 2, TILE_HEIGHT / 2);
-        let span = Math.max(TILE_WIDTH, TILE_HEIGHT);
+        let centre = this.pos.plus(TILE_WIDTH / 2, TILE_HEIGHT * -0.5);
+        let span = Math.max(TILE_WIDTH, TILE_HEIGHT) * 0.6;
         return {
             a: centre.plus(-span * 2, -span * 2),
             b: centre.plus(span * 2, span * 2),

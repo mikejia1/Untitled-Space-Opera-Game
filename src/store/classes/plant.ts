@@ -103,8 +103,8 @@ export class Plant {
 
   // Return the invisible rectangle that determines how close you need to be to water the plant.
   wateringRect(): Rect {
-    let span = Math.max(TILE_WIDTH, TILE_HEIGHT);
-    let base = this.pos.plus(TILE_WIDTH / 2, 0);
+    let span = Math.max(TILE_WIDTH, TILE_HEIGHT) * 0.6;
+    let base = this.pos.plus(TILE_WIDTH / 2, -TILE_HEIGHT / 2);
     return {
       a: base.plus(-span * 2, -span * 2),
       b: base.plus(span * 2, span * 2),
