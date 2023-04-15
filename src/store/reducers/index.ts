@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, TILE_WIDTH, TILE_HEIGHT } from "../../utils";
+import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect } from "../../utils";
 import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan, IGlobalState, InvisibleCollider } from "../classes";
 import {
   DOWN,
@@ -173,15 +173,31 @@ function updateFrame(state: IGlobalState): IGlobalState {
   if (f === state.currentFrame) {
     return state;
   }
-  // Move the gardener if it is moving.
+  // Allow fruits to grow, and move the gardener if it is moving.
   var frame = computeCurrentFrame();
-  if (state.gardener.moving) {
-    return moveGardenerOnFrame(state, state.gardener.facing)
+  let newState = growFruits(state, frame);
+  if (newState.gardener.moving) {
+    return moveGardenerOnFrame(newState, newState.gardener.facing);
   }
   return {
-    ...state,
+    ...newState,
     currentFrame: frame,
   }
+}
+
+// Check all plants to see if any will grow their fruits. Return state unchanged
+// if no fruit growth occurred, otherwise return updated state.
+function growFruits(state: IGlobalState, frame: number): IGlobalState {
+  let grewAny = false;
+  let newPlants: Plant[] = [];
+  state.plants.forEach(plant => {
+    let result = plant.growFruits(frame);
+    if (result.didGrow) newPlants = [ ...newPlants, result.newPlant ];
+    else newPlants = [ ...newPlants, plant ];
+    grewAny = grewAny || result.didGrow;
+  });
+  if (grewAny) return { ...state, plants: newPlants };
+  return state;
 }
 
 // Check whether the given gardener overlaps (collides) with anything it shouldn't.

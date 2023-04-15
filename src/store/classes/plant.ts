@@ -1,4 +1,4 @@
-import { Coord, IGlobalState, Rect } from './';
+import { Coord, IGlobalState, Rect, Fruit } from './';
 import { TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, positionRect, outlineRect } from '../../utils';
 
 // Initial, min, and max value for plant health.
@@ -27,8 +27,9 @@ export class Plant {
   growthTime: number;
   dehydrationTime: number;
   alive: boolean;
+  fruits: Fruit[];
 
-  constructor(pos: Coord, initialHealth: number, size = 0, growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
+  constructor(pos: Coord, initialHealth: number, size = 0, fruits: Fruit[] = [], growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
     this.pos = pos;
     this.health = initialHealth;
     this.width = 0;   // Dummy value to silence an error message.
@@ -39,19 +40,47 @@ export class Plant {
     this.size = size;
     console.log("this.size" + this.size);
     this.alive = true;
+    this.fruits = fruits;
     this.updateWidthAndHeight();
+  }
+
+  // See if the plant is ready and able to grow its fruit.
+  // Return boolean indicating whether or not growth occurred,
+  // and, if growth occurred, also return the new plant.
+  growFruits(frame: number): any {
+    let noGrow = { didGrow: false };
+    if (!this.alive) return noGrow;
+    if (this.health < MAX_PLANT_HEALTH) return noGrow;
+    let anyGrew = false;
+    let newFruits: Fruit[] = [];
+    if (this.fruits.length === 0) {
+        newFruits = [ new Fruit(1, frame) ];
+        anyGrew = true;
+    } else {
+        this.fruits.forEach(fruit => {
+            let result = fruit.grow(frame);
+            if (result.didGrow) newFruits = [ ...newFruits, result.newFruit ];
+            else newFruits = [ ...newFruits, fruit ];
+            anyGrew = anyGrew || result.didGrow;
+        });
+    };
+    if (!anyGrew) return noGrow;
+    return {
+        didGrow: true,
+        newPlant: new Plant(this.pos, this.health, this.size, newFruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp),
+    }
   }
 
   growPlant(): Plant {
     if (this.size < 1) {
-      return new Plant(this.pos, this.health, this.size + 0.25, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+      return new Plant(this.pos, this.health, this.size + 0.25, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
     }
     return this;
   }
 
   dehydratePlant(): Plant {
     if (this.health > 0) {
-      return new Plant(this.pos, this.health - 1, this.size, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+      return new Plant(this.pos, this.health - 1, this.size, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
     }
     return this;
   }
@@ -69,7 +98,7 @@ export class Plant {
     }
     var h = this.health + WATERING_HEALTH_INCREMENT;
     h = Math.min(h, MAX_PLANT_HEALTH);
-    return new Plant(this.pos, h, this.size, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+    return new Plant(this.pos, h, this.size, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
   }
 
   // Paint the plant on the canvas.
@@ -80,6 +109,10 @@ export class Plant {
     canvas.strokeStyle = Colour.PLANT_OUTLINE;
     canvas?.fillRect(this.pos.x + (TILE_WIDTH / 2) - (this.width / 2), this.pos.y - this.height, this.width, this.height);
     canvas?.strokeRect(this.pos.x + (TILE_WIDTH / 2) - (this.width / 2), this.pos.y - this.height, this.width, this.height);
+
+    // Paint the fruit(s), if any.
+    let fruitPos = this.pos.plus(TILE_WIDTH / 2, -(TILE_HEIGHT + 2));
+    this.fruits.forEach(fruit => fruit.paint(canvas, fruitPos));
 
     // Extra debug displays.
     if (state.debugSettings.showCollisionRects) {
