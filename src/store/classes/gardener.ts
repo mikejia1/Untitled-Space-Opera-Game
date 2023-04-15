@@ -1,5 +1,5 @@
 import { IGlobalState, Coord, Rect, Collider, Paintable } from './';
-import { Direction, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH } from '../../utils';
+import { Direction, Colour, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH } from '../../utils';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
@@ -82,13 +82,13 @@ export class Gardener implements Paintable, Collider {
     
         // Extra debug displays.
         if (state.debugSettings.showCollisionRects) {
-            outlineRect(canvas, this.collisionRect(), "#FF2200");
+            outlineRect(canvas, this.collisionRect(), Colour.COLLISION_RECT);
         }
         if (state.debugSettings.showPositionRects) {
-            outlineRect(canvas, positionRect(this), "#22FF00");
+            outlineRect(canvas, positionRect(this), Colour.POSITION_RECT);
         }
         if (state.debugSettings.showFacingRects) {
-            outlineRect(canvas, this.facingDetectionRect(), "#2200FF");
+            outlineRect(canvas, this.facingDetectionRect(), Colour.FACING_RECT);
         }
     }
 

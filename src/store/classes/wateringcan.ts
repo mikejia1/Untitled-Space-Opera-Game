@@ -1,4 +1,4 @@
-import { positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH } from '../../utils';
+import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH } from '../../utils';
 import { Rect, Coord, Gardener, Paintable, IGlobalState } from './';
 
 // The watering can.
@@ -27,10 +27,10 @@ export class WateringCan implements Paintable {
 
         // Extra debug displays.
         if (state.debugSettings.showPositionRects) {
-            outlineRect(canvas, positionRect(this), "#22FF00");
+            outlineRect(canvas, positionRect(this), Colour.POSITION_RECT);
         }
         if (state.debugSettings.showEquipRects && !this.isEquipped) {
-            outlineRect(canvas, this.equipRect(), "#FF22FF");
+            outlineRect(canvas, this.equipRect(), Colour.EQUIP_RECT);
         }
     }
 

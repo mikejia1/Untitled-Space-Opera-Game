@@ -1,5 +1,5 @@
 import { Coord, IGlobalState, Rect } from './';
-import { TILE_WIDTH, TILE_HEIGHT, FPS, computeCurrentFrame, positionRect, outlineRect } from '../../utils';
+import { TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, positionRect, outlineRect } from '../../utils';
 
 // Initial, min, and max value for plant health.
 export const INITIAL_PLANT_HEALTH = 0;
@@ -76,20 +76,20 @@ export class Plant {
   paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
     //Assume MAX_PLANT_HEALTH is 5
     let color = ["#170000", "#541704", "#964d03", "#968703", "#00a313", "#00c92f"]
-    canvas.fillStyle = color[this.health];   // Green
-    canvas.strokeStyle = "#146356"; // Dark grey-ish maybe.
+    canvas.fillStyle = color[this.health];
+    canvas.strokeStyle = Colour.PLANT_OUTLINE;
     canvas?.fillRect(this.pos.x + (TILE_WIDTH / 2) - (this.width / 2), this.pos.y - this.height, this.width, this.height);
     canvas?.strokeRect(this.pos.x + (TILE_WIDTH / 2) - (this.width / 2), this.pos.y - this.height, this.width, this.height);
 
     // Extra debug displays.
     if (state.debugSettings.showCollisionRects) {
-        outlineRect(canvas, this.collisionRect(), "#FF2200");
+        outlineRect(canvas, this.collisionRect(), Colour.COLLISION_RECT);
     }
     if (state.debugSettings.showPositionRects) {
-        outlineRect(canvas, positionRect(this), "#22FF00");
+        outlineRect(canvas, positionRect(this), Colour.POSITION_RECT);
     }
     if (state.debugSettings.showWateringRects) {
-        outlineRect(canvas, this.wateringRect(), "#0022FF");
+        outlineRect(canvas, this.wateringRect(), Colour.WATERING_RECT);
     }
   }
 
