@@ -11,5 +11,6 @@ export interface IGlobalState {
     backgroundImage: any;           // The background image.
     wateringCanImage: any;          // The watering can image.
     invisibleColliders: Collider[], // All Colliders that aren't visible.
+    muted: boolean,                 // Enable / disable sounds.
     debugSettings: any;             // For configuring extra debug info and visualizations.
   }

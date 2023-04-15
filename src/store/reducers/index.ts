@@ -62,6 +62,7 @@ function initialGameState(): IGlobalState {
     backgroundImage: background,
     wateringCanImage: wateringcan,
     invisibleColliders: invisibleCollidersForMapBoundary(),
+    muted: false,
     debugSettings: {
       showCollisionRects: true,   // Collision rectangles for colliders.
       showPositionRects: true,    // Position rectangles for paintables.
@@ -133,6 +134,7 @@ function moveGardenerOnFrame(state: IGlobalState, direction: Direction): IGlobal
   // If new gardener is in collision with anything, we abort the move.
   if (collisionDetected(state, newGar)) {
     console.log("Bump!");
+    if (!state.muted) playBumpSound();
     return {
       ...state,
       gardener: state.gardener.changeFacingDirection(direction),
@@ -146,6 +148,22 @@ function moveGardenerOnFrame(state: IGlobalState, direction: Direction): IGlobal
     // Watering can moves with gardener if the item is equipped.
     wateringCan: state.wateringCan.isEquipped ? state.wateringCan.moveWithGardener(newGar) : state.wateringCan,
     currentFrame: computeCurrentFrame(),
+  }
+}
+
+// Play the sound corresponding to the gardener bumping into a collider.
+function playBumpSound(): void {
+  try {
+    let boing = new Audio(require('../sounds/boing.mp3'));
+    let playPromise = boing.play();
+    // In browsers that don’t yet support this functionality, playPromise won’t be defined.
+    if (playPromise !== undefined) {
+      playPromise.then(function() {}).catch(function(error) {
+        console.log("Bump sound failure: ", error);
+      });
+    }
+  } catch (error) {
+    console.log("Audio error: ", error);
   }
 }
 
