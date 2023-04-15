@@ -1,8 +1,5 @@
-import { Coord, Rect, Collider, Paintable } from './';
-import { IGlobalState } from '../classes';
-import { Direction } from '../../utils';
-import { TILE_HEIGHT, TILE_WIDTH } from '../../utils';
-import { shiftRect } from '../../utils';
+import { IGlobalState, Coord, Rect, Collider, Paintable } from './';
+import { Direction, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH } from '../../utils';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
@@ -83,13 +80,17 @@ export class Gardener implements Paintable, Collider {
             this.pos.y - 20,         // Y position of top-left corner on canvas
             30, 30);                 // Sprite size on canvas
     
-        //canvas.fillStyle = "#FFA500";   // Orange
-        canvas.strokeStyle = "#146356"; // Dark grey-ish maybe.
-        //canvas.fillRect(this.pos.x, this.pos.y, 20, 20);
-        canvas.strokeRect(this.pos.x, this.pos.y - TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
-        //canvas.strokeRect(this.pos.x, this.pos.y - TILE_WIDTH,  TILE_WIDTH, TILE_WIDTH);
+        // Extra debug displays.
+        if (state.debugSettings.showCollisionRects) {
+            outlineRect(canvas, this.collisionRect(), "#FF2200");
+        }
+        if (state.debugSettings.showPositionRects) {
+            outlineRect(canvas, positionRect(this), "#22FF00");
+        }
+        if (state.debugSettings.showFacingRects) {
+            outlineRect(canvas, this.facingDetectionRect(), "#2200FF");
+        }
     }
-  
 
     // Return the invisible rectangle that determines collision behaviour for the gardener.
     collisionRect(): Rect {
@@ -100,7 +101,7 @@ export class Gardener implements Paintable, Collider {
     }
 
     // Return a rectangle adjacent to the gardener in the direction it is facing.
-    getFacingDetectionRect(): Rect {
+    facingDetectionRect(): Rect {
         let rect = this.collisionRect();
         switch (this.facing) {
             case Direction.Up:    return shiftRect(rect, 0, -TILE_HEIGHT);

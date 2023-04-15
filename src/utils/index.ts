@@ -1,5 +1,5 @@
 import { Coord, Rect, InvisibleCollider, IGlobalState, Paintable, TypedPriorityQueue } from "../store/classes";
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../utils";
+import { CANVAS_HEIGHT, CANVAS_WIDTH, TILE_HEIGHT, TILE_WIDTH } from "../utils";
 
 export * from './constants';
 
@@ -67,4 +67,18 @@ export function worldBoundaryColliders(): InvisibleCollider[] {
     new InvisibleCollider({a: new Coord(-50, 0), b: new Coord(0, CANVAS_HEIGHT)}),                           // Left of canvas
     new InvisibleCollider({a: new Coord(CANVAS_WIDTH, 0), b: new Coord(CANVAS_WIDTH + 50, CANVAS_HEIGHT)}),  // Right of canvas
   ];
+}
+
+// Paint a Rect on a canvas with a given colour.
+export function outlineRect(canvas: CanvasRenderingContext2D, rect: Rect, colour: string): void {
+  canvas.strokeStyle = colour;
+  canvas?.strokeRect(rect.a.x, rect.a.y, rect.b.x - rect.a.x + 1, rect.b.y - rect.a.y + 1);
+}
+
+// Rectangle of dimensions TILE_WIDTH x TILE_HEIGHT at a Paintable's position.
+export function positionRect(obj: Paintable): Rect {
+  return {
+    a: obj.pos.plus(0, -TILE_HEIGHT),
+    b: obj.pos.plus(TILE_WIDTH, 0),
+  };
 }

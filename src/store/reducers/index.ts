@@ -60,6 +60,13 @@ function initialGameState(): IGlobalState {
     gimage: avatar,
     backgroundImage: background,
     wateringCanImage: wateringcan,
+    debugSettings: {
+      showCollisionRects: true,   // Collision rectangles for colliders.
+      showPositionRects: true,    // Position rectangles for paintables.
+      showWateringRects: true,    // Watering interaction rectangles for plants.
+      showFacingRects: true,      // Facing direction rectangle for gardener.
+      showEquipRects: true,       // Equipping interaction rectangle for watering can.
+    },
   }
 }
 
@@ -195,15 +202,9 @@ function toggleEquip(state: IGlobalState): IGlobalState {
 // Check whether or not an item can be equipped right now.
 function canEquip(state: IGlobalState): boolean {
   // Rectangle for the direction the gardener is facing.
-  let faceRect = state.gardener.getFacingDetectionRect();
-  let span = Math.max(TILE_WIDTH, TILE_HEIGHT);
-  let centre = state.wateringCan.pos.plus(TILE_WIDTH / 2, TILE_HEIGHT / 2);
-  // Rectangle for the watering can.
-  let canRect = {
-    a: centre.plus(-span * 2, -span * 2),
-    b: centre.plus(span * 2, span * 2),
-  };
-  return rectanglesOverlap(faceRect, canRect);
+  let faceRect = state.gardener.facingDetectionRect();
+  let rect = state.wateringCan.equipRect();
+  return rectanglesOverlap(faceRect, rect);
 }
 
 // Use currently equipped item, if possible.
@@ -213,7 +214,7 @@ function utiliseItem(state: IGlobalState): IGlobalState {
     return state;
   }
   var newPlants: Plant[] = [];
-  let faceRect = state.gardener.getFacingDetectionRect();
+  let faceRect = state.gardener.facingDetectionRect();
   let alreadyAbsorbed = false;
   for (let i = 0; i < state.plants.length; i++) {
     let plant = state.plants[i];

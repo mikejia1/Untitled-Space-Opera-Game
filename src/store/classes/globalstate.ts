@@ -10,5 +10,5 @@ export interface IGlobalState {
     gimage: any;                   // The walkcycle sprite source image.
     backgroundImage: any;          // The background image.
     wateringCanImage: any;         // The watering can image.
+    debugSettings: any;            // For configuring extra debug info and visualizations.
   }
-  

@@ -1,5 +1,5 @@
-import { TILE_HEIGHT, TILE_WIDTH } from '../../utils';
-import { Coord, Gardener, Paintable, IGlobalState } from './';
+import { positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH } from '../../utils';
+import { Rect, Coord, Gardener, Paintable, IGlobalState } from './';
 
 // The watering can.
 export class WateringCan implements Paintable {
@@ -24,14 +24,26 @@ export class WateringCan implements Paintable {
             base = this.pos.plus(TILE_WIDTH / 2, 0);
         }
         canvas.drawImage(state.wateringCanImage, base.x - (size / 2) + 8, base.y - size + 18);
-        
-        //canvas.fillStyle = "#808080"; // Grey
-        canvas.strokeStyle = "#146356"; // Dark grey-ish maybe.
-        //canvas.fillRect(  base.x - (TILE_WIDTH * 0.4), base.y - 5, TILE_WIDTH * 0.2, 5);
-        //canvas.strokeRect(base.x - (TILE_WIDTH * 0.4), base.y - 5, TILE_WIDTH * 0.2, 5);
-        canvas.strokeRect(this.pos.x, this.pos.y - TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+
+        // Extra debug displays.
+        if (state.debugSettings.showPositionRects) {
+            outlineRect(canvas, positionRect(this), "#22FF00");
+        }
+        if (state.debugSettings.showEquipRects && !this.isEquipped) {
+            outlineRect(canvas, this.equipRect(), "#FF22FF");
+        }
     }
 
+    // Rectangle that determines how close you need to be to equip the watering can.
+    equipRect(): Rect {
+        let centre = this.pos.plus(TILE_WIDTH / 2, TILE_HEIGHT / 2);
+        let span = Math.max(TILE_WIDTH, TILE_HEIGHT);
+        return {
+            a: centre.plus(-span * 2, -span * 2),
+            b: centre.plus(span * 2, span * 2),
+        };
+    }
+  
     // A new watering can that is equipped by the gardener and moving with him/her.
     moveWithGardener(gar: Gardener): WateringCan {
         return new WateringCan(
