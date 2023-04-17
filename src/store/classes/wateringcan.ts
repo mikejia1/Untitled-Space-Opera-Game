@@ -1,5 +1,5 @@
-import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH } from '../../utils';
-import { Rect, Coord, Gardener, Paintable, IGlobalState } from './';
+import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, shiftRect, shiftForTile } from '../../utils';
+import { Rect, Tile, Coord, Gardener, Paintable, IGlobalState } from './';
 
 // The watering can.
 export class WateringCan implements Paintable {
@@ -13,6 +13,9 @@ export class WateringCan implements Paintable {
 
     // Paint the plant on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
+        // Determine where, on the canvas, the plant should be painted.
+        let shift = this.computeShift(state);
+
         let size = 32;
         // Compute base, the bottom-middle point for the watering can.
         let base: Coord;
@@ -23,15 +26,29 @@ export class WateringCan implements Paintable {
             // On the ground.
             base = this.pos.plus(TILE_WIDTH / 2, 0);
         }
+        base = base.plus(shift.x, shift.y);
         canvas.drawImage(state.wateringCanImage, base.x - (size / 2) + 8, base.y - size + 18);
 
         // Extra debug displays.
         if (state.debugSettings.showPositionRects) {
-            outlineRect(canvas, positionRect(this), Colour.POSITION_RECT);
+            outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
         }
         if (state.debugSettings.showEquipRects && !this.isEquipped) {
-            outlineRect(canvas, this.equipRect(), Colour.EQUIP_RECT);
+            outlineRect(canvas, shiftRect(this.equipRect(), shift.x, shift.y), Colour.EQUIP_RECT);
         }
+    }
+
+    // Compute a displacement that will place the Plant at the correct place on the canvas.
+    computeShift(state: IGlobalState): Coord {
+        let tile = this.closestTile();
+        return shiftForTile(tile, state);
+    }
+
+        // Determine the grid tile that is the closest approximation to the Gardener's position.
+    closestTile(): Tile {
+        return new Tile(
+            Math.floor(this.pos.x / TILE_WIDTH),
+            Math.floor(this.pos.y / TILE_WIDTH));
     }
 
     // Rectangle that determines how close you need to be to equip the watering can.

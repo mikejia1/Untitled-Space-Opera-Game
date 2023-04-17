@@ -1,12 +1,21 @@
+import { Coord } from '../store/classes';
 
+// Width and height of background image.
+export const BACKGROUND_WIDTH = 2000;
+export const BACKGROUND_HEIGHT = 600;
 
-// Width and height of the 2D canvas;
+// Width and height of the 2D canvas.
 export const CANVAS_WIDTH = 400;
 export const CANVAS_HEIGHT = 240;
 
+// The coord that would place the Gardener at the centre of the canvas.
+export const CANVAS_CENTRE = new Coord(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+
 // The number of pixels wide/tall a single spot on the grid occupies.
-export const TILE_WIDTH = 16;
-export const TILE_HEIGHT = 8;
+//export const TILE_WIDTH = 16;
+//export const TILE_HEIGHT = 8;
+export const TILE_WIDTH = 20;
+export const TILE_HEIGHT = 10;
 
 // The number of pixels left/right/up/down that the gardener moves on WASD input.
 export const MOVE_HORZ = 5;

@@ -1,6 +1,8 @@
-import { Coord, Rect, InvisibleCollider, IGlobalState, Paintable, TypedPriorityQueue } from "../store/classes";
+//import { isGetAccessorDeclaration, isStringLiteral } from "typescript";
+import { Tile, Coord, Rect, InvisibleCollider, IGlobalState, Paintable, TypedPriorityQueue, WrapSector } from "../store/classes";
 import { MAP_TILE_SIZE } from "../store/data/collisions";
-import { Colour, CANVAS_HEIGHT, CANVAS_WIDTH, TILE_HEIGHT, TILE_WIDTH } from "../utils";
+import { Colour, CANVAS_HEIGHT, CANVAS_WIDTH, CANVAS_CENTRE, TILE_HEIGHT, TILE_WIDTH } from "../utils";
+import { BACKGROUND_WIDTH } from "./constants";
 
 export * from './constants';
 
@@ -26,7 +28,8 @@ export const drawState = (
       return a.pos.y < b.pos.y;
     }
   );
-  canvas.drawImage(state.backgroundImage, 0,0);
+  let shift = computeBackgroundShift(state);
+  drawBackground(state, shift, canvas); // canvas.drawImage(state.backgroundImage, 0,0);
   state.plants.forEach(plant => pq.add(plant));
   pq.add(state.gardener);
   pq.add(state.wateringCan);
@@ -41,6 +44,38 @@ export const drawState = (
     state.invisibleColliders.forEach(ic => outlineRect(canvas, ic.collisionRect(), Colour.COLLISION_RECT));
   }
 };
+
+// Compute a displacement that would shift the background to the "right" place. In tile.ts this
+// corresponds to the background being placed in WrapSector.Middle.
+export function computeBackgroundShift(state: IGlobalState): Coord {
+  return CANVAS_CENTRE.minus(state.gardener.pos.x, state.gardener.pos.y);
+}
+
+// Compute a displacement that would shift a given tile into the correct place to make it visible.
+export function shiftForTile(tile: Tile, state: IGlobalState): Coord {
+  let middle = computeBackgroundShift(state);
+  let ws = tile.sector(state);
+  switch (ws) {
+    case WrapSector.Left:   return middle.minus(CANVAS_WIDTH, 0);
+    case WrapSector.Middle: return middle;
+    case WrapSector.Right:  return middle.plus(CANVAS_WIDTH, 0);
+  }
+}
+
+// Paint the background onto the canvas.
+// First paint it in the WrapSector.Middle or "normal" position/sector.
+// If any of the WrapSector.Left copy of the world should be visible, paint a copy there as well.
+// If any of the WrapSector.Right copy of the world should be visible, paint a copy there as well.
+function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
+  canvas.drawImage(state.backgroundImage, shift.x, shift.y);
+  if (shift.x >= 0) {
+    let reshift = shift.minus(BACKGROUND_WIDTH, 0);
+    canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
+  } else if ((shift.x + BACKGROUND_WIDTH) < CANVAS_WIDTH) {
+    let reshift = shift.plus(BACKGROUND_WIDTH, 0);
+    canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
+  }
+}
 
 function randomNumber(min: number, max: number) {
   let random = Math.random() * max;
@@ -78,7 +113,13 @@ export function worldBoundaryColliders(): InvisibleCollider[] {
 // Paint a Rect on a canvas with a given colour.
 export function outlineRect(canvas: CanvasRenderingContext2D, rect: Rect, colour: string): void {
   canvas.strokeStyle = colour;
-  canvas?.strokeRect(rect.a.x, rect.a.y, rect.b.x - rect.a.x + 1, rect.b.y - rect.a.y + 1);
+  canvas.strokeRect(rect.a.x, rect.a.y, rect.b.x - rect.a.x + 1, rect.b.y - rect.a.y + 1);
+}
+
+// Painted a filled Rect on a canvas with a given colour.
+export function fillRect(canvas: CanvasRenderingContext2D, rect: Rect, colour: string): void {
+  canvas.fillStyle = colour;
+  canvas.fillRect(rect.a.x, rect.a.y, rect.b.x - rect.a.x + 1, rect.b.y - rect.a.y + 1);
 }
 
 // Rectangle of dimensions TILE_WIDTH x TILE_HEIGHT at a Paintable's position.

@@ -1,5 +1,5 @@
-import { Coord, IGlobalState, Rect, Fruit } from './';
-import { TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, positionRect, outlineRect } from '../../utils';
+import { Coord, Tile, IGlobalState, Rect, Fruit } from './';
+import { TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect, positionRect, fillRect, outlineRect } from '../../utils';
 
 // Initial, min, and max value for plant health.
 export const INITIAL_PLANT_HEALTH = 0;
@@ -103,27 +103,52 @@ export class Plant {
 
   // Paint the plant on the canvas.
   paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
-    //Assume MAX_PLANT_HEALTH is 5
+
+    // Determine where, on the canvas, the plant should be painted.
+    let shift = this.computeShift(state);
+    let newPos = this.pos.plus(shift.x, shift.y);
+
+    let x1 = newPos.x + (TILE_WIDTH / 2) - (this.width / 2);
+    let y1 = newPos.y - this.height;
+    let x2 = x1 + this.width - 1;
+    let y2 = y1 + this.height - 1;
+    let visRect = { a: new Coord(x1, y1), b: new Coord(x2, y2) };
+    // Assume MAX_PLANT_HEALTH is 5
     let color = ["#170000", "#541704", "#964d03", "#968703", "#00a313", "#00c92f"]
-    canvas.fillStyle = color[this.health];
-    canvas.strokeStyle = Colour.PLANT_OUTLINE;
-    canvas?.fillRect(this.pos.x + (TILE_WIDTH / 2) - (this.width / 2), this.pos.y - this.height, this.width, this.height);
-    canvas?.strokeRect(this.pos.x + (TILE_WIDTH / 2) - (this.width / 2), this.pos.y - this.height, this.width, this.height);
+    fillRect(canvas, visRect, color[this.health]);
+    outlineRect(canvas, visRect, Colour.PLANT_OUTLINE);
+    //canvas.fillStyle = color[this.health];
+    //canvas.strokeStyle = Colour.PLANT_OUTLINE;
+    //canvas.fillRect(x, y, this.width, this.height);
+    //canvas.strokeRect(this.pos.x + (TILE_WIDTH / 2) - (this.width / 2), this.pos.y - this.height, this.width, this.height);
 
     // Paint the fruit(s), if any.
-    let fruitPos = this.pos.plus(TILE_WIDTH / 2, -(TILE_HEIGHT + 2));
+    let fruitPos = newPos.plus(TILE_WIDTH / 2, -(TILE_HEIGHT + 2));
     this.fruits.forEach(fruit => fruit.paint(canvas, fruitPos));
 
     // Extra debug displays.
     if (state.debugSettings.showCollisionRects) {
-        outlineRect(canvas, this.collisionRect(), Colour.COLLISION_RECT);
+        outlineRect(canvas, shiftRect(this.collisionRect(), shift.x, shift.y), Colour.COLLISION_RECT);
     }
     if (state.debugSettings.showPositionRects) {
-        outlineRect(canvas, positionRect(this), Colour.POSITION_RECT);
+        outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
     }
     if (state.debugSettings.showWateringRects) {
-        outlineRect(canvas, this.wateringRect(), Colour.WATERING_RECT);
+        outlineRect(canvas, shiftRect(this.wateringRect(), shift.x, shift.y), Colour.WATERING_RECT);
     }
+  }
+
+  // Compute a displacement that will place the Plant at the correct place on the canvas.
+  computeShift(state: IGlobalState): Coord {
+    let tile = this.closestTile();
+    return shiftForTile(tile, state);
+  }
+
+    // Determine the grid tile that is the closest approximation to the Gardener's position.
+  closestTile(): Tile {
+    return new Tile(
+        Math.floor(this.pos.x / TILE_WIDTH),
+        Math.floor(this.pos.y / TILE_WIDTH));
   }
 
   // Return the invisible rectangle that determines collision behaviour for the plant.

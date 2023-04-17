@@ -40,7 +40,8 @@ function initialGameState(): IGlobalState {
   avatar.onload = () => {
       console.log("Walkcycle source image loaded.");
   };
-  background.src = require('../images/Canvas.png');
+//  background.src = require('../images/Canvas.png');
+  background.src = require('../images/GardenMap100x30.png');
   background.onload = () => {
       console.log("Background image loaded.");
   };
@@ -69,6 +70,7 @@ function initialGameState(): IGlobalState {
       showWateringRects: true,    // Watering interaction rectangles for plants.
       showFacingRects: true,      // Facing direction rectangle for gardener.
       showEquipRects: true,       // Equipping interaction rectangle for watering can.
+      collisionsDisabled: true,   // Disable collision checks - Gardener can walk through anything.
     },
   }
 }
@@ -79,7 +81,8 @@ function invisibleCollidersForMapBoundary(): Collider[] {
   for (let r = 0; r < V_TILE_COUNT; r++) {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
-      if (collisions[i] != 179) continue;
+      //if (collisions[i] != 179) continue;
+      if (collisions[i] != 689) continue;
       let ic = new InvisibleCollider(tileRect(r,c));
       all = [...all, ic];
     }
@@ -201,6 +204,7 @@ function growFruits(state: IGlobalState, frame: number): IGlobalState {
 
 // Check whether the given gardener overlaps (collides) with anything it shouldn't.
 function collisionDetected(state: IGlobalState, gar: Gardener): boolean {
+  if (state.debugSettings.collisionsDisabled) return false;
   // Gather all colliders into one array.
   let colliders: Array<Collider> = [];
   state.plants.forEach(plant => colliders.push(plant));

@@ -15,5 +15,9 @@ export class Coord {
     plus(deltaX: number, deltaY: number): Coord {
       return new Coord(this.x + deltaX, this.y + deltaY);
     }
+
+    minus(deltaX: number, deltaY: number): Coord {
+      return new Coord(this.x - deltaX, this.y - deltaY);
+    }
   }
   

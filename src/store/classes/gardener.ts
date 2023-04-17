@@ -1,5 +1,5 @@
-import { IGlobalState, Coord, Rect, Collider, Paintable } from './';
-import { Direction, Colour, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH } from '../../utils';
+import { IGlobalState, Tile, Coord, Rect, Collider, Paintable } from './';
+import { Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH } from '../../utils';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
@@ -22,7 +22,6 @@ export class Gardener implements Paintable, Collider {
     
     // Move the gardener along the direction its currently facing. Return new gardener.
     move(): Gardener {
-      //move payload to gardeners
       var delta = [0,0]
       switch (this.facing) {
         case Direction.Down:
@@ -39,7 +38,15 @@ export class Gardener implements Paintable, Collider {
           break;
       }
       let newPos = new Coord(this.pos.x + delta[0], this.pos.y + delta[1]);
-      return new Gardener(newPos, this.facing, this.itemEquipped, true);
+      return new Gardener(this.ensureGridWrapAround(newPos), this.facing, this.itemEquipped, true);
+    }
+
+    // Take a Gardener position and ensure that it is within the background image in its
+    // WrapSector.Middle spot (see tile.ts).
+    ensureGridWrapAround(position: Coord): Coord {
+        if (position.x < 0) return position.plus(BACKGROUND_WIDTH,0);
+        if (position.x >= BACKGROUND_WIDTH) return position.minus(BACKGROUND_WIDTH, 0);
+        return position;
     }
 
     stop(): Gardener {
@@ -71,25 +78,45 @@ export class Gardener implements Paintable, Collider {
             case Direction.Right:
                 row = 3; break;
         }
+
+        // Determine where, on the canvas, the gardener should be painted.
+        let shift = this.computeShift(state);
+        let newPos = this.pos.plus(shift.x, shift.y);
+
         // The -20s and 60s here stretch the sprite and place it exactly where you'd expect it to be.
         canvas.drawImage(
-            state.gimage,            // Sprite source image
-            frame * 48, row * 48,    // Top-left corner of frame in source
-            48, 48,                  // Size of frame in source
-            this.pos.x - 7,          // X position of top-left corner on canvas
-            this.pos.y - 20,         // Y position of top-left corner on canvas
-            30, 30);                 // Sprite size on canvas
+            state.gimage,          // Sprite source image
+            frame * 48, row * 48,  // Top-left corner of frame in source
+            48, 48,                // Size of frame in source
+            // this.pos.x - 7,     // X position of top-left corner on canvas
+            // this.pos.y - 20,    // Y position of top-left corner on canvas
+            newPos.x - 7,          // X position of top-left corner on canvas
+            newPos.y - 20,         // Y position of top-left corner on canvas
+            30, 30);               // Sprite size on canvas
     
         // Extra debug displays.
         if (state.debugSettings.showCollisionRects) {
-            outlineRect(canvas, this.collisionRect(), Colour.COLLISION_RECT);
+            outlineRect(canvas, shiftRect(this.collisionRect(), shift.x, shift.y), Colour.COLLISION_RECT);
         }
         if (state.debugSettings.showPositionRects) {
-            outlineRect(canvas, positionRect(this), Colour.POSITION_RECT);
+            outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
         }
         if (state.debugSettings.showFacingRects) {
-            outlineRect(canvas, this.facingDetectionRect(), Colour.FACING_RECT);
+            outlineRect(canvas, shiftRect(this.facingDetectionRect(), shift.x, shift.y), Colour.FACING_RECT);
         }
+    }
+
+    // Compute a displacement that will place the Gardener at the correct place on the canvas.
+    computeShift(state: IGlobalState): Coord {
+        let tile = this.closestTile();
+        return shiftForTile(tile, state);
+    }
+
+    // Determine the grid tile that is the closest approximation to the Gardener's position.
+    closestTile(): Tile {
+        return new Tile(
+            Math.floor(this.pos.x / TILE_WIDTH),
+            Math.floor(this.pos.y / TILE_WIDTH));
     }
 
     // Return the invisible rectangle that determines collision behaviour for the gardener.

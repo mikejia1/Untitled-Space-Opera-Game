@@ -9,3 +9,4 @@ export * from './invisiblecollider';
 export * from './wateringcan';
 export * from './globalstate';
 export * from './fruit';
+export * from './tile';
