@@ -174,14 +174,13 @@ function updateFrame(state: IGlobalState): IGlobalState {
     return state;
   }
   // Allow fruits to grow, and move the gardener if it is moving.
-  var frame = computeCurrentFrame();
-  let newState = growFruits(state, frame);
+  let newState = growFruits(state, f);
   if (newState.gardener.moving) {
     return moveGardenerOnFrame(newState, newState.gardener.facing);
   }
   return {
     ...newState,
-    currentFrame: frame,
+    currentFrame: f,
   }
 }
 
