@@ -1,4 +1,5 @@
-import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, shiftRect, shiftForTile } from '../../utils';
+import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, shiftRect, shiftForTile, computeBackgroundShift } from '../../utils';
+import { MAP_TILE_SIZE } from '../data/collisions';
 import { Rect, Tile, Coord, Gardener, Paintable, IGlobalState } from './';
 
 // The watering can.
@@ -21,10 +22,10 @@ export class WateringCan implements Paintable {
         let base: Coord;
         if (this.isEquipped) {
             // Above head of gardener.
-            base = this.pos.plus(TILE_WIDTH / 2, -8);
+            base = this.pos.plus(MAP_TILE_SIZE / 2, -8);
         } else {
             // On the ground.
-            base = this.pos.plus(TILE_WIDTH / 2, 0);
+            base = this.pos.plus(MAP_TILE_SIZE / 2, 0);
         }
         base = base.plus(shift.x, shift.y);
         canvas.drawImage(state.wateringCanImage, base.x - (size / 2) + 8, base.y - size + 18);
@@ -40,15 +41,14 @@ export class WateringCan implements Paintable {
 
     // Compute a displacement that will place the Plant at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        let tile = this.closestTile();
-        return shiftForTile(tile, state);
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state));
     }
 
-        // Determine the grid tile that is the closest approximation to the Gardener's position.
+    // Determine the grid tile that is the closest approximation to the Gardener's position.
     closestTile(): Tile {
         return new Tile(
-            Math.floor(this.pos.x / TILE_WIDTH),
-            Math.floor(this.pos.y / TILE_WIDTH));
+            Math.floor(this.pos.x / MAP_TILE_SIZE),
+            Math.floor(this.pos.y / MAP_TILE_SIZE));
     }
 
     // Rectangle that determines how close you need to be to equip the watering can.

@@ -19,5 +19,9 @@ export class Coord {
     minus(deltaX: number, deltaY: number): Coord {
       return new Coord(this.x - deltaX, this.y - deltaY);
     }
+
+    toString(): string {
+      return "( " + this.x + ", " + this.y + " )";
+    }
   }
   

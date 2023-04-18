@@ -11,6 +11,11 @@ export const CANVAS_HEIGHT = 240;
 // The coord that would place the Gardener at the centre of the canvas.
 export const CANVAS_CENTRE = new Coord(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 
+export const CANVAS_RECT = {
+    a: new Coord(0,0),
+    b: new Coord(CANVAS_WIDTH-1, CANVAS_HEIGHT-1),
+};
+
 // The number of pixels wide/tall a single spot on the grid occupies.
 //export const TILE_WIDTH = 16;
 //export const TILE_HEIGHT = 8;

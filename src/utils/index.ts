@@ -1,8 +1,7 @@
-//import { isGetAccessorDeclaration, isStringLiteral } from "typescript";
 import { Tile, Coord, Rect, InvisibleCollider, IGlobalState, Paintable, TypedPriorityQueue, WrapSector } from "../store/classes";
 import { MAP_TILE_SIZE } from "../store/data/collisions";
-import { Colour, CANVAS_HEIGHT, CANVAS_WIDTH, CANVAS_CENTRE, TILE_HEIGHT, TILE_WIDTH } from "../utils";
-import { BACKGROUND_WIDTH } from "./constants";
+import { Colour, CANVAS_WIDTH, CANVAS_CENTRE, CANVAS_RECT, TILE_HEIGHT, TILE_WIDTH } from "../utils";
+import { BACKGROUND_WIDTH, BACKGROUND_HEIGHT } from "./constants";
 
 export * from './constants';
 
@@ -22,14 +21,14 @@ export const drawState = (
   if (!canvas) return;
 
   // Put all paintable objects into a heap-based priority queue.
-  // They'll come out sorted by ascending y coordinate for taking 3D.
+  // They'll come out sorted by ascending y coordinate for faking 3D.
   let pq = new TypedPriorityQueue<Paintable>(
     function (a: Paintable, b: Paintable) {
       return a.pos.y < b.pos.y;
     }
   );
   let shift = computeBackgroundShift(state);
-  drawBackground(state, shift, canvas); // canvas.drawImage(state.backgroundImage, 0,0);
+  drawBackground(state, shift, canvas);
   state.plants.forEach(plant => pq.add(plant));
   pq.add(state.gardener);
   pq.add(state.wateringCan);
@@ -41,25 +40,38 @@ export const drawState = (
 
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
-    state.invisibleColliders.forEach(ic => outlineRect(canvas, ic.collisionRect(), Colour.COLLISION_RECT));
+    state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
   }
 };
 
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle.
 export function computeBackgroundShift(state: IGlobalState): Coord {
-  return CANVAS_CENTRE.minus(state.gardener.pos.x, state.gardener.pos.y);
+  let firstShift = CANVAS_CENTRE.minus(state.gardener.pos.x, state.gardener.pos.y);
+  if (firstShift.x >= 0) return firstShift.minus(BACKGROUND_WIDTH, 0);
+  return firstShift;
 }
 
 // Compute a displacement that would shift a given tile into the correct place to make it visible.
-export function shiftForTile(tile: Tile, state: IGlobalState): Coord {
-  let middle = computeBackgroundShift(state);
-  let ws = tile.sector(state);
+export function shiftForTile(tile: Tile, state: IGlobalState, shift: Coord): Coord {
+  let ws = tile.sector(state, shift);
   switch (ws) {
-    case WrapSector.Left:   return middle.minus(CANVAS_WIDTH, 0);
-    case WrapSector.Middle: return middle;
-    case WrapSector.Right:  return middle.plus(CANVAS_WIDTH, 0);
+    case WrapSector.Left:   return shift;
+    case WrapSector.Right:  return shift.plus(BACKGROUND_WIDTH, 0);
   }
+}
+
+// Given two rectangles, check if they overlap.
+export function rectanglesOverlap(rect1: any, rect2: any): boolean {
+  let a = rect1.a;
+  let b = rect1.b;
+  let c = rect2.a;
+  let d = rect2.b;
+  if (Math.max(a.x, b.x) < Math.min(c.x, d.x)) return false;
+  if (Math.min(a.x, b.x) > Math.max(c.x, d.x)) return false;
+  if (Math.max(a.y, b.y) < Math.min(c.y, d.y)) return false;
+  if (Math.min(a.y, b.y) > Math.max(c.y, d.y)) return false;
+  return true;
 }
 
 // Paint the background onto the canvas.
@@ -68,6 +80,7 @@ export function shiftForTile(tile: Tile, state: IGlobalState): Coord {
 // If any of the WrapSector.Right copy of the world should be visible, paint a copy there as well.
 function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
   canvas.drawImage(state.backgroundImage, shift.x, shift.y);
+  outlineRect(canvas, {a: new Coord(shift.x, shift.y), b: new Coord(shift.x + BACKGROUND_WIDTH - 1, shift.y + BACKGROUND_HEIGHT - 1)}, "#000000");
   if (shift.x >= 0) {
     let reshift = shift.minus(BACKGROUND_WIDTH, 0);
     canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
@@ -97,16 +110,33 @@ export function shiftRect(rect: Rect, deltaX: number, deltaY: number): Rect {
   return {
     a: rect.a.plus(deltaX, deltaY),
     b: rect.b.plus(deltaX, deltaY),
-  }
+  };
 }
 
-// Four invisible colliders to stop gardener from wandering beyond edge of canvas.
+// Given a rectangle, return a new one that is shifted to be in the correct WrapSector for visibility on canvas.
+export function shiftForVisibleRect(rect: Rect, shift: Coord): Rect {
+  let leftRect = {
+    a: rect.a.plus(shift.x, shift.y),
+    b: rect.b.plus(shift.x, shift.y),
+  };
+  let rightRect = shiftRect(leftRect, BACKGROUND_WIDTH, 0);
+  if (rectanglesOverlap(CANVAS_RECT, rightRect)) return rightRect;
+  return leftRect;
+}
+
+// Two invisible colliders to stop gardener from wandering beyond top and bottom edges of world.
 export function worldBoundaryColliders(): InvisibleCollider[] {
   return [
-    new InvisibleCollider({a: new Coord(-50, 0), b: new Coord(CANVAS_WIDTH, -1)}),                           // Above canvas
-    new InvisibleCollider({a: new Coord(0, CANVAS_HEIGHT), b: new Coord(CANVAS_WIDTH, CANVAS_HEIGHT + 50)}), // Below canvas
-    new InvisibleCollider({a: new Coord(-50, 0), b: new Coord(0, CANVAS_HEIGHT)}),                           // Left of canvas
-    new InvisibleCollider({a: new Coord(CANVAS_WIDTH, 0), b: new Coord(CANVAS_WIDTH + 50, CANVAS_HEIGHT)}),  // Right of canvas
+    // Above background image.
+    new InvisibleCollider({
+      a: new Coord(-500, -500),
+      b: new Coord(BACKGROUND_WIDTH + 500, -1),
+    }),
+    // Below background image.
+    new InvisibleCollider({
+      a: new Coord(-500, BACKGROUND_HEIGHT),
+      b: new Coord(BACKGROUND_WIDTH + 500, BACKGROUND_HEIGHT + 500),
+    }),
   ];
 }
 
@@ -137,4 +167,8 @@ export function tileRect(row: number, col: number): Rect {
     a: new Coord(col * MAP_TILE_SIZE, row * MAP_TILE_SIZE),
     b: new Coord((col + 1) * MAP_TILE_SIZE, (row + 1) * MAP_TILE_SIZE),
   };
+}
+
+export function rectToString(rect: Rect): string {
+  return "{ " + rect.a.toString() + " " + rect.b.toString() + " }";
 }

@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect } from "../../utils";
+import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap } from "../../utils";
 import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan, IGlobalState, InvisibleCollider } from "../classes";
 import {
   DOWN,
@@ -54,7 +54,8 @@ function initialGameState(): IGlobalState {
     gardener: initialGardener(),
     score: 0,
     wateringCan: initialWateringCan(),
-    plants: [new Plant(new Coord(200, 200), INITIAL_PLANT_HEALTH),
+    plants: [
+      new Plant(new Coord(200, 200), INITIAL_PLANT_HEALTH),
       new Plant(new Coord(150, 200), INITIAL_PLANT_HEALTH),
       new Plant(new Coord(300, 100), INITIAL_PLANT_HEALTH),
       new Plant(new Coord(50, 70), INITIAL_PLANT_HEALTH)],
@@ -70,7 +71,7 @@ function initialGameState(): IGlobalState {
       showWateringRects: true,    // Watering interaction rectangles for plants.
       showFacingRects: true,      // Facing direction rectangle for gardener.
       showEquipRects: true,       // Equipping interaction rectangle for watering can.
-      collisionsDisabled: true,   // Disable collision checks - Gardener can walk through anything.
+      collisionsDisabled: false,  // Disable collision checks - Gardener can walk through anything.
     },
   }
 }
@@ -81,7 +82,6 @@ function invisibleCollidersForMapBoundary(): Collider[] {
   for (let r = 0; r < V_TILE_COUNT; r++) {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
-      //if (collisions[i] != 179) continue;
       if (collisions[i] != 689) continue;
       let ic = new InvisibleCollider(tileRect(r,c));
       all = [...all, ic];
@@ -219,19 +219,6 @@ function collisionDetected(state: IGlobalState, gar: Gardener): boolean {
 
   // No collisions detected.
   return false;
-}
-
-// Given two rectangles (via their bottom-left and top-right coordinates), check if they overlap.
-function rectanglesOverlap(rect1: any, rect2: any): boolean {
-  let a = rect1.a;
-  let b = rect1.b;
-  let c = rect2.a;
-  let d = rect2.b;
-  if (Math.max(a.x, b.x) < Math.min(c.x, d.x)) return false;
-  if (Math.min(a.x, b.x) > Math.max(c.x, d.x)) return false;
-  if (Math.max(a.y, b.y) < Math.min(c.y, d.y)) return false;
-  if (Math.min(a.y, b.y) > Math.max(c.y, d.y)) return false;
-  return true;
 }
 
 // Attempt to equip item or drop current item.

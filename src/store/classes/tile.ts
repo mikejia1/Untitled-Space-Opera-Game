@@ -1,5 +1,6 @@
-import { IGlobalState, Coord } from './';
-import { CANVAS_WIDTH, TILE_HEIGHT, TILE_WIDTH, computeBackgroundShift } from '../../utils';
+import { IGlobalState, Coord, Rect } from './';
+import { CANVAS_RECT, BACKGROUND_WIDTH, rectToString, rectanglesOverlap } from '../../utils';
+import { MAP_TILE_SIZE } from '../data/collisions';
 
 // A tile on the background grid.
 export class Tile {
@@ -11,27 +12,40 @@ export class Tile {
       this.row = row;
     }
 
-    // Determine which WrapSector to put the cell in to make it visible non canvas.
-    sector(state: IGlobalState): WrapSector {
-      let shift = computeBackgroundShift(state);
-      let pos = new Coord(this.col * TILE_WIDTH, this.row * TILE_HEIGHT).plus(shift.x, shift.y);
-      if ((pos.x + TILE_WIDTH) <= 0) return WrapSector.Right;
-      if (pos.x >= CANVAS_WIDTH) return WrapSector.Left;
-      return WrapSector.Middle;
+    // Determine which WrapSector to put the cell in to make it visible on canvas.
+    sector(state: IGlobalState, shift: Coord): WrapSector {
+      // Position of tile's top-left corner, in pixels, within background image.
+      let pos = new Coord(this.col * MAP_TILE_SIZE, this.row * MAP_TILE_SIZE);
+      // Apply background image shift to see where that position ends up relative to canvas.
+      pos = pos.plus(shift.x, shift.y);
+      // A version of tile's rectangle if it were in the WrapSector.Right sector.
+      let rightRect = this.rectInSector(WrapSector.Right, shift, pos, MAP_TILE_SIZE, MAP_TILE_SIZE);
+      // If having it in the WrapSector.Right sector would overlap with canvs, then that's the sector we want.
+      if (rectanglesOverlap(CANVAS_RECT, rightRect)) return WrapSector.Right;
+      // Else default to WrapSector.Left sector.
+      return WrapSector.Left;
+    }
+
+    // Given a desired sector and the current background shift, return a rect with given top-left
+    // Coord, width, and height, but shifted to the given sector.
+    rectInSector(sector: WrapSector, shift: Coord, pos: Coord, width: number, height: number): Rect {
+      let topLeft = pos.plus((sector == WrapSector.Left) ? 0 : BACKGROUND_WIDTH, 0);
+      return {
+        a: topLeft,
+        b: topLeft.plus(width - 1, height - 1),
+      };
+    }
+
+    toString(): string {
+      return "( " + this.col + ", " + this.row + " )";
     }
 };
 
-// An enum indicating which of the three "sectors" a grid tile
-// would need to be painted in to be visible on the canvas.
-// Left   - A copy of the world just to the left of the "real" middle one.
-//          Shows far-right columns just to the left of column zero, if those
-//          columns should be visible there to make the world wrap around.
-// Middle - The "real" version of the world. Used most often to make tiles visible.
-// Right  - A copy of the world just to the right of the "real" middle one.
-//          Shows far-left columns just to the right of the final column, if
-//          those columns should be visible there to make the world warp around.
+// An enum indicating which of the two "sectors" a grid tile would need to be painted in to be visible on the canvas.
+// Left   - To the left of the boundary between two background images if the boundary is in view (on canvas).
+// Right  - To the right of the boundary between two background images if the boundary is in view (on canvas).
+// Anything not in view (on canvas) will default to WrapSector.Left;
 export enum WrapSector {
     Left,
-    Middle,
     Right,
 };

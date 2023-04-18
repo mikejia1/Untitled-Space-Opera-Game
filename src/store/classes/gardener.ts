@@ -1,5 +1,6 @@
 import { IGlobalState, Tile, Coord, Rect, Collider, Paintable } from './';
-import { Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH } from '../../utils';
+import { Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, computeBackgroundShift } from '../../utils';
+import { MAP_TILE_SIZE } from '../data/collisions';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
@@ -37,16 +38,11 @@ export class Gardener implements Paintable, Collider {
           delta = [this.hPixelSpeed, 0];
           break;
       }
-      let newPos = new Coord(this.pos.x + delta[0], this.pos.y + delta[1]);
-      return new Gardener(this.ensureGridWrapAround(newPos), this.facing, this.itemEquipped, true);
-    }
-
-    // Take a Gardener position and ensure that it is within the background image in its
-    // WrapSector.Middle spot (see tile.ts).
-    ensureGridWrapAround(position: Coord): Coord {
-        if (position.x < 0) return position.plus(BACKGROUND_WIDTH,0);
-        if (position.x >= BACKGROUND_WIDTH) return position.minus(BACKGROUND_WIDTH, 0);
-        return position;
+      // Add deltas to gardener position and keep it within the background rectangle.
+      let newPos = new Coord(
+        (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
+        (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
+      return new Gardener(newPos, this.facing, this.itemEquipped, true);
     }
 
     stop(): Gardener {
@@ -83,13 +79,11 @@ export class Gardener implements Paintable, Collider {
         let shift = this.computeShift(state);
         let newPos = this.pos.plus(shift.x, shift.y);
 
-        // The -20s and 60s here stretch the sprite and place it exactly where you'd expect it to be.
+        // Paint gardener with small adjustment to place it exactly where you'd expect it to be.
         canvas.drawImage(
             state.gimage,          // Sprite source image
             frame * 48, row * 48,  // Top-left corner of frame in source
             48, 48,                // Size of frame in source
-            // this.pos.x - 7,     // X position of top-left corner on canvas
-            // this.pos.y - 20,    // Y position of top-left corner on canvas
             newPos.x - 7,          // X position of top-left corner on canvas
             newPos.y - 20,         // Y position of top-left corner on canvas
             30, 30);               // Sprite size on canvas
@@ -108,15 +102,14 @@ export class Gardener implements Paintable, Collider {
 
     // Compute a displacement that will place the Gardener at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        let tile = this.closestTile();
-        return shiftForTile(tile, state);
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state));
     }
 
     // Determine the grid tile that is the closest approximation to the Gardener's position.
     closestTile(): Tile {
         return new Tile(
-            Math.floor(this.pos.x / TILE_WIDTH),
-            Math.floor(this.pos.y / TILE_WIDTH));
+            Math.floor(this.pos.x / MAP_TILE_SIZE),
+            Math.floor(this.pos.y / MAP_TILE_SIZE));
     }
 
     // Return the invisible rectangle that determines collision behaviour for the gardener.
