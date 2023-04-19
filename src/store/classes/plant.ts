@@ -29,8 +29,10 @@ export class Plant {
   dehydrationTime: number;
   alive: boolean;
   fruits: Fruit[];
+  colliderId: number;
 
-  constructor(pos: Coord, initialHealth: number, size = 0, fruits: Fruit[] = [], growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
+  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 0, fruits: Fruit[] = [], growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
+    this.colliderId = colliderId;
     this.pos = pos;
     this.health = initialHealth;
     this.width = 0;   // Dummy value to silence an error message.
@@ -68,20 +70,20 @@ export class Plant {
     if (!anyGrew) return noGrow;
     return {
         didGrow: true,
-        newPlant: new Plant(this.pos, this.health, this.size, newFruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp),
+        newPlant: new Plant(this.colliderId, this.pos, this.health, this.size, newFruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp),
     }
   }
 
   growPlant(): Plant {
     if (this.size < 1) {
-      return new Plant(this.pos, this.health, this.size + 0.25, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+      return new Plant(this.colliderId, this.pos, this.health, this.size + 0.25, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
     }
     return this;
   }
 
   dehydratePlant(): Plant {
     if (this.health > 0) {
-      return new Plant(this.pos, this.health - 1, this.size, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+      return new Plant(this.colliderId, this.pos, this.health - 1, this.size, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
     }
     return this;
   }
@@ -99,7 +101,7 @@ export class Plant {
     }
     var h = this.health + WATERING_HEALTH_INCREMENT;
     h = Math.min(h, MAX_PLANT_HEALTH);
-    return new Plant(this.pos, h, this.size, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+    return new Plant(this.colliderId, this.pos, h, this.size, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
   }
 
   // Paint the plant on the canvas.

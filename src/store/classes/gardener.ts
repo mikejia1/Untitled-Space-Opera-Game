@@ -1,5 +1,5 @@
 import { IGlobalState, Tile, Coord, Rect, Collider, Paintable } from './';
-import { Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, computeBackgroundShift } from '../../utils';
+import { Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, computeBackgroundShift, V_PIXEL_SPEED, H_PIXEL_SPEED } from '../../utils';
 import { MAP_TILE_SIZE } from '../data/collisions';
 
 // The height of the gardener in pixels.
@@ -11,14 +11,14 @@ export class Gardener implements Paintable, Collider {
     facing: Direction;      // Direction the gardener is currently facing.
     itemEquipped: boolean;  // Whether or not the gardener has an item equipped.
     moving: boolean;        // Whether or not the gardener is moving.
-    vPixelSpeed = 3;
-    hPixelSpeed = 3;
+    colliderId: number;     // The ID that distinguishes the collider from all others.
   
-    constructor(pos: Coord, facing: Direction, itemEquipped: boolean=false, moving: boolean=false) {
-      this.pos = pos;
-      this.facing = facing;
-      this.itemEquipped = itemEquipped;
-      this.moving = moving;
+    constructor(colliderId: number, pos: Coord, facing: Direction, itemEquipped: boolean=false, moving: boolean=false) {
+        this.colliderId = colliderId;
+        this.pos = pos;
+        this.facing = facing;
+        this.itemEquipped = itemEquipped;
+        this.moving = moving;
     }
     
     // Move the gardener along the direction its currently facing. Return new gardener.
@@ -26,37 +26,37 @@ export class Gardener implements Paintable, Collider {
       var delta = [0,0]
       switch (this.facing) {
         case Direction.Down:
-          delta = [0, this.vPixelSpeed];
+          delta = [0, V_PIXEL_SPEED];
           break;
         case Direction.Up:
-          delta = [0, -this.vPixelSpeed];
+          delta = [0, -V_PIXEL_SPEED];
           break;
         case Direction.Left:
-          delta = [-this.hPixelSpeed, 0];
+          delta = [-H_PIXEL_SPEED, 0];
           break;
         case Direction.Right:
-          delta = [this.hPixelSpeed, 0];
+          delta = [H_PIXEL_SPEED, 0];
           break;
       }
       // Add deltas to gardener position and keep it within the background rectangle.
       let newPos = new Coord(
         (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
         (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
-      return new Gardener(newPos, this.facing, this.itemEquipped, true);
+      return new Gardener(this.colliderId, newPos, this.facing, this.itemEquipped, true);
     }
 
     stop(): Gardener {
-      return new Gardener(this.pos, this.facing, this.itemEquipped, false);
+      return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, false);
     }
 
     // Change facing direction of the gardener but without changing its position.
     changeFacingDirection(direction: Direction): Gardener {
-        return new Gardener(this.pos, direction, this.itemEquipped, this.moving /* Assume: moving = true */);
+        return new Gardener(this.colliderId, this.pos, direction, this.itemEquipped, this.moving /* Assume: moving = true */);
     }
   
     // Set value of itemEquipped. Return new gardener.
     setItemEquipped(itemEquipped: boolean): Gardener {
-      return new Gardener(this.pos, this.facing, itemEquipped);
+      return new Gardener(this.colliderId, this.pos, this.facing, itemEquipped);
     }
   
     // Paint the gardener on the canvas.

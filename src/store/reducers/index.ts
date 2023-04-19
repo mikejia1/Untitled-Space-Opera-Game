@@ -1,8 +1,8 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap } from "../../utils";
-import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan, IGlobalState, InvisibleCollider } from "../classes";
+import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS } from "../../utils";
+import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan, IGlobalState, InvisibleCollider, NonPlayer } from "../classes";
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -22,8 +22,8 @@ import {
 import { V_TILE_COUNT, H_TILE_COUNT, collisions } from "../data/collisions";
 
 // Default gardener starting state.
-function initialGardener(): Gardener {
-  return new Gardener(new Coord(200, 150), Direction.Up, false);
+function initialGardener(colliderId: number): Gardener {
+  return new Gardener(colliderId, new Coord(200, 150), Direction.Up, false);
 }
 
 // Create watering can for start of game.
@@ -34,13 +34,17 @@ function initialWateringCan(): WateringCan {
 // Generate the game starting state.
 function initialGameState(): IGlobalState {
   const avatar = new Image(192, 192);
+  const npcimage = new Image(192, 192);
   const background = new Image(400, 240);
   const wateringcan = new Image(16, 16);
   avatar.src = require('../images/gardenerwalkcycle.png');
   avatar.onload = () => {
-      console.log("Walkcycle source image loaded.");
+      console.log("Gardener walkcycle source image loaded.");
   };
-//  background.src = require('../images/Canvas.png');
+  npcimage.src = require('../images/npcwalkcycle.png');
+  npcimage.onload = () => {
+      console.log("NPC walkcycle source image loaded.")
+  };
   background.src = require('../images/GardenMap100x30.png');
   background.onload = () => {
       console.log("Background image loaded.");
@@ -50,40 +54,72 @@ function initialGameState(): IGlobalState {
       console.log("watering can image loaded.");
   };
 
+  // Ensure all colliders get a unique ID.
+  let colliderId = 0;
+
+  // Create invisible colliders for map features with unique collider Ids and increment colliderId accordingly.
+  let features = invisibleCollidersForMapFeatures(colliderId);
+  colliderId += features.length;
+
+  // Create invisible colliders for world boundaries with unique collider Ids and increment colliderId accordingly.
+  let worldBoundaries = worldBoundaryColliders(colliderId);
+  colliderId += worldBoundaries.length;
+
+  // Create a bunch of NPCs and increment colliderId accordingly.
+  let npcs = gridOfNPCs(colliderId, new Coord(300, 150), 25, 3, 5);
+  colliderId += npcs.length;
+
   return {
-    gardener: initialGardener(),
+    gardener: initialGardener(colliderId++),
     score: 0,
     wateringCan: initialWateringCan(),
     plants: [
-      new Plant(new Coord(200, 200), INITIAL_PLANT_HEALTH),
-      new Plant(new Coord(150, 200), INITIAL_PLANT_HEALTH),
-      new Plant(new Coord(300, 100), INITIAL_PLANT_HEALTH),
-      new Plant(new Coord(50, 70), INITIAL_PLANT_HEALTH)],
+      new Plant(colliderId++, new Coord(200, 200), INITIAL_PLANT_HEALTH),
+      new Plant(colliderId++, new Coord(150, 200), INITIAL_PLANT_HEALTH),
+      new Plant(colliderId++, new Coord(300, 100), INITIAL_PLANT_HEALTH),
+      new Plant(colliderId++, new Coord(50, 70), INITIAL_PLANT_HEALTH)],
+    npcs: npcs,
     currentFrame: 0,
     gimage: avatar,
+    npcimage: npcimage,
     backgroundImage: background,
     wateringCanImage: wateringcan,
-    invisibleColliders: invisibleCollidersForMapBoundary(),
+    invisibleColliders: [...worldBoundaries, ...features],  // Map features and world boundaries both contribute invisible colliders.
     muted: false,
     debugSettings: {
-      showCollisionRects: true,   // Collision rectangles for colliders.
-      showPositionRects: true,    // Position rectangles for paintables.
-      showWateringRects: true,    // Watering interaction rectangles for plants.
-      showFacingRects: true,      // Facing direction rectangle for gardener.
-      showEquipRects: true,       // Equipping interaction rectangle for watering can.
-      collisionsDisabled: false,  // Disable collision checks - Gardener can walk through anything.
+      showCollisionRects: false,   // Collision rectangles for colliders.
+      showPositionRects: false,    // Position rectangles for paintables.
+      showWateringRects: false,    // Watering interaction rectangles for plants.
+      showFacingRects: false,      // Facing direction rectangle for gardener.
+      showEquipRects: false,       // Equipping interaction rectangle for watering can.
+      collisionsDisabled: false,   // Disable collision checks - Gardener can walk through anything.
     },
   }
 }
 
+// Create a grid of NPCs with top-left one at given position, and with given spacing.
+function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: number, rows: number): NonPlayer[] {
+  let all: NonPlayer[] = [];
+  for (let col = 0; col < cols; col++) {
+    for (let row = 0; row < rows; row++) {
+      let npc = new NonPlayer({
+        colliderId: colliderId + (row * cols) + col,
+        pos: pos.plus(col * spacing, row * spacing), 
+      });
+      all = [...all, npc];
+    }
+  }
+  return all;
+}
+
 // Return an array of invisible colliders based on store/data/collision.tsx
-function invisibleCollidersForMapBoundary(): Collider[] {
+function invisibleCollidersForMapFeatures(nextColliderId: number): Collider[] {
   let all: Collider[] = [];
   for (let r = 0; r < V_TILE_COUNT; r++) {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
       if (collisions[i] != 689) continue;
-      let ic = new InvisibleCollider(tileRect(r,c));
+      let ic = new InvisibleCollider(nextColliderId + all.length, tileRect(r,c));
       all = [...all, ic];
     }
   }
@@ -113,8 +149,8 @@ const gameReducer = (state = initialGameState(), action: any) => {
 
 // Stop the gardener if the keyup direction matches the current gardener direction.
 function stopGardener(state: IGlobalState, direction: Direction): IGlobalState {
-  //Only stop gardener if the keyup direction matches the current gardener direction.
-  if(state.gardener.moving && state.gardener.facing === direction) {
+  // Only stop gardener if the keyup direction matches the current gardener direction.
+  if (state.gardener.moving && state.gardener.facing === direction) {
     return { ...state, gardener: state.gardener.stop()}
   }
   return state;
@@ -123,19 +159,24 @@ function stopGardener(state: IGlobalState, direction: Direction): IGlobalState {
 // Only move the gardener if the keypress changes the gardener direction.
 function moveGardener(state: IGlobalState, direction: Direction): IGlobalState {
   // This is a spurious keypress. Ignore it.
-  if(state.gardener.moving && state.gardener.facing === direction) {
+  if (state.gardener.moving && state.gardener.facing === direction) {
     return state;
   }
-  return moveGardenerOnFrame(state, direction);
+
+  // Get all the colliders as they exist now.
+  let allColliders = allCollidersFromState(state);
+
+  return moveGardenerOnFrame(state, direction, allColliders);
 }
 
 // Move the gardener according to the direction given. Triggered on TICK or on new keypress direction.
 // This will be aborted if the would-be new position overlaps with a plant.
-function moveGardenerOnFrame(state: IGlobalState, direction: Direction): IGlobalState {
+function moveGardenerOnFrame(state: IGlobalState, direction: Direction, allColliders: Collider[]): IGlobalState {
   // Would-be new post-move gardener.
   let newGar = state.gardener.changeFacingDirection(direction).move();
+
   // If new gardener is in collision with anything, we abort the move.
-  if (collisionDetected(state, newGar)) {
+  if (collisionDetected(state, allColliders, newGar)) {
     console.log("Bump!");
     if (!state.muted) playBumpSound();
     return {
@@ -176,15 +217,99 @@ function updateFrame(state: IGlobalState): IGlobalState {
   if (f === state.currentFrame) {
     return state;
   }
-  // Allow fruits to grow, and move the gardener if it is moving.
+  // Allow fruits to grow.
   let newState = growFruits(state, f);
-  if (newState.gardener.moving) {
-    return moveGardenerOnFrame(newState, newState.gardener.facing);
+
+  // Get all the colliders as they exist now.
+  let allColliders = allCollidersFromState(newState);
+
+  // Allow gardener to move.
+  let gardenerMoving = newState.gardener.moving;
+  if (gardenerMoving) {
+    newState = moveGardenerOnFrame(newState, newState.gardener.facing, allColliders);
+    allColliders = replaceCollider(allColliders, newState.gardener);
   }
+
+  // Allow NPCs to move.
+  let newNPCs: NonPlayer[] = [];
+  newState.npcs.forEach(npc => {
+    // Get a new version of the npc - one that has taken its next step.
+    let newNPC = moveNPC(newState, allColliders, npc);
+
+    // Allow the NPC to consider adopting a new movement.
+    newNPC = considerNewNPCMovement(newNPC);
+
+    // If this new NPC is in collision with anything, revert back to original npc.
+    // Otherwise keep it and update allColliders accordingly so the next NPC we
+    // process will have up-to-date colliders to collide with.
+    if (collisionDetected(newState, allColliders, newNPC)) {
+      newNPC = considerNewNPCMovement(npc);
+    }
+    newNPCs = [...newNPCs, newNPC];
+    allColliders = replaceCollider(allColliders, newNPC);
+  });
+
   return {
     ...newState,
     currentFrame: f,
+    npcs: newNPCs,
   }
+}
+
+// Allow an NPC to randomly choose a new movement. If the NPC is not currently moving, wait for
+// its stationaryCountdown to reach zero before adopting a new movement.
+function considerNewNPCMovement(npc: NonPlayer): NonPlayer {
+  // Whether or not the NPC will adopt a new movement.
+  let change = false;
+
+  // If NPC is currently stationery, adopt new movement when the countdown reaches zero,
+  // otherwise adopt new movement with some small probability.
+  if (!npc.moving) {
+    if (npc.stationeryCountdown === 0) change = true;
+  } else {
+    change = (Math.random() < 0.02);
+  }
+
+  // If no new movement is being adopted, return NPC unchanged.
+  if (!change) return npc;
+
+  // New movement is to be adopted. Choose new direction *or* choose to remain stationery for a while.
+  let choice = randomInt(0, 4);
+  if (choice === 4) {
+    let countdown = 30 + randomInt(0, 200);
+    return new NonPlayer({
+      clone: npc,
+      moving: false,
+      stationeryCountdown: countdown,
+    });
+  }
+  return new NonPlayer({
+    clone: npc,
+    moving: true,
+    facing: ALL_DIRECTIONS[choice],
+  });
+}
+
+// Return new array of colliders but with one particular one replaced with an updated version of itself.
+// TODO: This should be done with a map/dict instead for O(1) time instead of O(n). For now, it's fine.
+function replaceCollider(colliders: Collider[], collider: Collider): Collider[] {
+  let updated: Collider[] = [];
+  colliders.forEach(co => {
+    if (co.colliderId !== collider.colliderId) updated = [...updated, co];
+    else updated = [...updated, collider];
+  });
+  return updated;
+}
+
+// "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
+function moveNPC(state: IGlobalState, colliders: Collider[], npc: NonPlayer): NonPlayer {
+  if (!npc.moving) {
+    return new NonPlayer({
+      clone: npc,
+      stationeryCountdown: Math.max(0, npc.stationeryCountdown - 1),
+    });
+  }
+  return npc.move();
 }
 
 // Check all plants to see if any will grow their fruits. Return state unchanged
@@ -202,23 +327,30 @@ function growFruits(state: IGlobalState, frame: number): IGlobalState {
   return state;
 }
 
-// Check whether the given gardener overlaps (collides) with anything it shouldn't.
-function collisionDetected(state: IGlobalState, gar: Gardener): boolean {
+// Check whether the given collider overlaps (collides) with any other collider (excluding itself).
+function collisionDetected(state: IGlobalState, colliders: Collider[], collider: Collider): boolean {
   if (state.debugSettings.collisionsDisabled) return false;
-  // Gather all colliders into one array.
-  let colliders: Array<Collider> = [];
-  state.plants.forEach(plant => colliders.push(plant));
-  worldBoundaryColliders().forEach(col => colliders.push(col));
-  state.invisibleColliders.forEach(ic => colliders.push(ic));
-  let gRect = gar.collisionRect();
+  let cRect = collider.collisionRect();
 
   // Check all colliders and stop if and when any collision is found.
   for (let i = 0; i < colliders.length; i++) {
-    if (rectanglesOverlap(gRect, colliders[i].collisionRect())) return true;
+    // Don't check collisions with self.
+    if (colliders[i].colliderId === collider.colliderId) continue;
+    if (rectanglesOverlap(cRect, colliders[i].collisionRect())) return true;
   }
 
   // No collisions detected.
   return false;
+}
+
+// Get all the colliders from a state.
+function allCollidersFromState(state: IGlobalState): Collider[] {
+  let colliders: Array<Collider> = [];
+  state.plants.forEach(plant => colliders.push(plant));
+  state.invisibleColliders.forEach(ic => colliders.push(ic));
+  state.npcs.forEach(npc => colliders.push(npc));
+  colliders.push(state.gardener);
+  return colliders;
 }
 
 // Attempt to equip item or drop current item.

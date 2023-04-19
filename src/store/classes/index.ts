@@ -10,3 +10,4 @@ export * from './wateringcan';
 export * from './globalstate';
 export * from './fruit';
 export * from './tile';
+export * from './nonplayer';

@@ -1,7 +1,7 @@
 import { Tile, Coord, Rect, InvisibleCollider, IGlobalState, Paintable, TypedPriorityQueue, WrapSector } from "../store/classes";
 import { MAP_TILE_SIZE } from "../store/data/collisions";
 import { Colour, CANVAS_WIDTH, CANVAS_CENTRE, CANVAS_RECT, TILE_HEIGHT, TILE_WIDTH } from "../utils";
-import { BACKGROUND_WIDTH, BACKGROUND_HEIGHT } from "./constants";
+import { BACKGROUND_WIDTH, BACKGROUND_HEIGHT, Direction, ALL_DIRECTIONS } from "./constants";
 
 export * from './constants';
 
@@ -30,6 +30,7 @@ export const drawState = (
   let shift = computeBackgroundShift(state);
   drawBackground(state, shift, canvas);
   state.plants.forEach(plant => pq.add(plant));
+  state.npcs.forEach(npc => pq.add(npc));
   pq.add(state.gardener);
   pq.add(state.wateringCan);
   while (!pq.isEmpty()) {
@@ -100,6 +101,14 @@ export const generateRandomPosition = (width: number, height: number) => {
 };
 */
 
+export function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+export function randomDirection(): Direction {
+  return ALL_DIRECTIONS[randomInt(0, ALL_DIRECTIONS.length - 1)];
+}
+
 // Current frame number is just current epoch quarter second.
 export function computeCurrentFrame(): number {
   return  Math.floor(Date.now() * FPS / 1000); 
@@ -124,19 +133,23 @@ export function shiftForVisibleRect(rect: Rect, shift: Coord): Rect {
   return leftRect;
 }
 
-// Two invisible colliders to stop gardener from wandering beyond top and bottom edges of world.
-export function worldBoundaryColliders(): InvisibleCollider[] {
+// Two invisible colliders to stop gardener and NPCs from wandering beyond top and bottom edges of world.
+export function worldBoundaryColliders(nextColliderId: number): InvisibleCollider[] {
   return [
     // Above background image.
-    new InvisibleCollider({
-      a: new Coord(-500, -500),
-      b: new Coord(BACKGROUND_WIDTH + 500, -1),
-    }),
+    new InvisibleCollider(
+      nextColliderId,
+      {
+        a: new Coord(-500, -500),
+        b: new Coord(BACKGROUND_WIDTH + 500, -1),
+      }),
     // Below background image.
-    new InvisibleCollider({
-      a: new Coord(-500, BACKGROUND_HEIGHT),
-      b: new Coord(BACKGROUND_WIDTH + 500, BACKGROUND_HEIGHT + 500),
-    }),
+    new InvisibleCollider(
+      nextColliderId + 1,
+      {
+        a: new Coord(-500, BACKGROUND_HEIGHT),
+        b: new Coord(BACKGROUND_WIDTH + 500, BACKGROUND_HEIGHT + 500),
+      }),
   ];
 }
 
