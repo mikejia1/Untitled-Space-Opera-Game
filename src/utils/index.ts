@@ -1,9 +1,10 @@
-import { Tile, Coord, Rect, InvisibleCollider, IGlobalState, Paintable, TypedPriorityQueue, WrapSector } from "../store/classes";
+import { Tile, Coord, Rect, InvisibleCollider, IGlobalState, Paintable, WrapSector } from "../store/classes";
 import { MAP_TILE_SIZE } from "../store/data/collisions";
-import { Colour, CANVAS_WIDTH, CANVAS_CENTRE, CANVAS_RECT, TILE_HEIGHT, TILE_WIDTH } from "../utils";
+import { Colour, CANVAS_WIDTH, CANVAS_CENTRE, CANVAS_RECT, TILE_HEIGHT, TILE_WIDTH, TypedPriorityQueue } from "../utils";
 import { BACKGROUND_WIDTH, BACKGROUND_HEIGHT, Direction, ALL_DIRECTIONS } from "./constants";
 
 export * from './constants';
+export * from './priorityqueue';
 
 export const FPS = 24;
 
