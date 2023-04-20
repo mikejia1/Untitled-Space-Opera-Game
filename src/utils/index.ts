@@ -81,7 +81,7 @@ export function rectanglesOverlap(rect1: any, rect2: any): boolean {
 // If any of the WrapSector.Right copy of the world should be visible, paint a copy there as well.
 function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
   canvas.drawImage(state.backgroundImage, shift.x, shift.y);
-  outlineRect(canvas, {a: new Coord(shift.x, shift.y), b: new Coord(shift.x + BACKGROUND_WIDTH - 1, shift.y + BACKGROUND_HEIGHT - 1)}, "#000000");
+  //outlineRect(canvas, {a: new Coord(shift.x, shift.y), b: new Coord(shift.x + BACKGROUND_WIDTH - 1, shift.y + BACKGROUND_HEIGHT - 1)}, "#000000");
   if (shift.x >= 0) {
     let reshift = shift.minus(BACKGROUND_WIDTH, 0);
     canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
