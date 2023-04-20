@@ -66,7 +66,7 @@ function initialGameState(): IGlobalState {
   colliderId += worldBoundaries.length;
 
   // Create a bunch of NPCs and increment colliderId accordingly.
-  let npcs = gridOfNPCs(colliderId, new Coord(300, 150), 25, 3, 5);
+  let npcs = gridOfNPCs(colliderId, new Coord(300, 150), 25, 10, 10);
   colliderId += npcs.length;
 
   return {
@@ -118,7 +118,7 @@ function invisibleCollidersForMapFeatures(nextColliderId: number): Collider[] {
   for (let r = 0; r < V_TILE_COUNT; r++) {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
-      if (collisions[i] != 689) continue;
+      if (collisions[i] !== 689) continue;
       let ic = new InvisibleCollider(nextColliderId + all.length, tileRect(r,c));
       all = [...all, ic];
     }
@@ -171,7 +171,7 @@ function moveGardener(state: IGlobalState, direction: Direction): IGlobalState {
 
 // Move the gardener according to the direction given. Triggered on TICK or on new keypress direction.
 // This will be aborted if the would-be new position overlaps with a plant.
-function moveGardenerOnFrame(state: IGlobalState, direction: Direction, allColliders: Collider[]): IGlobalState {
+function moveGardenerOnFrame(state: IGlobalState, direction: Direction, allColliders: Map<number, Collider>): IGlobalState {
   // Would-be new post-move gardener.
   let newGar = state.gardener.changeFacingDirection(direction).move();
 
@@ -227,26 +227,28 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let gardenerMoving = newState.gardener.moving;
   if (gardenerMoving) {
     newState = moveGardenerOnFrame(newState, newState.gardener.facing, allColliders);
-    allColliders = replaceCollider(allColliders, newState.gardener);
+    allColliders.set(newState.gardener.colliderId, newState.gardener);
   }
 
   // Allow NPCs to move.
   let newNPCs: NonPlayer[] = [];
   newState.npcs.forEach(npc => {
     // Get a new version of the npc - one that has taken its next step.
-    let newNPC = moveNPC(newState, allColliders, npc);
+    let newNPC = moveNPC(newState, npc);
 
-    // Allow the NPC to consider adopting a new movement.
-    newNPC = considerNewNPCMovement(newNPC);
+    // Allow the NPC to consider adopting a new movement (forced = false).
+    newNPC = considerNewNPCMovement(newNPC, false);
 
-    // If this new NPC is in collision with anything, revert back to original npc.
-    // Otherwise keep it and update allColliders accordingly so the next NPC we
-    // process will have up-to-date colliders to collide with.
+    // If this new NPC is in collision with anything, revert back to original npc
+    // and force it to choose a new movement.
     if (collisionDetected(newState, allColliders, newNPC)) {
-      newNPC = considerNewNPCMovement(npc);
+      newNPC = considerNewNPCMovement(npc, true);
     }
+
+    // Update the NPC array. Update the colliders so that subsequent NPCs will
+    // check collisions against up-to-date locations of their peers.
     newNPCs = [...newNPCs, newNPC];
-    allColliders = replaceCollider(allColliders, newNPC);
+    allColliders.set(newNPC.colliderId, newNPC);
   });
 
   return {
@@ -258,7 +260,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
 
 // Allow an NPC to randomly choose a new movement. If the NPC is not currently moving, wait for
 // its stationaryCountdown to reach zero before adopting a new movement.
-function considerNewNPCMovement(npc: NonPlayer): NonPlayer {
+function considerNewNPCMovement(npc: NonPlayer, forced: boolean): NonPlayer {
   // Whether or not the NPC will adopt a new movement.
   let change = false;
 
@@ -269,6 +271,7 @@ function considerNewNPCMovement(npc: NonPlayer): NonPlayer {
   } else {
     change = (Math.random() < 0.02);
   }
+  change = change || forced;
 
   // If no new movement is being adopted, return NPC unchanged.
   if (!change) return npc;
@@ -290,6 +293,7 @@ function considerNewNPCMovement(npc: NonPlayer): NonPlayer {
   });
 }
 
+/*
 // Return new array of colliders but with one particular one replaced with an updated version of itself.
 // TODO: This should be done with a map/dict instead for O(1) time instead of O(n). For now, it's fine.
 function replaceCollider(colliders: Collider[], collider: Collider): Collider[] {
@@ -300,9 +304,10 @@ function replaceCollider(colliders: Collider[], collider: Collider): Collider[] 
   });
   return updated;
 }
+*/
 
 // "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
-function moveNPC(state: IGlobalState, colliders: Collider[], npc: NonPlayer): NonPlayer {
+function moveNPC(state: IGlobalState, npc: NonPlayer): NonPlayer {
   if (!npc.moving) {
     return new NonPlayer({
       clone: npc,
@@ -328,29 +333,33 @@ function growFruits(state: IGlobalState, frame: number): IGlobalState {
 }
 
 // Check whether the given collider overlaps (collides) with any other collider (excluding itself).
-function collisionDetected(state: IGlobalState, colliders: Collider[], collider: Collider): boolean {
+function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>, collider: Collider): boolean {
   if (state.debugSettings.collisionsDisabled) return false;
   let cRect = collider.collisionRect();
 
   // Check all colliders and stop if and when any collision is found.
-  for (let i = 0; i < colliders.length; i++) {
+  let ids = Array.from(colliders.keys());
+  for (let i = 0; i < ids.length; i++) {
+    let colliderId = ids[i];
     // Don't check collisions with self.
-    if (colliders[i].colliderId === collider.colliderId) continue;
-    if (rectanglesOverlap(cRect, colliders[i].collisionRect())) return true;
-  }
+    if (colliderId === collider.colliderId) continue;
+    let co = colliders.get(colliderId);
+    if (co === undefined) continue; // Will never happen.
+    if (rectanglesOverlap(cRect, co.collisionRect())) return true;    
+  };
 
   // No collisions detected.
   return false;
 }
 
 // Get all the colliders from a state.
-function allCollidersFromState(state: IGlobalState): Collider[] {
-  let colliders: Array<Collider> = [];
-  state.plants.forEach(plant => colliders.push(plant));
-  state.invisibleColliders.forEach(ic => colliders.push(ic));
-  state.npcs.forEach(npc => colliders.push(npc));
-  colliders.push(state.gardener);
-  return colliders;
+function allCollidersFromState(state: IGlobalState): Map<number, Collider> {
+  let map = new Map<number, Collider>();
+  state.plants.forEach(plant => map.set(plant.colliderId, plant));
+  state.invisibleColliders.forEach(ic => map.set(ic.colliderId, ic));
+  state.npcs.forEach(npc => map.set(npc.colliderId, npc));
+  map.set(state.gardener.colliderId, state.gardener);
+  return map;
 }
 
 // Attempt to equip item or drop current item.

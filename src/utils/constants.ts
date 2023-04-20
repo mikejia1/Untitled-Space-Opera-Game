@@ -26,9 +26,13 @@ export const TILE_HEIGHT = 10;
 export const MOVE_HORZ = 5;
 export const MOVE_VERT = 1;
 
-// Walking speed of gardener and NPCs.
-export const V_PIXEL_SPEED = 3;
-export const H_PIXEL_SPEED = 3;
+// Walking speed of gardener.
+export const GARDENER_V_PIXEL_SPEED = 3;
+export const GARDENER_H_PIXEL_SPEED = 3;
+
+// Walking speed of NPCs.
+export const NPC_V_PIXEL_SPEED = 1;
+export const NPC_H_PIXEL_SPEED = 1;
 
 // An enum for the directions.
 export enum Direction {

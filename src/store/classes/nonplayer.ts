@@ -1,5 +1,9 @@
 import { Collider, Coord, IGlobalState, Paintable, Rect, Tile } from './';
-import { BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, H_PIXEL_SPEED, TILE_HEIGHT, TILE_WIDTH, V_PIXEL_SPEED, computeBackgroundShift, computeCurrentFrame, outlineRect, positionRect, randomDirection, shiftForTile, shiftRect } from '../../utils';
+import {
+    BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
+    TILE_HEIGHT, TILE_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
+    outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
+} from '../../utils';
 import { MAP_TILE_SIZE } from '../data/collisions';
 
 export class NonPlayer implements Paintable, Collider {
@@ -11,11 +15,12 @@ export class NonPlayer implements Paintable, Collider {
 
     constructor(params: any) {
         // Some default values to satisfy the requirement that everything be initialized in the constructor.
-        this.colliderId = 8675309;      // A dummy collider ID, meant to be overwritten.
-        this.pos = new Coord(50, 50);   // A dummy position, meant to be overwritten.
-        this.facing = randomDirection();
-        this.stationeryCountdown = 0;
-        this.moving = true;
+        this.colliderId = 8675309;          // A dummy collider ID, meant to be overwritten.
+        this.pos = new Coord(50, 50);       // A dummy position, meant to be overwritten.
+        this.facing = randomDirection();    // Choose a random facing direction.
+        this.stationeryCountdown = 0;       // Start with NPC not standing still.
+        this.moving = true;                 // Start with NPC moving.
+
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
         if (params.clone !== undefined) this.cloneFrom(params.clone);
         if (params.colliderId !== undefined) this.colliderId = params.colliderId;
@@ -101,16 +106,16 @@ export class NonPlayer implements Paintable, Collider {
         var delta = [0,0]
         switch (this.facing) {
             case Direction.Down:
-            delta = [0, V_PIXEL_SPEED];
+            delta = [0, NPC_V_PIXEL_SPEED];
             break;
             case Direction.Up:
-            delta = [0, -V_PIXEL_SPEED];
+            delta = [0, -NPC_V_PIXEL_SPEED];
             break;
             case Direction.Left:
-            delta = [-H_PIXEL_SPEED, 0];
+            delta = [-NPC_H_PIXEL_SPEED, 0];
             break;
             case Direction.Right:
-            delta = [H_PIXEL_SPEED, 0];
+            delta = [NPC_H_PIXEL_SPEED, 0];
              break;
         }
         // Add deltas to NPC position and keep it within the background rectangle.

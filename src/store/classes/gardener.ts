@@ -1,5 +1,9 @@
 import { IGlobalState, Tile, Coord, Rect, Collider, Paintable } from './';
-import { Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, computeBackgroundShift, V_PIXEL_SPEED, H_PIXEL_SPEED } from '../../utils';
+import {
+    Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
+    TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
+    computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED,
+} from '../../utils';
 import { MAP_TILE_SIZE } from '../data/collisions';
 
 // The height of the gardener in pixels.
@@ -26,16 +30,16 @@ export class Gardener implements Paintable, Collider {
       var delta = [0,0]
       switch (this.facing) {
         case Direction.Down:
-          delta = [0, V_PIXEL_SPEED];
+          delta = [0, GARDENER_V_PIXEL_SPEED];
           break;
         case Direction.Up:
-          delta = [0, -V_PIXEL_SPEED];
+          delta = [0, -GARDENER_V_PIXEL_SPEED];
           break;
         case Direction.Left:
-          delta = [-H_PIXEL_SPEED, 0];
+          delta = [-GARDENER_H_PIXEL_SPEED, 0];
           break;
         case Direction.Right:
-          delta = [H_PIXEL_SPEED, 0];
+          delta = [GARDENER_H_PIXEL_SPEED, 0];
           break;
       }
       // Add deltas to gardener position and keep it within the background rectangle.
