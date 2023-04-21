@@ -26,7 +26,7 @@ export const CANVAS_RECT = {
 
 export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
   if (canvas) {
-    canvas.clearRect(0, 0, 1000, 600);
+    canvas.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
 };
 
