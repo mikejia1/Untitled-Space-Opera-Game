@@ -1,7 +1,8 @@
 import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
-import { Tile, Paintable, IGlobalState } from '../store/classes';
-import { Gardener } from '.';
+import { Paintable, IGlobalState } from '../store/classes';
+import { Gardener } from './gardener';
+import { Tile } from '../scene';
 
 // The watering can.
 export class WateringCan implements Paintable {

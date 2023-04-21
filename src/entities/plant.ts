@@ -1,10 +1,11 @@
-import { Tile, IGlobalState } from '../store/classes';
+import { IGlobalState } from '../store/classes';
 import {
   TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect,
   positionRect, fillRect, outlineRect, computeBackgroundShift, Coord, Rect,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
-import { Fruit } from '../entities';
+import { Fruit } from './fruit';
+import { Tile } from '../scene';
 
 // Initial, min, and max value for plant health.
 export const INITIAL_PLANT_HEALTH = 0;

@@ -1,4 +1,4 @@
-import { Collider, IGlobalState, Paintable, Tile } from '../store/classes';
+import { Collider, IGlobalState, Paintable } from '../store/classes';
 import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     TILE_HEIGHT, TILE_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
@@ -6,6 +6,7 @@ import {
     Coord, Rect,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
+import { Tile } from '../scene';
 
 export class NonPlayer implements Paintable, Collider {
     pos: Coord;                     // NPC's current location, in pixels, relative to background image.

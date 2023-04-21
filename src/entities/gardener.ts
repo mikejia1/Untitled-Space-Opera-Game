@@ -1,4 +1,4 @@
-import { IGlobalState, Tile, Collider, Paintable } from '../store/classes';
+import { IGlobalState, Collider, Paintable } from '../store/classes';
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
@@ -6,6 +6,7 @@ import {
     Coord, Rect,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
+import { Tile } from '../scene';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;

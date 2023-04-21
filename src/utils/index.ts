@@ -1,4 +1,4 @@
-import { Tile, InvisibleCollider, IGlobalState, Paintable, WrapSector } from "../store/classes";
+import { InvisibleCollider, IGlobalState, Paintable } from "../store/classes";
 import { MAP_TILE_SIZE } from "../store/data/collisions";
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
@@ -7,6 +7,7 @@ import {
  } from "./constants";
  import { Coord } from './coord';
  import { Rect } from './rect';
+ import { Tile, WrapSector } from '../scene';
 
 export * from './coord';
 export * from './constants';
