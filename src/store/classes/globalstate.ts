@@ -1,4 +1,5 @@
-import { Gardener, Collider, WateringCan, Plant, NonPlayer } from './';
+import { Collider } from './';
+import { Gardener, NonPlayer, WateringCan, Plant } from '../../entities';
 
 // Interface for full game state object.
 export interface IGlobalState {

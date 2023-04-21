@@ -1,5 +1,5 @@
-import { Coord } from './';
-import { Colour } from '../../utils';
+import { Coord } from '../store/classes';
+import { Colour } from '../utils';
 
 // Maximum size that a fruit can reach.
 export const MAX_FRUIT_SIZE = 8;

@@ -1,6 +1,7 @@
-import { Coord, Tile, IGlobalState, Rect, Fruit } from './';
-import { TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect, positionRect, fillRect, outlineRect, computeBackgroundShift } from '../../utils';
-import { MAP_TILE_SIZE } from '../data/collisions';
+import { Coord, Tile, IGlobalState, Rect } from '../store/classes';
+import { TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect, positionRect, fillRect, outlineRect, computeBackgroundShift } from '../utils';
+import { MAP_TILE_SIZE } from '../store/data/collisions';
+import { Fruit } from '../entities';
 
 // Initial, min, and max value for plant health.
 export const INITIAL_PLANT_HEALTH = 0;

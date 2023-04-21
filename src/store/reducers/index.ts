@@ -2,7 +2,8 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS } from "../../utils";
-import { Coord, Plant, Gardener, Collider, INITIAL_PLANT_HEALTH, WateringCan, IGlobalState, InvisibleCollider, NonPlayer } from "../classes";
+import { Coord, Collider, IGlobalState, InvisibleCollider } from "../classes";
+import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import {
   DOWN,
   INCREMENT_SCORE,

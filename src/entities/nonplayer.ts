@@ -1,10 +1,10 @@
-import { Collider, Coord, IGlobalState, Paintable, Rect, Tile } from './';
+import { Collider, Coord, IGlobalState, Paintable, Rect, Tile } from '../store/classes';
 import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     TILE_HEIGHT, TILE_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
-} from '../../utils';
-import { MAP_TILE_SIZE } from '../data/collisions';
+} from '../utils';
+import { MAP_TILE_SIZE } from '../store/data/collisions';
 
 export class NonPlayer implements Paintable, Collider {
     pos: Coord;                     // NPC's current location, in pixels, relative to background image.
@@ -94,7 +94,7 @@ export class NonPlayer implements Paintable, Collider {
         return shiftForTile(this.closestTile(), state, computeBackgroundShift(state));
     }
 
-    // Determine the grid tile that is the closest approximation to the Gardener's position.
+    // Determine the grid tile that is the closest approximation to the NPC's position.
     closestTile(): Tile {
         return new Tile(
             Math.floor(this.pos.x / MAP_TILE_SIZE),

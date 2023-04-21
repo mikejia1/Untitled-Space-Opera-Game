@@ -1,6 +1,7 @@
-import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, shiftRect, shiftForTile, computeBackgroundShift } from '../../utils';
-import { MAP_TILE_SIZE } from '../data/collisions';
-import { Rect, Tile, Coord, Gardener, Paintable, IGlobalState } from './';
+import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, shiftRect, shiftForTile, computeBackgroundShift } from '../utils';
+import { MAP_TILE_SIZE } from '../store/data/collisions';
+import { Rect, Tile, Coord, Paintable, IGlobalState } from '../store/classes';
+import { Gardener } from '.';
 
 // The watering can.
 export class WateringCan implements Paintable {
@@ -44,7 +45,7 @@ export class WateringCan implements Paintable {
         return shiftForTile(this.closestTile(), state, computeBackgroundShift(state));
     }
 
-    // Determine the grid tile that is the closest approximation to the Gardener's position.
+    // Determine the grid tile that is the closest approximation to the watering can's position.
     closestTile(): Tile {
         return new Tile(
             Math.floor(this.pos.x / MAP_TILE_SIZE),
