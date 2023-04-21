@@ -1,4 +1,5 @@
-import { Collider, Rect } from './';
+import { Collider } from './';
+import { Rect } from '../../utils';
 
 // An invisible object that exists just to collide.
 export class InvisibleCollider implements Collider {

@@ -5,7 +5,7 @@ import {
   takeLatest,
 } from "redux-saga/effects";
 import { RESET, STOP_GAME } from "../actions";
-import { Coord } from "../classes";
+import { Coord } from "../../utils";
 
 // Dummy saga.
 export function* moveSaga(params: {

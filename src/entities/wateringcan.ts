@@ -1,6 +1,6 @@
-import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, shiftRect, shiftForTile, computeBackgroundShift } from '../utils';
+import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
-import { Rect, Tile, Coord, Paintable, IGlobalState } from '../store/classes';
+import { Tile, Paintable, IGlobalState } from '../store/classes';
 import { Gardener } from '.';
 
 // The watering can.

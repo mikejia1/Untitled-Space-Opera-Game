@@ -1,5 +1,5 @@
-import { IGlobalState, Coord, Rect } from './';
-import { CANVAS_RECT, BACKGROUND_WIDTH, rectToString, rectanglesOverlap } from '../../utils';
+import { IGlobalState } from './';
+import { CANVAS_RECT, BACKGROUND_WIDTH, Coord, Rect, rectanglesOverlap } from '../../utils';
 import { MAP_TILE_SIZE } from '../data/collisions';
 
 // A tile on the background grid.

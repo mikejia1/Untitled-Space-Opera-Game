@@ -1,8 +1,9 @@
-import { Collider, Coord, IGlobalState, Paintable, Rect, Tile } from '../store/classes';
+import { Collider, IGlobalState, Paintable, Tile } from '../store/classes';
 import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     TILE_HEIGHT, TILE_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
+    Coord, Rect,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
 

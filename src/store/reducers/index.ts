@@ -1,8 +1,8 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS } from "../../utils";
-import { Coord, Collider, IGlobalState, InvisibleCollider } from "../classes";
+import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord } from "../../utils";
+import { Collider, IGlobalState, InvisibleCollider } from "../classes";
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import {
   DOWN,

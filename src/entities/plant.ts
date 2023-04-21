@@ -1,5 +1,8 @@
-import { Coord, Tile, IGlobalState, Rect } from '../store/classes';
-import { TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect, positionRect, fillRect, outlineRect, computeBackgroundShift } from '../utils';
+import { Tile, IGlobalState } from '../store/classes';
+import {
+  TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect,
+  positionRect, fillRect, outlineRect, computeBackgroundShift, Coord, Rect,
+} from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
 import { Fruit } from '../entities';
 
