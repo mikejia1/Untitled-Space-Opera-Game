@@ -2,7 +2,7 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord } from "../../utils";
-import { Collider, IGlobalState, InvisibleCollider } from "../classes";
+import { Collider, IGlobalState } from "../classes";
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import {
   DOWN,
@@ -21,6 +21,7 @@ import {
   STOP_DOWN,
 } from "../actions";
 import { V_TILE_COUNT, H_TILE_COUNT, collisions } from "../data/collisions";
+import { InvisibleCollider } from "../../scene";
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
