@@ -50,7 +50,7 @@ function initialGameState(): IGlobalState {
   background.onload = () => {
       console.log("Background image loaded.");
   };
-  wateringcan.src = require('../images/wateringcan.png');
+  wateringcan.src = require('../../entities/images/wateringcan/wateringcan.png');
   wateringcan.onload = () => {
       console.log("watering can image loaded.");
   };
