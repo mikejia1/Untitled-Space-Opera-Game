@@ -1,8 +1,8 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS } from "../../utils";
-import { Coord, Collider, IGlobalState, InvisibleCollider } from "../classes";
+import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord } from "../../utils";
+import { Collider, IGlobalState } from "../classes";
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import {
   DOWN,
@@ -21,6 +21,7 @@ import {
   STOP_DOWN,
 } from "../actions";
 import { V_TILE_COUNT, H_TILE_COUNT, collisions } from "../data/collisions";
+import { InvisibleCollider } from "../../scene";
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
@@ -38,11 +39,11 @@ function initialGameState(): IGlobalState {
   const npcimage = new Image(192, 192);
   const background = new Image(400, 240);
   const wateringcan = new Image(16, 16);
-  avatar.src = require('../images/gardenerwalkcycle.png');
+  avatar.src = require('../../entities/images/gardener/gardenerwalkcycle.png');
   avatar.onload = () => {
       console.log("Gardener walkcycle source image loaded.");
   };
-  npcimage.src = require('../images/npcwalkcycle.png');
+  npcimage.src = require('../../entities/images/nonplayer/npcwalkcycle.png');
   npcimage.onload = () => {
       console.log("NPC walkcycle source image loaded.")
   };
@@ -50,7 +51,7 @@ function initialGameState(): IGlobalState {
   background.onload = () => {
       console.log("Background image loaded.");
   };
-  wateringcan.src = require('../images/wateringcan.png');
+  wateringcan.src = require('../../entities/images/wateringcan/wateringcan.png');
   wateringcan.onload = () => {
       console.log("watering can image loaded.");
   };

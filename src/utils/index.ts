@@ -1,16 +1,33 @@
-import { Tile, Coord, Rect, InvisibleCollider, IGlobalState, Paintable, WrapSector } from "../store/classes";
+import { IGlobalState, Paintable } from "../store/classes";
 import { MAP_TILE_SIZE } from "../store/data/collisions";
-import { Colour, CANVAS_WIDTH, CANVAS_CENTRE, CANVAS_RECT, TILE_HEIGHT, TILE_WIDTH, TypedPriorityQueue } from "../utils";
-import { BACKGROUND_WIDTH, BACKGROUND_HEIGHT, Direction, ALL_DIRECTIONS } from "./constants";
+import { TypedPriorityQueue } from "./priorityqueue";
+import {
+  BACKGROUND_WIDTH, BACKGROUND_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT, Direction, ALL_DIRECTIONS,
+  Colour, TILE_HEIGHT, TILE_WIDTH,
+ } from "./constants";
+ import { Coord } from './coord';
+ import { Rect } from './rect';
+ import { Tile, WrapSector, InvisibleCollider } from '../scene';
 
+export * from './coord';
 export * from './constants';
 export * from './priorityqueue';
+export * from './rect';
 
 export const FPS = 24;
 
+// The coord that would place the Gardener at the centre of the canvas.
+export const CANVAS_CENTRE = new Coord(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+
+// The rectangle that is the visible pixel range on the canvas.
+export const CANVAS_RECT = {
+  a: new Coord(0,0),
+  b: new Coord(CANVAS_WIDTH-1, CANVAS_HEIGHT-1),
+};
+
 export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
   if (canvas) {
-    canvas.clearRect(0, 0, 1000, 600);
+    canvas.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
 };
 
