@@ -38,7 +38,7 @@ function initialGameState(): IGlobalState {
   const npcimage = new Image(192, 192);
   const background = new Image(400, 240);
   const wateringcan = new Image(16, 16);
-  avatar.src = require('../images/gardenerwalkcycle.png');
+  avatar.src = require('../../entities/images/gardener/gardenerwalkcycle.png');
   avatar.onload = () => {
       console.log("Gardener walkcycle source image loaded.");
   };
