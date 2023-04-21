@@ -42,7 +42,7 @@ function initialGameState(): IGlobalState {
   avatar.onload = () => {
       console.log("Gardener walkcycle source image loaded.");
   };
-  npcimage.src = require('../images/npcwalkcycle.png');
+  npcimage.src = require('../../entities/images/nonplayer/npcwalkcycle.png');
   npcimage.onload = () => {
       console.log("NPC walkcycle source image loaded.")
   };
