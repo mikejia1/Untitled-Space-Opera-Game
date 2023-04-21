@@ -72,6 +72,7 @@ function initialGameState(): IGlobalState {
 
   return {
     gardener: initialGardener(colliderId++),
+    keysPressed: [],
     score: 0,
     wateringCan: initialWateringCan(),
     plants: [
@@ -130,14 +131,14 @@ function invisibleCollidersForMapFeatures(nextColliderId: number): Collider[] {
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
-    case RIGHT:           return moveGardener(state, Direction.Right);
-    case LEFT:            return moveGardener(state, Direction.Left);
-    case UP:              return moveGardener(state, Direction.Up);
-    case DOWN:            return moveGardener(state, Direction.Down);
-    case STOP_RIGHT:      return stopGardener(state, Direction.Right);
-    case STOP_LEFT:       return stopGardener(state, Direction.Left);
-    case STOP_UP:         return stopGardener(state, Direction.Up);
-    case STOP_DOWN:       return stopGardener(state, Direction.Down);
+    case RIGHT:           return newKeyDown(state, Direction.Right);
+    case LEFT:            return newKeyDown(state, Direction.Left);
+    case UP:              return newKeyDown(state, Direction.Up);
+    case DOWN:            return newKeyDown(state, Direction.Down);
+    case STOP_RIGHT:      return newKeyUp(state, Direction.Right);
+    case STOP_LEFT:       return newKeyUp(state, Direction.Left);
+    case STOP_UP:         return newKeyUp(state, Direction.Up);
+    case STOP_DOWN:       return newKeyUp(state, Direction.Down);
     case TOGGLE_EQUIP:    return toggleEquip(state);
     case USE_ITEM:        return utiliseItem(state);
     case RESET:           return initialGameState();
@@ -149,32 +150,51 @@ const gameReducer = (state = initialGameState(), action: any) => {
 };
 
 // Stop the gardener if the keyup direction matches the current gardener direction.
-function stopGardener(state: IGlobalState, direction: Direction): IGlobalState {
-  // Only stop gardener if the keyup direction matches the current gardener direction.
-  if (state.gardener.moving && state.gardener.facing === direction) {
-    return { ...state, gardener: state.gardener.stop()}
+function newKeyUp(state: IGlobalState, direction: Direction): IGlobalState {
+  var keysPressed = state.keysPressed;
+  const index = keysPressed.indexOf(direction);
+  if (index > -1) { // only splice array when item is found
+    keysPressed.splice(index, 1); // 2nd parameter means remove one item only
   }
-  return state;
+  // Only stop gardener if no keys are pressed.
+  if (keysPressed.length == 0) {
+    return { ...state, keysPressed: keysPressed, gardener: state.gardener.stop()}
+  }
+  // Update facing direction of gardener if new key is to the left or right.
+  if (keysPressed[0] == Direction.Left || keysPressed[0] == Direction.Right) {
+    return { ...state, keysPressed: keysPressed, gardener: state.gardener.changeFacingDirection(keysPressed[0])}
+  }
+  return {...state, keysPressed: keysPressed};
 }
 
 // Only move the gardener if the keypress changes the gardener direction.
-function moveGardener(state: IGlobalState, direction: Direction): IGlobalState {
+function newKeyDown(state: IGlobalState, direction: Direction): IGlobalState {
   // This is a spurious keypress. Ignore it.
-  if (state.gardener.moving && state.gardener.facing === direction) {
+  if (ignoreKeyPress(direction, state.keysPressed)) {
     return state;
   }
-
-  // Get all the colliders as they exist now.
-  let allColliders = allCollidersFromState(state);
-
-  return moveGardenerOnFrame(state, direction, allColliders);
+  // Add the new keypress to the keysPressed array. New keypress must be first.
+  const keys = [direction, ...state.keysPressed];
+  // If keypress is to the left or right, update the gardener's facing direction.
+  let gardener = state.gardener;
+  if (direction == Direction.Left || direction == Direction.Right) {
+    gardener = gardener.changeFacingDirection(direction);
+  }
+  gardener.moving = true;
+  return {...state, keysPressed: keys, gardener: gardener};
 }
 
-// Move the gardener according to the direction given. Triggered on TICK or on new keypress direction.
+function ignoreKeyPress(newDirection: Direction, keysPressed: Direction[]): boolean {
+  // If key is the same as the current direction, ignore it.
+  if (keysPressed[0]==newDirection) return true;
+  return false;
+}
+
+// Move the gardener according to keys pressed.
 // This will be aborted if the would-be new position overlaps with a plant.
-function moveGardenerOnFrame(state: IGlobalState, direction: Direction, allColliders: Map<number, Collider>): IGlobalState {
+function moveGardenerOnFrame(state: IGlobalState, allColliders: Map<number, Collider>): IGlobalState {
   // Would-be new post-move gardener.
-  let newGar = state.gardener.changeFacingDirection(direction).move();
+  const newGar = state.gardener.move(state.keysPressed);
 
   // If new gardener is in collision with anything, we abort the move.
   if (collisionDetected(state, allColliders, newGar)) {
@@ -182,7 +202,6 @@ function moveGardenerOnFrame(state: IGlobalState, direction: Direction, allColli
     if (!state.muted) playBumpSound();
     return {
       ...state,
-      gardener: state.gardener.changeFacingDirection(direction),
       currentFrame: computeCurrentFrame(),
     }
   }
@@ -227,7 +246,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   // Allow gardener to move.
   let gardenerMoving = newState.gardener.moving;
   if (gardenerMoving) {
-    newState = moveGardenerOnFrame(newState, newState.gardener.facing, allColliders);
+    newState = moveGardenerOnFrame(newState, allColliders);
     allColliders.set(newState.gardener.colliderId, newState.gardener);
   }
 

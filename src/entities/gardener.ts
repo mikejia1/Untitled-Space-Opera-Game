@@ -2,7 +2,7 @@ import { IGlobalState, Tile, Coord, Rect, Collider, Paintable } from '../store/c
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
-    computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED,
+    computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
 
@@ -25,22 +25,49 @@ export class Gardener implements Paintable, Collider {
         this.moving = moving;
     }
     
+    opposingDirection(direction1: Direction, direction2: Direction){
+        switch(direction1) {
+            case Direction.Left:  return direction2 == Direction.Right;
+            case Direction.Right: return direction2 == Direction.Left;
+            case Direction.Up:    return direction2 == Direction.Down;
+            case Direction.Down:  return direction2 == Direction.Up;
+        }
+    }
+
     // Move the gardener along the direction its currently facing. Return new gardener.
-    move(): Gardener {
+    move(directions: Direction[]): Gardener {
       var delta = [0,0]
-      switch (this.facing) {
-        case Direction.Down:
-          delta = [0, GARDENER_V_PIXEL_SPEED];
-          break;
-        case Direction.Up:
-          delta = [0, -GARDENER_V_PIXEL_SPEED];
-          break;
-        case Direction.Left:
-          delta = [-GARDENER_H_PIXEL_SPEED, 0];
-          break;
-        case Direction.Right:
-          delta = [GARDENER_H_PIXEL_SPEED, 0];
-          break;
+      // Diagonal gardener movement.
+      if(directions.length > 1 && !this.opposingDirection(directions[0], directions[1])){
+        const diagonalDirection = directions.slice(0,2);
+        if(diagonalDirection.includes(Direction.Up) && diagonalDirection.includes(Direction.Left)){
+            delta = [-GARDENER_DH_PIXEL_SPEED, -GARDENER_DV_PIXEL_SPEED];
+        }
+        else if(diagonalDirection.includes(Direction.Up) && diagonalDirection.includes(Direction.Right)){
+            delta = [GARDENER_DH_PIXEL_SPEED, -GARDENER_DV_PIXEL_SPEED];
+        }
+        else if(diagonalDirection.includes(Direction.Down) && diagonalDirection.includes(Direction.Left)){
+            delta = [-GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED];
+        }
+        else if(diagonalDirection.includes(Direction.Down) && diagonalDirection.includes(Direction.Right)){
+            delta = [GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED];
+        }
+      }
+      else {
+        switch (directions[0]) {
+            case Direction.Down:
+              delta = [0, GARDENER_V_PIXEL_SPEED];
+              break;
+            case Direction.Up:
+              delta = [0, -GARDENER_V_PIXEL_SPEED];
+              break;
+            case Direction.Left:
+              delta = [-GARDENER_H_PIXEL_SPEED, 0];
+              break;
+            case Direction.Right:
+              delta = [GARDENER_H_PIXEL_SPEED, 0];
+              break;
+          }
       }
       // Add deltas to gardener position and keep it within the background rectangle.
       let newPos = new Coord(

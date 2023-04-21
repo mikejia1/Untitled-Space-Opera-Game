@@ -30,6 +30,10 @@ export const MOVE_VERT = 1;
 export const GARDENER_V_PIXEL_SPEED = 3;
 export const GARDENER_H_PIXEL_SPEED = 3;
 
+// Diagonal alking speed of gardener.
+export const GARDENER_DV_PIXEL_SPEED = 2.12;
+export const GARDENER_DH_PIXEL_SPEED = 2.12;
+
 // Walking speed of NPCs.
 export const NPC_V_PIXEL_SPEED = 1;
 export const NPC_H_PIXEL_SPEED = 1;
