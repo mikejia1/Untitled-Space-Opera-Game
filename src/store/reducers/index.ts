@@ -48,7 +48,7 @@ function initialGameState(): IGlobalState {
   npcimage.onload = () => {
       console.log("NPC walkcycle source image loaded.")
   };
-  background.src = require('../images/GardenMap100x30.png');
+  background.src = require('../images/space_garden.png');
   background.onload = () => {
       console.log("Background image loaded.");
   };
