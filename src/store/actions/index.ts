@@ -16,6 +16,8 @@ export const TOGGLE_EQUIP = "TOGGLE_EQUIP";
 export const USE_ITEM = "USE_ITEM";
 export const TICK = "TICK";
 
+export const TOGGLE_DEBUG_CONTROL_COLLISION_RECTS = "TOGGLE_DEBUG_CONTROL_COLLISION_RECTS";
+
 export const makeMove = (move: string) => ({
   type: move,
 });
@@ -38,6 +40,10 @@ export const toggleEquip = () => ({
 
 export const useItem = () => ({
   type: USE_ITEM
+});
+
+export const toggleShowCollisionRects = () => ({
+  type: TOGGLE_DEBUG_CONTROL_COLLISION_RECTS
 });
 
 // An animation loop event that updates state.currentFrame.

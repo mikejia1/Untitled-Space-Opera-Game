@@ -29,10 +29,10 @@ export class Gardener implements Paintable, Collider {
     
     opposingDirection(direction1: Direction, direction2: Direction){
         switch(direction1) {
-            case Direction.Left:  return direction2 == Direction.Right;
-            case Direction.Right: return direction2 == Direction.Left;
-            case Direction.Up:    return direction2 == Direction.Down;
-            case Direction.Down:  return direction2 == Direction.Up;
+            case Direction.Left:  return direction2 === Direction.Right;
+            case Direction.Right: return direction2 === Direction.Left;
+            case Direction.Up:    return direction2 === Direction.Down;
+            case Direction.Down:  return direction2 === Direction.Up;
         }
     }
 

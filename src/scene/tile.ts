@@ -2,6 +2,15 @@ import { IGlobalState } from '../store/classes';
 import { CANVAS_RECT, BACKGROUND_WIDTH, Coord, Rect, rectanglesOverlap } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
 
+// An enum indicating which of the two "sectors" a grid tile would need to be painted in to be visible on the canvas.
+// Left   - To the left of the boundary between two background images if the boundary is in view (on canvas).
+// Right  - To the right of the boundary between two background images if the boundary is in view (on canvas).
+// Anything not in view (on canvas) will default to WrapSector.Left;
+export enum WrapSector {
+  Left,
+  Right,
+};
+
 // A tile on the background grid.
 export class Tile {
     col: number;
@@ -29,7 +38,7 @@ export class Tile {
     // Given a desired sector and the current background shift, return a rect with given top-left
     // Coord, width, and height, but shifted to the given sector.
     rectInSector(sector: WrapSector, shift: Coord, pos: Coord, width: number, height: number): Rect {
-      let topLeft = pos.plus((sector == WrapSector.Left) ? 0 : BACKGROUND_WIDTH, 0);
+      let topLeft = pos.plus((sector === WrapSector.Left) ? 0 : BACKGROUND_WIDTH, 0);
       return {
         a: topLeft,
         b: topLeft.plus(width - 1, height - 1),
@@ -39,13 +48,4 @@ export class Tile {
     toString(): string {
       return "( " + this.col + ", " + this.row + " )";
     }
-};
-
-// An enum indicating which of the two "sectors" a grid tile would need to be painted in to be visible on the canvas.
-// Left   - To the left of the boundary between two background images if the boundary is in view (on canvas).
-// Right  - To the right of the boundary between two background images if the boundary is in view (on canvas).
-// Anything not in view (on canvas) will default to WrapSector.Left;
-export enum WrapSector {
-    Left,
-    Right,
 };

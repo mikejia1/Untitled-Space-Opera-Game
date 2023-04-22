@@ -17,10 +17,12 @@ import {
   STOP_DOWN,
   STOP_LEFT,
   STOP_RIGHT,
+  toggleShowCollisionRects,
 } from "../store/actions";
 import { IGlobalState } from "../store/classes";
 import { clearBoard, drawState } from "../utils";
 import Instruction from "./Instructions";
+import DebugControls from './DebugControls';
 
 export interface ICanvasBoard {
   height: number;
@@ -93,6 +95,11 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     window.addEventListener("keyup", handleKeyUpEvents);
   }, [context, dispatch, handleKeyDownEvents, handleKeyUpEvents, height, state, width]);
 
+  // Toggle the showCollisionRects debug boolean.
+  const collisionRectsDebug = useCallback(() => {
+    dispatch(toggleShowCollisionRects());
+  }, [context, dispatch])
+
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
     //Draw on canvas each time
@@ -136,6 +143,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
         height={height}
       />
       <Instruction resetBoard={resetBoard} />
+      <DebugControls collisionRectsDebug={collisionRectsDebug} />
     </>
   );
 };

@@ -19,6 +19,7 @@ import {
   STOP_LEFT,
   STOP_UP,
   STOP_DOWN,
+  TOGGLE_DEBUG_CONTROL_COLLISION_RECTS,
 } from "../actions";
 import { V_TILE_COUNT, H_TILE_COUNT, collisions } from "../data/collisions";
 import { InvisibleCollider } from "../../scene";
@@ -132,21 +133,22 @@ function invisibleCollidersForMapFeatures(nextColliderId: number): Collider[] {
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
-    case RIGHT:           return newKeyDown(state, Direction.Right);
-    case LEFT:            return newKeyDown(state, Direction.Left);
-    case UP:              return newKeyDown(state, Direction.Up);
-    case DOWN:            return newKeyDown(state, Direction.Down);
-    case STOP_RIGHT:      return newKeyUp(state, Direction.Right);
-    case STOP_LEFT:       return newKeyUp(state, Direction.Left);
-    case STOP_UP:         return newKeyUp(state, Direction.Up);
-    case STOP_DOWN:       return newKeyUp(state, Direction.Down);
-    case TOGGLE_EQUIP:    return toggleEquip(state);
-    case USE_ITEM:        return utiliseItem(state);
-    case RESET:           return initialGameState();
-    case RESET_SCORE:     return { ...state, score: 0 };
-    case INCREMENT_SCORE: return { ...state, score: state.score + 1 };
-    case TICK:            return updateFrame(state);
-    default:              return state;
+    case RIGHT:                                 return newKeyDown(state, Direction.Right);
+    case LEFT:                                  return newKeyDown(state, Direction.Left);
+    case UP:                                    return newKeyDown(state, Direction.Up);
+    case DOWN:                                  return newKeyDown(state, Direction.Down);
+    case STOP_RIGHT:                            return newKeyUp(state, Direction.Right);
+    case STOP_LEFT:                             return newKeyUp(state, Direction.Left);
+    case STOP_UP:                               return newKeyUp(state, Direction.Up);
+    case STOP_DOWN:                             return newKeyUp(state, Direction.Down);
+    case TOGGLE_EQUIP:                          return toggleEquip(state);
+    case USE_ITEM:                              return utiliseItem(state);
+    case RESET:                                 return initialGameState();
+    case RESET_SCORE:                           return { ...state, score: 0 };
+    case INCREMENT_SCORE:                       return { ...state, score: state.score + 1 };
+    case TICK:                                  return updateFrame(state);
+    case TOGGLE_DEBUG_CONTROL_COLLISION_RECTS:  return toggleDebugControlCollisionRects(state);
+    default:                                    return state;
   }
 };
 
@@ -158,11 +160,11 @@ function newKeyUp(state: IGlobalState, direction: Direction): IGlobalState {
     keysPressed.splice(index, 1); // 2nd parameter means remove one item only
   }
   // Only stop gardener if no keys are pressed.
-  if (keysPressed.length == 0) {
+  if (keysPressed.length === 0) {
     return { ...state, keysPressed: keysPressed, gardener: state.gardener.stop()}
   }
   // Update facing direction of gardener if new key is to the left or right.
-  if (keysPressed[0] == Direction.Left || keysPressed[0] == Direction.Right) {
+  if (keysPressed[0] === Direction.Left || keysPressed[0] === Direction.Right) {
     return { ...state, keysPressed: keysPressed, gardener: state.gardener.changeFacingDirection(keysPressed[0])}
   }
   return {...state, keysPressed: keysPressed};
@@ -178,7 +180,7 @@ function newKeyDown(state: IGlobalState, direction: Direction): IGlobalState {
   const keys = [direction, ...state.keysPressed];
   // If keypress is to the left or right, update the gardener's facing direction.
   let gardener = state.gardener;
-  if (direction == Direction.Left || direction == Direction.Right) {
+  if (direction === Direction.Left || direction === Direction.Right) {
     gardener = gardener.changeFacingDirection(direction);
   }
   gardener.moving = true;
@@ -187,7 +189,7 @@ function newKeyDown(state: IGlobalState, direction: Direction): IGlobalState {
 
 function ignoreKeyPress(newDirection: Direction, keysPressed: Direction[]): boolean {
   // If key is the same as the current direction, ignore it.
-  if (keysPressed[0]==newDirection) return true;
+  if (keysPressed[0] === newDirection) return true;
   return false;
 }
 
@@ -277,6 +279,17 @@ function updateFrame(state: IGlobalState): IGlobalState {
     currentFrame: f,
     npcs: newNPCs,
   }
+}
+
+// Toggle debug control showCollisionRects from False to True or vice versa.
+function toggleDebugControlCollisionRects(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    debugSettings: {
+      ...state.debugSettings,
+      showCollisionRects: !state.debugSettings.showCollisionRects,
+    },
+  };
 }
 
 // Allow an NPC to randomly choose a new movement. If the NPC is not currently moving, wait for
