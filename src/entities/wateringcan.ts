@@ -1,4 +1,4 @@
-import { Colour, positionRect, outlineRect, TILE_HEIGHT, TILE_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect } from '../utils';
+import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Gardener } from './gardener';
@@ -55,8 +55,8 @@ export class WateringCan implements Paintable {
 
     // Rectangle that determines how close you need to be to equip the watering can.
     equipRect(): Rect {
-        let centre = this.pos.plus(TILE_WIDTH / 2, TILE_HEIGHT * -0.5);
-        let span = Math.max(TILE_WIDTH, TILE_HEIGHT) * 0.6;
+        let centre = this.pos.plus(ENTITY_RECT_WIDTH / 2, ENTITY_RECT_HEIGHT * -0.5);
+        let span = Math.max(ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT) * 0.6;
         return {
             a: centre.plus(-span * 2, -span * 2),
             b: centre.plus(span * 2, span * 2),

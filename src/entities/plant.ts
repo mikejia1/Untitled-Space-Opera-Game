@@ -1,6 +1,6 @@
 import { IGlobalState } from '../store/classes';
 import {
-  TILE_WIDTH, TILE_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect,
+  ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect,
   positionRect, fillRect, outlineRect, computeBackgroundShift, Coord, Rect,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/collisions';
@@ -116,7 +116,7 @@ export class Plant {
     let newPos = this.pos.plus(shift.x, shift.y);
 
     // The plant's rectangle.
-    let x1 = newPos.x + (TILE_WIDTH / 2) - (this.width / 2);
+    let x1 = newPos.x + (ENTITY_RECT_WIDTH / 2) - (this.width / 2);
     let y1 = newPos.y - this.height;
     let x2 = x1 + this.width - 1;
     let y2 = y1 + this.height - 1;
@@ -128,7 +128,7 @@ export class Plant {
     outlineRect(canvas, visRect, Colour.PLANT_OUTLINE);
 
     // Paint the fruit(s), if any.
-    let fruitPos = newPos.plus(TILE_WIDTH / 2, -(TILE_HEIGHT + 2));
+    let fruitPos = newPos.plus(ENTITY_RECT_WIDTH / 2, -(ENTITY_RECT_HEIGHT + 2));
     this.fruits.forEach(fruit => fruit.paint(canvas, fruitPos));
 
     // Extra debug displays.
@@ -158,15 +158,15 @@ export class Plant {
   // Return the invisible rectangle that determines collision behaviour for the plant.
   collisionRect(): Rect {
     return {
-      a: this.pos.plus(0, -TILE_HEIGHT),
-      b: this.pos.plus(TILE_WIDTH, 0),
+      a: this.pos.plus(0, -ENTITY_RECT_HEIGHT),
+      b: this.pos.plus(ENTITY_RECT_WIDTH, 0),
     }
   }
 
   // Return the invisible rectangle that determines how close you need to be to water the plant.
   wateringRect(): Rect {
-    let span = Math.max(TILE_WIDTH, TILE_HEIGHT) * 0.6;
-    let base = this.pos.plus(TILE_WIDTH / 2, -TILE_HEIGHT / 2);
+    let span = Math.max(ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT) * 0.6;
+    let base = this.pos.plus(ENTITY_RECT_WIDTH / 2, -ENTITY_RECT_HEIGHT / 2);
     return {
       a: base.plus(-span * 2, -span * 2),
       b: base.plus(span * 2, span * 2),

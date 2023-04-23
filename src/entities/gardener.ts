@@ -1,7 +1,7 @@
 import { IGlobalState, Collider, Paintable } from '../store/classes';
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
-    TILE_HEIGHT, TILE_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
+    ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
     Coord, Rect,
 } from '../utils';
@@ -148,8 +148,8 @@ export class Gardener implements Paintable, Collider {
     // Return the invisible rectangle that determines collision behaviour for the gardener.
     collisionRect(): Rect {
         return {
-            a: this.pos.plus(0, -TILE_HEIGHT),
-            b: this.pos.plus(TILE_WIDTH, 0),
+            a: this.pos.plus(0, -ENTITY_RECT_HEIGHT),
+            b: this.pos.plus(ENTITY_RECT_WIDTH, 0),
         }
     }
 
@@ -157,10 +157,10 @@ export class Gardener implements Paintable, Collider {
     facingDetectionRect(): Rect {
         let rect = this.collisionRect();
         switch (this.facing) {
-            case Direction.Up:    return shiftRect(rect, 0, -TILE_HEIGHT);
-            case Direction.Down:  return shiftRect(rect, 0, TILE_HEIGHT);
-            case Direction.Left:  return shiftRect(rect, -TILE_WIDTH, 0);
-            case Direction.Right: return shiftRect(rect, TILE_WIDTH, 0);
+            case Direction.Up:    return shiftRect(rect, 0, -ENTITY_RECT_HEIGHT);
+            case Direction.Down:  return shiftRect(rect, 0, ENTITY_RECT_HEIGHT);
+            case Direction.Left:  return shiftRect(rect, -ENTITY_RECT_WIDTH, 0);
+            case Direction.Right: return shiftRect(rect, ENTITY_RECT_WIDTH, 0);
         }
     }
   }

@@ -1,7 +1,7 @@
 import { Collider, IGlobalState, Paintable } from '../store/classes';
 import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
-    TILE_HEIGHT, TILE_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
+    ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
     Coord, Rect,
 } from '../utils';
@@ -44,8 +44,8 @@ export class NonPlayer implements Paintable, Collider {
     // Return the invisible rectangle that determines collision behaviour for the NPC.
     collisionRect(): Rect {
         return {
-            a: this.pos.plus(0, -TILE_HEIGHT),
-            b: this.pos.plus(TILE_WIDTH, 0),
+            a: this.pos.plus(0, -ENTITY_RECT_HEIGHT),
+            b: this.pos.plus(ENTITY_RECT_WIDTH, 0),
         }
     }
 

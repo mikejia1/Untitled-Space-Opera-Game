@@ -3,7 +3,7 @@ import { MAP_TILE_SIZE } from "../store/data/collisions";
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
   BACKGROUND_WIDTH, BACKGROUND_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT, Direction, ALL_DIRECTIONS,
-  Colour, TILE_HEIGHT, TILE_WIDTH,
+  Colour, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH,
  } from "./constants";
  import { Coord } from './coord';
  import { Rect } from './rect';
@@ -186,8 +186,8 @@ export function fillRect(canvas: CanvasRenderingContext2D, rect: Rect, colour: s
 // Rectangle of dimensions TILE_WIDTH x TILE_HEIGHT at a Paintable's position.
 export function positionRect(obj: Paintable): Rect {
   return {
-    a: obj.pos.plus(0, -TILE_HEIGHT),
-    b: obj.pos.plus(TILE_WIDTH, 0),
+    a: obj.pos.plus(0, -ENTITY_RECT_HEIGHT),
+    b: obj.pos.plus(ENTITY_RECT_WIDTH, 0),
   };
 }
 
