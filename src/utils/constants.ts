@@ -9,7 +9,7 @@ export const CANVAS_WIDTH = 400;
 export const CANVAS_HEIGHT = 240;
 
 // The number of pixels wide/tall a single spot on the grid occupies.
-export const TILE_WIDTH = 20;
+export const TILE_WIDTH = 10;
 export const TILE_HEIGHT = 10;
 
 // The number of pixels left/right/up/down that the gardener moves on WASD input.

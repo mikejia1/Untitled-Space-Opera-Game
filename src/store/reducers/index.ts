@@ -26,7 +26,7 @@ import { InvisibleCollider } from "../../scene";
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
-  return new Gardener(colliderId, new Coord(200, 150), Direction.Up, false);
+  return new Gardener(colliderId, new Coord(200, 220), Direction.Up, false);
 }
 
 // Create watering can for start of game.
@@ -36,10 +36,10 @@ function initialWateringCan(): WateringCan {
 
 // Generate the game starting state.
 function initialGameState(): IGlobalState {
-  const avatar = new Image(192, 192);
-  const npcimage = new Image(192, 192);
-  const background = new Image(400, 240);
-  const wateringcan = new Image(16, 16);
+  const avatar = new Image();
+  const npcimage = new Image();
+  const background = new Image();
+  const wateringcan = new Image();
   avatar.src = require('../../entities/images/gardener/gardenerwalkcycle.png');
   avatar.onload = () => {
       console.log("Gardener walkcycle source image loaded.");
@@ -69,7 +69,7 @@ function initialGameState(): IGlobalState {
   colliderId += worldBoundaries.length;
 
   // Create a bunch of NPCs and increment colliderId accordingly.
-  let npcs = gridOfNPCs(colliderId, new Coord(300, 150), 25, 10, 10);
+  let npcs = gridOfNPCs(colliderId, new Coord(200, 250), 25, 2, 2);
   colliderId += npcs.length;
 
   return {
@@ -122,7 +122,7 @@ function invisibleCollidersForMapFeatures(nextColliderId: number): Collider[] {
   for (let r = 0; r < V_TILE_COUNT; r++) {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
-      if (collisions[i] !== 689) continue;
+      if (collisions[i] == 0) continue;
       let ic = new InvisibleCollider(nextColliderId + all.length, tileRect(r,c));
       all = [...all, ic];
     }
