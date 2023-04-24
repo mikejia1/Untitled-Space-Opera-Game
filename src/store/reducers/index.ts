@@ -21,8 +21,9 @@ import {
   STOP_DOWN,
   TOGGLE_DEBUG_CONTROL_COLLISION_RECTS,
 } from "../actions";
-import { V_TILE_COUNT, H_TILE_COUNT, collisions } from "../data/collisions";
+import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
+import { create } from "domain";
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
@@ -69,6 +70,10 @@ function initialGameState(): IGlobalState {
   let features = invisibleCollidersForMapFeatures(colliderId);
   colliderId += features.length;
 
+  // Create plants from initial plant positions. 
+  let allPlants = createPlants(colliderId);
+  colliderId += allPlants.length;
+
   // Create invisible colliders for world boundaries with unique collider Ids and increment colliderId accordingly.
   let worldBoundaries = worldBoundaryColliders(colliderId);
   colliderId += worldBoundaries.length;
@@ -82,11 +87,7 @@ function initialGameState(): IGlobalState {
     keysPressed: [],
     score: 0,
     wateringCan: initialWateringCan(),
-    plants: [
-      new Plant(colliderId++, new Coord(200, 200), INITIAL_PLANT_HEALTH),
-      new Plant(colliderId++, new Coord(150, 200), INITIAL_PLANT_HEALTH),
-      new Plant(colliderId++, new Coord(300, 100), INITIAL_PLANT_HEALTH),
-      new Plant(colliderId++, new Coord(50, 70), INITIAL_PLANT_HEALTH)],
+    plants: allPlants,
     npcs: npcs,
     currentFrame: 0,
     gimage: avatar,
@@ -117,6 +118,20 @@ function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: numbe
         pos: pos.plus(col * spacing, row * spacing), 
       });
       all = [...all, npc];
+    }
+  }
+  return all;
+}
+
+function createPlants(colliderId: number): Plant[]{
+  let all: Plant[] = [];
+  for (let r = 0; r < V_TILE_COUNT; r++) {
+    for (let c = 0; c < H_TILE_COUNT; c++) {
+      let i = (r * H_TILE_COUNT) + c;
+      if (plants[i] == 0) continue;
+      // Shift the vertical position of plants by 4 pixels to better align with dirt patch. 
+      let plant: Plant = new Plant(colliderId++, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE+8), INITIAL_PLANT_HEALTH);
+      all = [...all, plant];
     }
   }
   return all;

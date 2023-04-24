@@ -1,6 +1,6 @@
 import { IGlobalState } from '../store/classes';
 import { CANVAS_RECT, BACKGROUND_WIDTH, Coord, Rect, rectanglesOverlap } from '../utils';
-import { MAP_TILE_SIZE } from '../store/data/collisions';
+import { MAP_TILE_SIZE } from '../store/data/positions';
 
 // An enum indicating which of the two "sectors" a grid tile would need to be painted in to be visible on the canvas.
 // Left   - To the left of the boundary between two background images if the boundary is in view (on canvas).

@@ -3,7 +3,7 @@ import {
   ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect,
   positionRect, fillRect, outlineRect, computeBackgroundShift, Coord, Rect,
 } from '../utils';
-import { MAP_TILE_SIZE } from '../store/data/collisions';
+import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Fruit } from './fruit';
 import { Tile } from '../scene';
 

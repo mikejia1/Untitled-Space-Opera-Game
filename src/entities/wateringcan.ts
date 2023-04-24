@@ -1,5 +1,5 @@
 import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect } from '../utils';
-import { MAP_TILE_SIZE } from '../store/data/collisions';
+import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Gardener } from './gardener';
 import { Tile } from '../scene';

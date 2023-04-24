@@ -1,5 +1,5 @@
 import { IGlobalState, Paintable } from "../store/classes";
-import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/collisions";
+import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/positions";
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
   BACKGROUND_WIDTH, BACKGROUND_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT, Direction, ALL_DIRECTIONS,

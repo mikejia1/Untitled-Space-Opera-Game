@@ -5,7 +5,7 @@ import {
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
     Coord, Rect,
 } from '../utils';
-import { MAP_TILE_SIZE } from '../store/data/collisions';
+import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 
 // The height of the gardener in pixels.

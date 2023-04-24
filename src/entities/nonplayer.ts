@@ -5,7 +5,7 @@ import {
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
     Coord, Rect,
 } from '../utils';
-import { MAP_TILE_SIZE } from '../store/data/collisions';
+import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 
 export class NonPlayer implements Paintable, Collider {
