@@ -1,5 +1,5 @@
 import { IGlobalState, Paintable } from "../store/classes";
-import { MAP_TILE_SIZE } from "../store/data/collisions";
+import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/collisions";
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
   BACKGROUND_WIDTH, BACKGROUND_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT, Direction, ALL_DIRECTIONS,
@@ -98,15 +98,30 @@ export function rectanglesOverlap(rect1: any, rect2: any): boolean {
 // If any of the WrapSector.Left copy of the world should be visible, paint a copy there as well.
 // If any of the WrapSector.Right copy of the world should be visible, paint a copy there as well.
 function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
+  drawDeepSpaceFrame(state, canvas, shift);
   canvas.drawImage(state.backgroundImage, shift.x, shift.y);
   //outlineRect(canvas, {a: new Coord(shift.x, shift.y), b: new Coord(shift.x + BACKGROUND_WIDTH - 1, shift.y + BACKGROUND_HEIGHT - 1)}, "#000000");
   if (shift.x >= 0) {
     let reshift = shift.minus(BACKGROUND_WIDTH, 0);
+    drawDeepSpaceFrame(state, canvas, reshift);
     canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
   } else if ((shift.x + BACKGROUND_WIDTH) < CANVAS_WIDTH) {
     let reshift = shift.plus(BACKGROUND_WIDTH, 0);
+    drawDeepSpaceFrame(state, canvas, reshift);
     canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
+  
   }
+}
+
+function drawDeepSpaceFrame(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord){
+  let frame = Math.floor(state.currentFrame % 24 / 6);
+  canvas.drawImage(
+    state.deepSpaceImage,                                     // Sprite source image
+    frame * MAP_TILE_SIZE * H_TILE_COUNT, 0,                  // Top-left corner of frame in source
+    H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE,   // Size of frame in source
+    shift.x,                                                  // X position of top-left corner on canvas
+    shift.y,                                                  // Y position of top-left corner on canvas
+    H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
 }
 
 function randomNumber(min: number, max: number) {

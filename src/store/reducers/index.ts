@@ -40,6 +40,7 @@ function initialGameState(): IGlobalState {
   const npcimage = new Image();
   const background = new Image();
   const wateringcan = new Image();
+  const deepSpace = new Image();
   avatar.src = require('../../entities/images/gardener/gardenerwalkcycle.png');
   avatar.onload = () => {
       console.log("Gardener walkcycle source image loaded.");
@@ -55,6 +56,10 @@ function initialGameState(): IGlobalState {
   wateringcan.src = require('../../entities/images/wateringcan/wateringcan.png');
   wateringcan.onload = () => {
       console.log("watering can image loaded.");
+  };
+  deepSpace.src = require('../images/space_frames.png');
+  deepSpace.onload = () => {
+      console.log("deep space image loaded.");
   };
 
   // Ensure all colliders get a unique ID.
@@ -88,6 +93,7 @@ function initialGameState(): IGlobalState {
     npcimage: npcimage,
     backgroundImage: background,
     wateringCanImage: wateringcan,
+    deepSpaceImage: deepSpace,
     invisibleColliders: [...worldBoundaries, ...features],  // Map features and world boundaries both contribute invisible colliders.
     muted: false,
     debugSettings: {
