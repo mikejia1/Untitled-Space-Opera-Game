@@ -6,3 +6,7 @@ export interface Rect {
     a: Coord
     b: Coord
 }
+
+export function rectToString(rect: Rect): String {
+    return "[" + rect.a.toString() + " - " + rect.b.toString + "]";
+}

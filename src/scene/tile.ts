@@ -1,5 +1,5 @@
 import { IGlobalState } from '../store/classes';
-import { CANVAS_RECT, BACKGROUND_WIDTH, Coord, Rect, rectanglesOverlap } from '../utils';
+import { CANVAS_RECT, BACKGROUND_WIDTH, Coord, Rect, rectanglesOverlap, CANVAS_WIDTH } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 
 // An enum indicating which of the two "sectors" a grid tile would need to be painted in to be visible on the canvas.
@@ -23,15 +23,18 @@ export class Tile {
 
     // Determine which WrapSector to put the cell in to make it visible on canvas.
     sector(state: IGlobalState, shift: Coord): WrapSector {
-      // Position of tile's top-left corner, in pixels, within background image.
-      let pos = new Coord(this.col * MAP_TILE_SIZE, this.row * MAP_TILE_SIZE);
-      // Apply background image shift to see where that position ends up relative to canvas.
-      pos = pos.plus(shift.x, shift.y);
-      // A version of tile's rectangle if it were in the WrapSector.Right sector.
-      let rightRect = this.rectInSector(WrapSector.Right, shift, pos, MAP_TILE_SIZE, MAP_TILE_SIZE);
-      // If having it in the WrapSector.Right sector would overlap with canvs, then that's the sector we want.
-      if (rectanglesOverlap(CANVAS_RECT, rightRect)) return WrapSector.Right;
-      // Else default to WrapSector.Left sector.
+      // Special logic for ring-world wrap-around maps that are wider than the canvas.
+      if (BACKGROUND_WIDTH > CANVAS_WIDTH) {
+        // Position of tile's top-left corner, in pixels, within background image.
+        let pos = new Coord(this.col * MAP_TILE_SIZE, this.row * MAP_TILE_SIZE);
+        // Apply background image shift to see where that position ends up relative to canvas.
+        pos = pos.plus(shift.x, shift.y);
+        // A version of tile's rectangle if it were in the WrapSector.Right sector.
+        let rightRect = this.rectInSector(WrapSector.Right, shift, pos, MAP_TILE_SIZE, MAP_TILE_SIZE);
+        // If having it in the WrapSector.Right sector would overlap with canvs, then that's the sector we want.
+        if (rectanglesOverlap(CANVAS_RECT, rightRect)) return WrapSector.Right;
+      }
+      // WrapSector.Left is the default or fallback.
       return WrapSector.Left;
     }
 

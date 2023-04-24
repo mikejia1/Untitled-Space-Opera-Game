@@ -66,9 +66,25 @@ export const drawState = (
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle.
 export function computeBackgroundShift(state: IGlobalState): Coord {
-  let firstShift = CANVAS_CENTRE.minus(state.gardener.pos.x, state.gardener.pos.y);
-  if (firstShift.x >= 0) return firstShift.minus(BACKGROUND_WIDTH, 0);
-  return firstShift;
+  let shift = CANVAS_CENTRE.minus(state.gardener.pos.x, state.gardener.pos.y);
+  // Prevent top of background image from dropping below top of canvas.
+  if (shift.y > 0) shift = shift.minus(0, shift.y);
+  // Prevent bottom of background image from rising above bottom of canvas.
+  if (shift.y + BACKGROUND_HEIGHT < CANVAS_HEIGHT) shift = shift.plus(0, CANVAS_HEIGHT - (shift.y + BACKGROUND_HEIGHT));
+
+  // Wrap-around logic for wide background ring-world type maps.
+  if (BACKGROUND_WIDTH > CANVAS_WIDTH) {
+    if (shift.x >= 0) return shift.minus(BACKGROUND_WIDTH, 0);
+    return shift;
+  }
+
+  // Non-wrap-around logic for narrow background bounded maps.
+  const padding = (CANVAS_WIDTH - BACKGROUND_WIDTH) / 2;
+  // Prevent left edge of background image from moving farther right than the padding amount.
+  if (shift.x > padding) shift = shift.minus(shift.x - padding, 0);
+  // Prevent right edge of background image from moving farther left than the padding amount.
+  if ((shift.x + BACKGROUND_WIDTH) < (CANVAS_WIDTH - padding)) shift = shift.plus((CANVAS_WIDTH - padding) - (shift.x + BACKGROUND_WIDTH), 0);
+  return shift;
 }
 
 // Compute a displacement that would shift a given tile into the correct place to make it visible.
@@ -101,15 +117,21 @@ function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderi
   drawDeepSpaceFrame(state, canvas, shift);
   canvas.drawImage(state.backgroundImage, shift.x, shift.y);
   //outlineRect(canvas, {a: new Coord(shift.x, shift.y), b: new Coord(shift.x + BACKGROUND_WIDTH - 1, shift.y + BACKGROUND_HEIGHT - 1)}, "#000000");
-  if (shift.x >= 0) {
-    let reshift = shift.minus(BACKGROUND_WIDTH, 0);
-    drawDeepSpaceFrame(state, canvas, reshift);
-    canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
-  } else if ((shift.x + BACKGROUND_WIDTH) < CANVAS_WIDTH) {
-    let reshift = shift.plus(BACKGROUND_WIDTH, 0);
-    drawDeepSpaceFrame(state, canvas, reshift);
-    canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
-  
+  // A ring-world background image wider than the canvas. 
+  if (BACKGROUND_WIDTH > CANVAS_WIDTH) {
+    if (shift.x >= 0) {
+      let reshift = shift.minus(BACKGROUND_WIDTH, 0);
+      drawDeepSpaceFrame(state, canvas, reshift);
+      canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
+    } else if ((shift.x + BACKGROUND_WIDTH) < CANVAS_WIDTH) {
+      let reshift = shift.plus(BACKGROUND_WIDTH, 0);
+      drawDeepSpaceFrame(state, canvas, reshift);
+      canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);  
+    }
+  } else {
+    // A narrow bounded map that is not wider than the canvas.
+    drawDeepSpaceFrame(state, canvas, shift);
+    canvas.drawImage(state.backgroundImage, shift.x, shift.y);  
   }
 }
 
@@ -161,6 +183,9 @@ export function shiftForVisibleRect(rect: Rect, shift: Coord): Rect {
     a: rect.a.plus(shift.x, shift.y),
     b: rect.b.plus(shift.x, shift.y),
   };
+  // For non-ring-world bounded maps, always return the leftRect.
+  if (CANVAS_WIDTH >= BACKGROUND_WIDTH) return leftRect;
+  // For ring-world wrap-around maps, it depends which rect would actually be visible.
   let rightRect = shiftRect(leftRect, BACKGROUND_WIDTH, 0);
   if (rectanglesOverlap(CANVAS_RECT, rightRect)) return rightRect;
   return leftRect;
@@ -168,23 +193,44 @@ export function shiftForVisibleRect(rect: Rect, shift: Coord): Rect {
 
 // Two invisible colliders to stop gardener and NPCs from wandering beyond top and bottom edges of world.
 export function worldBoundaryColliders(nextColliderId: number): InvisibleCollider[] {
-  return [
+  const thickness = 5;
+  let boundaries = [
     // Above background image.
     new InvisibleCollider(
       nextColliderId,
       {
-        a: new Coord(-500, -500),
-        b: new Coord(BACKGROUND_WIDTH + 500, -1),
+        a: new Coord(-thickness, -thickness),
+        b: new Coord(BACKGROUND_WIDTH + thickness, -1),
       }),
     // Below background image.
     new InvisibleCollider(
       nextColliderId + 1,
       {
-        a: new Coord(-500, BACKGROUND_HEIGHT),
-        b: new Coord(BACKGROUND_WIDTH + 500, BACKGROUND_HEIGHT + 500),
+        a: new Coord(-thickness, BACKGROUND_HEIGHT),
+        b: new Coord(BACKGROUND_WIDTH + thickness, BACKGROUND_HEIGHT + thickness),
       }),
   ];
-}
+
+  // For ring-world maps that are wider than the canvas, the above boundaries are all that are needed.
+  if (BACKGROUND_WIDTH > CANVAS_WIDTH) return boundaries;
+
+  // For non-ring-world maps with width narrower than canvas width, there are left and right boundaries too.
+  return [
+    ...boundaries,
+    new InvisibleCollider(
+      nextColliderId + 2,
+      {
+        a: new Coord(-thickness, -thickness),
+        b: new Coord(-1, BACKGROUND_HEIGHT + thickness),
+      }),
+    new InvisibleCollider(
+      nextColliderId + 3,
+      {
+        a: new Coord(BACKGROUND_WIDTH, -thickness),
+        b: new Coord(BACKGROUND_WIDTH + thickness, BACKGROUND_HEIGHT + thickness),
+      }),
+  ];
+  }
 
 // Paint a Rect on a canvas with a given colour.
 export function outlineRect(canvas: CanvasRenderingContext2D, rect: Rect, colour: string): void {

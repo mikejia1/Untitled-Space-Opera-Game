@@ -1,5 +1,5 @@
 import { Collider } from '../store/classes';
-import { Rect } from '../utils';
+import { Rect, rectToString } from '../utils';
 
 // An invisible object that exists just to collide.
 export class InvisibleCollider implements Collider {
@@ -13,5 +13,9 @@ export class InvisibleCollider implements Collider {
   
     collisionRect(): Rect {
         return this.rect;
+    }
+
+    toString(): String {
+        return rectToString(this.rect);
     }
 }

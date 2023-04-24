@@ -1,8 +1,8 @@
 //import { Coord } from './';
 
 // Width and height of background image.
-export const BACKGROUND_WIDTH = 2000;
-export const BACKGROUND_HEIGHT = 600;
+export const BACKGROUND_WIDTH = 384;//2000;
+export const BACKGROUND_HEIGHT = 384;//600;
 
 // Width and height of the 2D canvas.
 export const CANVAS_WIDTH = 400;
