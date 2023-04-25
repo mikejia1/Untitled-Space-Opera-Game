@@ -15,6 +15,7 @@ import {
   TOGGLE_EQUIP,
   UP,
   USE_ITEM,
+  STOP_WATERING,
   STOP_RIGHT,
   STOP_LEFT,
   STOP_UP,
@@ -27,7 +28,7 @@ import { create } from "domain";
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
-  return new Gardener(colliderId, new Coord(200, 220), GardenerDirection.Right, false);
+  return new Gardener(colliderId, new Coord(200, 220), GardenerDirection.Right, false, false, false);
 }
 
 // Create watering can for start of game.
@@ -37,16 +38,10 @@ function initialWateringCan(): WateringCan {
 
 // Generate the game starting state.
 function initialGameState(): IGlobalState {
-  const avatar = new Image();
   const npcimage = new Image();
   const background = new Image();
   const wateringcan = new Image();
   const deepSpace = new Image();
-  //avatar.src = require('../../entities/images/gardener/gardenerwalkcycle.png');
-  avatar.src = require('../../entities/images/gardener/base_walk_strip8.png');
-  avatar.onload = () => {
-      console.log("Gardener walkcycle source image loaded.");
-  };
   npcimage.src = require('../../entities/images/nonplayer/npcwalkcycle.png');
   npcimage.onload = () => {
       console.log("NPC walkcycle source image loaded.")
@@ -91,8 +86,7 @@ function initialGameState(): IGlobalState {
     plants: allPlants,
     npcs: npcs,
     currentFrame: 0,
-    // gimage: avatar,
-    gardenerBaseWalkCycleImage: avatar,
+    gardenerImages: gardenerImages(),
     npcimage: npcimage,
     backgroundImage: background,
     wateringCanImage: wateringcan,
@@ -108,6 +102,25 @@ function initialGameState(): IGlobalState {
       collisionsDisabled: false,   // Disable collision checks - Gardener can walk through anything.
     },
   }
+}
+
+// Load all the gardener source images.
+function gardenerImages(): any {
+  // An object to store all gardener source images.
+  let images = {
+    walkingBase: new Image(),
+    wateringBase: new Image(),
+  };
+
+  // Specify image source files.
+  images.walkingBase.src = require('../../entities/images/gardener/base_walk_strip8.png');
+  images.wateringBase.src = require('../../entities/images/gardener/base_watering_strip5.png');
+
+  // Set the onload handler for all images.
+  images.walkingBase.onload = () => console.log("Gardener walkcycle source image loaded.");
+  images.wateringBase.onload = () => console.log("Gardener watering source image loaded.");
+
+  return images;
 }
 
 // Create a grid of NPCs with top-left one at given position, and with given spacing.
@@ -166,6 +179,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
     case STOP_DOWN:                             return newKeyUp(state, Direction.Down);
     case TOGGLE_EQUIP:                          return toggleEquip(state);
     case USE_ITEM:                              return utiliseItem(state);
+    case STOP_WATERING:                         return ceaseWatering(state);
     case RESET:                                 return initialGameState();
     case RESET_SCORE:                           return { ...state, score: 0 };
     case INCREMENT_SCORE:                       return { ...state, score: state.score + 1 };
@@ -276,6 +290,9 @@ function updateFrame(state: IGlobalState): IGlobalState {
     allColliders.set(newState.gardener.colliderId, newState.gardener);
   }
 
+  // Allow gardener to (keep) watering.
+  if (newState.gardener.watering) newState = utiliseItem(newState);
+
   // Allow NPCs to move.
   let newNPCs: NonPlayer[] = [];
   newState.npcs.forEach(npc => {
@@ -349,19 +366,6 @@ function considerNewNPCMovement(npc: NonPlayer, forced: boolean): NonPlayer {
     facing: ALL_DIRECTIONS[choice],
   });
 }
-
-/*
-// Return new array of colliders but with one particular one replaced with an updated version of itself.
-// TODO: This should be done with a map/dict instead for O(1) time instead of O(n). For now, it's fine.
-function replaceCollider(colliders: Collider[], collider: Collider): Collider[] {
-  let updated: Collider[] = [];
-  colliders.forEach(co => {
-    if (co.colliderId !== collider.colliderId) updated = [...updated, co];
-    else updated = [...updated, collider];
-  });
-  return updated;
-}
-*/
 
 // "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
 function moveNPC(state: IGlobalState, npc: NonPlayer): NonPlayer {
@@ -469,6 +473,15 @@ function utiliseItem(state: IGlobalState): IGlobalState {
   return {
     ...state,
     plants: newPlants,
+    gardener: state.gardener.setWatering(true),
+  };
+}
+
+// Set the gardener's "watering" boolean to false.
+function ceaseWatering(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    gardener: state.gardener.setWatering(false),
   };
 }
 

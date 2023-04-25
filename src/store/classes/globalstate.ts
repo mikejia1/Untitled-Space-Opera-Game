@@ -11,8 +11,7 @@ export interface IGlobalState {
     plants: Plant[];                  // All the plants currently living
     npcs: NonPlayer[];                // The various crew people wandering around in the garden
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
-    //gimage: any;                    // The gardener walkcycle sprite source image 4x4.
-    gardenerBaseWalkCycleImage: any;  // Base walk cycle source image for gardener.
+    gardenerImages: any;              // Source images for gardener sprites.
     npcimage: any;                    // The NPC walkcycle sprite source image.
     backgroundImage: any;             // The background image.
     wateringCanImage: any;            // The watering can image.

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   makeMove,
+  stopWatering,
   tick,
   DOWN,
   LEFT,
@@ -52,6 +53,9 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
             break;
           case "d":
             dispatch(makeMove(STOP_RIGHT));
+            break;
+          case "f":
+            dispatch(stopWatering());
             break;
         }
       },

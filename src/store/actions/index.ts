@@ -15,11 +15,16 @@ export const RESET_SCORE = "RESET_SCORE";
 export const TOGGLE_EQUIP = "TOGGLE_EQUIP";
 export const USE_ITEM = "USE_ITEM";
 export const TICK = "TICK";
+export const STOP_WATERING = "STOP_WATERING";
 
 export const TOGGLE_DEBUG_CONTROL_COLLISION_RECTS = "TOGGLE_DEBUG_CONTROL_COLLISION_RECTS";
 
 export const makeMove = (move: string) => ({
   type: move,
+});
+
+export const stopWatering = () => ({
+  type: STOP_WATERING
 });
 
 export const resetGame = () => ({

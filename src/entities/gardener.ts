@@ -10,21 +10,23 @@ import { Tile } from '../scene';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
-  
+
 // The gardener who tends the garden.
 export class Gardener implements Paintable, Collider {
     pos: Coord;                 // Position of the gardener in the environment.
     facing: GardenerDirection;  // Direction the gardener is currently facing.
     itemEquipped: boolean;      // Whether or not the gardener has an item equipped.
     moving: boolean;            // Whether or not the gardener is moving.
+    watering: boolean;          // Whether or not the gardener is watering.
     colliderId: number;         // The ID that distinguishes the collider from all others.
  
-    constructor(colliderId: number, pos: Coord, facing: GardenerDirection, itemEquipped: boolean=false, moving: boolean=false) {
+    constructor(colliderId: number, pos: Coord, facing: GardenerDirection, itemEquipped: boolean=false, moving: boolean=false, watering: boolean) {
         this.colliderId = colliderId;
         this.pos = pos;
         this.facing = facing;
         this.itemEquipped = itemEquipped;
         this.moving = moving;
+        this.watering = watering;
     }
     
     opposingDirection(direction1: Direction, direction2: Direction){
@@ -75,54 +77,42 @@ export class Gardener implements Paintable, Collider {
       let newPos = new Coord(
         (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
         (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
-      return new Gardener(this.colliderId, newPos, this.facing, this.itemEquipped, true);
+      return new Gardener(this.colliderId, newPos, this.facing, this.itemEquipped, true, this.watering);
     }
 
     stop(): Gardener {
-      return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, false);
+      return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, false, this.watering);
+    }
+
+    setWatering(watering: boolean): Gardener {
+        return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, this.moving, watering);
     }
 
     // Change facing direction of the gardener but without changing its position.
     changeFacingDirection(direction: Direction): Gardener {
         // Up and Down won't change gardener facing direction.
         if ((direction === Direction.Up ) || (direction === Direction.Down)) {
-            return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, this.moving /* Assume: moving = true */);
+            return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, this.moving, this.watering);
         }
         // Left and Right will change gardener facing direction.
         let dir = (direction === Direction.Left) ? GardenerDirection.Left : GardenerDirection.Right;
-        return new Gardener(this.colliderId, this.pos, dir, this.itemEquipped, this.moving /* Assume: moving = true */);
+        return new Gardener(this.colliderId, this.pos, dir, this.itemEquipped, this.moving, this.watering);
     }
   
     // Set value of itemEquipped. Return new gardener.
     setItemEquipped(itemEquipped: boolean): Gardener {
-      return new Gardener(this.colliderId, this.pos, this.facing, itemEquipped);
+      return new Gardener(this.colliderId, this.pos, this.facing, itemEquipped, this.moving, this.watering);
     }
   
     // Paint the gardener on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
-        // If the gardener is moving, animate the sprite. 
-        let frame = this.moving ? Math.floor(state.currentFrame % 36 / 6) : 0;
-
-        // Determine where, on the canvas, the gardener should be painted.
         let shift = this.computeShift(state);
         let newPos = this.pos.plus(shift.x, shift.y);        
         let flip = (this.facing === GardenerDirection.Left);
-        let dest = flip
-            ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
-            : new Coord(newPos.x - 3, newPos.y - 18);
-        canvas.save();
-        canvas.scale(flip ? -1 : 1, 1);
-        
-        // Paint gardener sprite for current frame.
-        canvas.drawImage(
-            state.gardenerBaseWalkCycleImage,  // Sprite source image
-            (frame * 96) + 40, 20,             // Top-left corner of frame in source
-            48, 48,                            // Size of frame in source
-            dest.x, dest.y,                    // Position of sprite on canvas
-            48, 48);                           // Sprite size on canvas
-    
-        // Restore canvas transforms to normal.
-        canvas.restore();
+
+        // The particular sprite cycle to use depends on what the gardener is currently doing.
+        if (this.watering) this.paintWatering(canvas, state, shift, newPos, flip);
+        else this.paintWalking(canvas, state, shift, newPos, flip);
 
         // Extra debug displays.
         if (state.debugSettings.showCollisionRects) {
@@ -134,6 +124,56 @@ export class Gardener implements Paintable, Collider {
         if (state.debugSettings.showFacingRects) {
             outlineRect(canvas, shiftRect(this.facingDetectionRect(), shift.x, shift.y), Colour.FACING_RECT);
         }
+    }
+
+    // Paint the gardener standing still or walking.
+    paintWalking(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord, newPos: Coord, flip: boolean): void {
+        // The walking animation has 8 frames.
+        let frameCount = 8;
+        let frame = this.moving ? Math.floor(state.currentFrame % (6 * frameCount) / 6) : 0;
+
+        // Determine where, on the canvas, the gardener should be painted.
+        let dest = flip
+            ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
+            : new Coord(newPos.x - 3, newPos.y - 18);
+        canvas.save();
+        canvas.scale(flip ? -1 : 1, 1);
+        
+        // Paint gardener sprite for current frame.
+        canvas.drawImage(
+            state.gardenerImages.walkingBase,  // Walking base source image
+            (frame * 96) + 40, 20,             // Top-left corner of frame in source
+            48, 48,                            // Size of frame in source
+            dest.x, dest.y,                    // Position of sprite on canvas
+            48, 48);                           // Sprite size on canvas
+    
+        // Restore canvas transforms to normal.
+        canvas.restore();
+    }
+
+    // Paint the gardener while it's watering.
+    paintWatering(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord, newPos: Coord, flip: boolean): void {
+        // The watering animation only has 5 frames.
+        let frameCount = 5;
+        let frame = Math.floor(state.currentFrame % (6 * frameCount) / 6);
+
+        // Determine where, on the canvas, the gardener should be painted.
+        let dest = flip
+            ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
+            : new Coord(newPos.x - 3, newPos.y - 18);
+        canvas.save();
+        canvas.scale(flip ? -1 : 1, 1);
+
+        // Paint gardener sprite for current frame.
+        canvas.drawImage(
+            state.gardenerImages.wateringBase,  // Watering base source image
+            (frame * 96) + 40, 20,              // Top-left corner of frame in source
+            48, 48,                             // Size of frame in source
+            dest.x, dest.y,                     // Position of sprite on canvas
+            48, 48);                            // Sprite size on canvas
+    
+        // Restore canvas transforms to normal.
+        canvas.restore();
     }
 
     // Compute a displacement that will place the Gardener at the correct place on the canvas.
