@@ -24,6 +24,7 @@ import {
   toggleShowFacingRects,
   toggleShowEquipRects,
   toggleDisableCollisions,
+  toggleGameAudio,
 } from "../store/actions";
 import { IGlobalState } from "../store/classes";
 import { clearBoard, drawState } from "../utils";
@@ -134,6 +135,11 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     dispatch(toggleDisableCollisions());
   }, [context, dispatch])
 
+    // Toggle audio on/off.
+    const toggleSound = useCallback(() => {
+      dispatch(toggleGameAudio());
+    }, [context, dispatch])
+  
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
     //Draw on canvas each time
@@ -184,6 +190,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
         facingRectsDebug={facingRectsDebug}
         equipRectsDebug={equipRectsDebug}
         disableCollisionsDebug={disableCollisionsDebug}
+        toggleSound={toggleSound}
       />
     </>
   );

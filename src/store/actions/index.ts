@@ -16,6 +16,7 @@ export const TOGGLE_EQUIP = "TOGGLE_EQUIP";
 export const USE_ITEM = "USE_ITEM";
 export const TICK = "TICK";
 export const STOP_WATERING = "STOP_WATERING";
+export const TOGGLE_GAME_AUDIO = "TOGGLE_GAME_AUDIO";
 
 export const TOGGLE_DEBUG_CONTROL_COLLISION_RECTS = "TOGGLE_DEBUG_CONTROL_COLLISION_RECTS";
 export const TOGGLE_DEBUG_CONTROL_POSITION_RECTS = "TOGGLE_DEBUG_CONTROL_POSITION_RECTS";
@@ -74,6 +75,10 @@ export const toggleShowEquipRects = () => ({
 
 export const toggleDisableCollisions = () => ({
   type: TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS
+});
+
+export const toggleGameAudio = () => ({
+  type: TOGGLE_GAME_AUDIO
 });
 
 // An animation loop event that updates state.currentFrame.

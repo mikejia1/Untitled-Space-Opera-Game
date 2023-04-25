@@ -26,6 +26,7 @@ import {
   TOGGLE_DEBUG_CONTROL_FACING_RECTS,
   TOGGLE_DEBUG_CONTROL_EQUIP_RECTS,
   TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS,
+  TOGGLE_GAME_AUDIO,
 } from "../actions";
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
@@ -191,6 +192,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
     case RESET:                                   return initialGameState();
     case RESET_SCORE:                             return { ...state, score: 0 };
     case INCREMENT_SCORE:                         return { ...state, score: state.score + 1 };
+    case TOGGLE_GAME_AUDIO:                       return toggleGameAudio(state);
     case TICK:                                    return updateFrame(state);
     case TOGGLE_DEBUG_CONTROL_COLLISION_RECTS:    return toggleDebugControlCollisionRects(state);
     case TOGGLE_DEBUG_CONTROL_POSITION_RECTS:     return toggleDebugControlPositionRects(state);
@@ -397,6 +399,14 @@ function toggleDebugControlDisableCollisions(state: IGlobalState): IGlobalState 
       ...state.debugSettings,
       collisionsDisabled: !state.debugSettings.collisionsDisabled,
     },
+  };
+}
+
+// Change state's "muted" property from false to true or vice versa.
+function toggleGameAudio(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    muted: !state.muted,
   };
 }
 
