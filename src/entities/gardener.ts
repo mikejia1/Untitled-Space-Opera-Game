@@ -3,7 +3,7 @@ import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
-    Coord, Rect,
+    Coord, Rect, GardenerDirection,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -13,13 +13,13 @@ export const GARDENER_HEIGHT = 20;
   
 // The gardener who tends the garden.
 export class Gardener implements Paintable, Collider {
-    pos: Coord;             // Position of the gardener in the environment.
-    facing: Direction;      // Direction the gardener is currently facing.
-    itemEquipped: boolean;  // Whether or not the gardener has an item equipped.
-    moving: boolean;        // Whether or not the gardener is moving.
-    colliderId: number;     // The ID that distinguishes the collider from all others.
-  
-    constructor(colliderId: number, pos: Coord, facing: Direction, itemEquipped: boolean=false, moving: boolean=false) {
+    pos: Coord;                 // Position of the gardener in the environment.
+    facing: GardenerDirection;  // Direction the gardener is currently facing.
+    itemEquipped: boolean;      // Whether or not the gardener has an item equipped.
+    moving: boolean;            // Whether or not the gardener is moving.
+    colliderId: number;         // The ID that distinguishes the collider from all others.
+ 
+    constructor(colliderId: number, pos: Coord, facing: GardenerDirection, itemEquipped: boolean=false, moving: boolean=false) {
         this.colliderId = colliderId;
         this.pos = pos;
         this.facing = facing;
@@ -84,7 +84,13 @@ export class Gardener implements Paintable, Collider {
 
     // Change facing direction of the gardener but without changing its position.
     changeFacingDirection(direction: Direction): Gardener {
-        return new Gardener(this.colliderId, this.pos, direction, this.itemEquipped, this.moving /* Assume: moving = true */);
+        // Up and Down won't change gardener facing direction.
+        if ((direction === Direction.Up ) || (direction === Direction.Down)) {
+            return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, this.moving /* Assume: moving = true */);
+        }
+        // Left and Right will change gardener facing direction.
+        let dir = (direction === Direction.Left) ? GardenerDirection.Left : GardenerDirection.Right;
+        return new Gardener(this.colliderId, this.pos, dir, this.itemEquipped, this.moving /* Assume: moving = true */);
     }
   
     // Set value of itemEquipped. Return new gardener.
@@ -95,32 +101,29 @@ export class Gardener implements Paintable, Collider {
     // Paint the gardener on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         // If the gardener is moving, animate the sprite. 
-        let frame = this.moving ? Math.floor(state.currentFrame % 24 / 6) : 0;
-        let row = 0;
-        switch (this.facing) {
-            case Direction.Down:
-                row = 0; break;
-            case Direction.Up:
-                row = 1; break;
-            case Direction.Left:
-                row = 2; break;
-            case Direction.Right:
-                row = 3; break;
-        }
+        let frame = this.moving ? Math.floor(state.currentFrame % 36 / 6) : 0;
 
         // Determine where, on the canvas, the gardener should be painted.
         let shift = this.computeShift(state);
-        let newPos = this.pos.plus(shift.x, shift.y);
-
-        // Paint gardener with small adjustment to place it exactly where you'd expect it to be.
+        let newPos = this.pos.plus(shift.x, shift.y);        
+        let flip = (this.facing === GardenerDirection.Left);
+        let dest = flip
+            ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
+            : new Coord(newPos.x - 3, newPos.y - 18);
+        canvas.save();
+        canvas.scale(flip ? -1 : 1, 1);
+        
+        // Paint gardener sprite for current frame.
         canvas.drawImage(
-            state.gimage,          // Sprite source image
-            frame * 48, row * 48,  // Top-left corner of frame in source
-            48, 48,                // Size of frame in source
-            newPos.x - 7,          // X position of top-left corner on canvas
-            newPos.y - 20,         // Y position of top-left corner on canvas
-            30, 30);               // Sprite size on canvas
+            state.gardenerBaseWalkCycleImage,  // Sprite source image
+            (frame * 96) + 40, 20,             // Top-left corner of frame in source
+            48, 48,                            // Size of frame in source
+            dest.x, dest.y,                    // Position of sprite on canvas
+            48, 48);                           // Sprite size on canvas
     
+        // Restore canvas transforms to normal.
+        canvas.restore();
+
         // Extra debug displays.
         if (state.debugSettings.showCollisionRects) {
             outlineRect(canvas, shiftRect(this.collisionRect(), shift.x, shift.y), Colour.COLLISION_RECT);
@@ -156,11 +159,9 @@ export class Gardener implements Paintable, Collider {
     // Return a rectangle adjacent to the gardener in the direction it is facing.
     facingDetectionRect(): Rect {
         let rect = this.collisionRect();
-        switch (this.facing) {
-            case Direction.Up:    return shiftRect(rect, 0, -ENTITY_RECT_HEIGHT);
-            case Direction.Down:  return shiftRect(rect, 0, ENTITY_RECT_HEIGHT);
-            case Direction.Left:  return shiftRect(rect, -ENTITY_RECT_WIDTH, 0);
-            case Direction.Right: return shiftRect(rect, ENTITY_RECT_WIDTH, 0);
-        }
+       switch (this.facing) {
+        case GardenerDirection.Left:  return shiftRect(rect, -ENTITY_RECT_WIDTH, 0);
+        case GardenerDirection.Right: return shiftRect(rect, ENTITY_RECT_WIDTH, 0);
+       }
     }
   }

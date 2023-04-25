@@ -33,6 +33,11 @@ export enum Direction {
     Up, Down, Left, Right,
 }
 
+// An enum for gardener facing direction.
+export enum GardenerDirection {
+    Left, Right,
+}
+
 export const ALL_DIRECTIONS = [Direction.Up, Direction.Down, Direction.Left, Direction.Right];
 
 // Named constants for colours.

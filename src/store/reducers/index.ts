@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, BACKGROUND_WIDTH, CANVAS_WIDTH } from "../../utils";
+import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, GardenerDirection } from "../../utils";
 import { Collider, IGlobalState } from "../classes";
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import {
@@ -27,7 +27,7 @@ import { create } from "domain";
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
-  return new Gardener(colliderId, new Coord(200, 220), Direction.Up, false);
+  return new Gardener(colliderId, new Coord(200, 220), GardenerDirection.Right, false);
 }
 
 // Create watering can for start of game.
@@ -42,7 +42,8 @@ function initialGameState(): IGlobalState {
   const background = new Image();
   const wateringcan = new Image();
   const deepSpace = new Image();
-  avatar.src = require('../../entities/images/gardener/gardenerwalkcycle.png');
+  //avatar.src = require('../../entities/images/gardener/gardenerwalkcycle.png');
+  avatar.src = require('../../entities/images/gardener/base_walk_strip8.png');
   avatar.onload = () => {
       console.log("Gardener walkcycle source image loaded.");
   };
@@ -90,7 +91,8 @@ function initialGameState(): IGlobalState {
     plants: allPlants,
     npcs: npcs,
     currentFrame: 0,
-    gimage: avatar,
+    // gimage: avatar,
+    gardenerBaseWalkCycleImage: avatar,
     npcimage: npcimage,
     backgroundImage: background,
     wateringCanImage: wateringcan,
