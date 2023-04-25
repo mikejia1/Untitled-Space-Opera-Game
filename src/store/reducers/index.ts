@@ -21,6 +21,7 @@ import {
   STOP_UP,
   STOP_DOWN,
   TOGGLE_DEBUG_CONTROL_COLLISION_RECTS,
+  TOGGLE_DEBUG_CONTROL_POSITION_RECTS,
 } from "../actions";
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
@@ -185,6 +186,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
     case INCREMENT_SCORE:                       return { ...state, score: state.score + 1 };
     case TICK:                                  return updateFrame(state);
     case TOGGLE_DEBUG_CONTROL_COLLISION_RECTS:  return toggleDebugControlCollisionRects(state);
+    case TOGGLE_DEBUG_CONTROL_POSITION_RECTS:   return toggleDebugControlPositionRects(state);
     default:                                    return state;
   }
 };
@@ -328,6 +330,17 @@ function toggleDebugControlCollisionRects(state: IGlobalState): IGlobalState {
     debugSettings: {
       ...state.debugSettings,
       showCollisionRects: !state.debugSettings.showCollisionRects,
+    },
+  };
+}
+
+// Toggle debug control showPositionRects from False to True or vice versa.
+function toggleDebugControlPositionRects(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    debugSettings: {
+      ...state.debugSettings,
+      showPositionRects: !state.debugSettings.showPositionRects,
     },
   };
 }

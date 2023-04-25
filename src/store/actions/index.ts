@@ -18,6 +18,7 @@ export const TICK = "TICK";
 export const STOP_WATERING = "STOP_WATERING";
 
 export const TOGGLE_DEBUG_CONTROL_COLLISION_RECTS = "TOGGLE_DEBUG_CONTROL_COLLISION_RECTS";
+export const TOGGLE_DEBUG_CONTROL_POSITION_RECTS = "TOGGLE_DEBUG_CONTROL_POSITION_RECTS";
 
 export const makeMove = (move: string) => ({
   type: move,
@@ -49,6 +50,10 @@ export const useItem = () => ({
 
 export const toggleShowCollisionRects = () => ({
   type: TOGGLE_DEBUG_CONTROL_COLLISION_RECTS
+});
+
+export const toggleShowPositionRects = () => ({
+  type: TOGGLE_DEBUG_CONTROL_POSITION_RECTS
 });
 
 // An animation loop event that updates state.currentFrame.
