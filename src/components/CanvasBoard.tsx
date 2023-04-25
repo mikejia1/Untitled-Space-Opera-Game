@@ -22,6 +22,7 @@ import {
   toggleShowPositionRects,
   toggleShowWateringRects,
   toggleShowFacingRects,
+  toggleShowEquipRects,
 } from "../store/actions";
 import { IGlobalState } from "../store/classes";
 import { clearBoard, drawState } from "../utils";
@@ -121,6 +122,11 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   const facingRectsDebug = useCallback(() => {
     dispatch(toggleShowFacingRects());
   }, [context, dispatch])
+
+  // Toggle the showEquipRects debug boolean.
+  const equipRectsDebug = useCallback(() => {
+    dispatch(toggleShowEquipRects());
+  }, [context, dispatch])
   
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
@@ -170,6 +176,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
         positionRectsDebug={positionRectsDebug}
         wateringRectsDebug={wateringRectsDebug}
         facingRectsDebug={facingRectsDebug}
+        equipRectsDebug={equipRectsDebug}
       />
     </>
   );

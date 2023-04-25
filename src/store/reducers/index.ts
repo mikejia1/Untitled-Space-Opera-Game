@@ -24,6 +24,7 @@ import {
   TOGGLE_DEBUG_CONTROL_POSITION_RECTS,
   TOGGLE_DEBUG_CONTROL_WATERING_RECTS,
   TOGGLE_DEBUG_CONTROL_FACING_RECTS,
+  TOGGLE_DEBUG_CONTROL_EQUIP_RECTS,
 } from "../actions";
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
@@ -191,6 +192,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
     case TOGGLE_DEBUG_CONTROL_POSITION_RECTS:   return toggleDebugControlPositionRects(state);
     case TOGGLE_DEBUG_CONTROL_WATERING_RECTS:   return toggleDebugControlWateringRects(state);
     case TOGGLE_DEBUG_CONTROL_FACING_RECTS:     return toggleDebugControlFacingRects(state);
+    case TOGGLE_DEBUG_CONTROL_EQUIP_RECTS:      return toggleDebugControlEquipRects(state);
     default:                                    return state;
   }
 };
@@ -367,6 +369,17 @@ function toggleDebugControlFacingRects(state: IGlobalState): IGlobalState {
     debugSettings: {
       ...state.debugSettings,
       showFacingRects: !state.debugSettings.showFacingRects,
+    },
+  };
+}
+
+// Toggle debug control showEquipRects from False to True or vice versa.
+function toggleDebugControlEquipRects(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    debugSettings: {
+      ...state.debugSettings,
+      showEquipRects: !state.debugSettings.showEquipRects,
     },
   };
 }

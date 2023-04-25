@@ -21,6 +21,7 @@ export const TOGGLE_DEBUG_CONTROL_COLLISION_RECTS = "TOGGLE_DEBUG_CONTROL_COLLIS
 export const TOGGLE_DEBUG_CONTROL_POSITION_RECTS = "TOGGLE_DEBUG_CONTROL_POSITION_RECTS";
 export const TOGGLE_DEBUG_CONTROL_WATERING_RECTS = "TOGGLE_DEBUG_CONTROL_WATERING_RECTS";
 export const TOGGLE_DEBUG_CONTROL_FACING_RECTS = "TOGGLE_DEBUG_CONTROL_FACING_RECTS";
+export const TOGGLE_DEBUG_CONTROL_EQUIP_RECTS = "TOGGLE_DEBUG_CONTROL_EQUIP_RECTS";
 
 export const makeMove = (move: string) => ({
   type: move,
@@ -64,6 +65,10 @@ export const toggleShowWateringRects = () => ({
 
 export const toggleShowFacingRects = () => ({
   type: TOGGLE_DEBUG_CONTROL_FACING_RECTS
+});
+
+export const toggleShowEquipRects = () => ({
+  type: TOGGLE_DEBUG_CONTROL_EQUIP_RECTS
 });
 
 // An animation loop event that updates state.currentFrame.
