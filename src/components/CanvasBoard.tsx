@@ -21,6 +21,7 @@ import {
   toggleShowCollisionRects,
   toggleShowPositionRects,
   toggleShowWateringRects,
+  toggleShowFacingRects,
 } from "../store/actions";
 import { IGlobalState } from "../store/classes";
 import { clearBoard, drawState } from "../utils";
@@ -116,6 +117,11 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     dispatch(toggleShowWateringRects());
   }, [context, dispatch])
 
+  // Toggle the showFacingRects debug boolean.
+  const facingRectsDebug = useCallback(() => {
+    dispatch(toggleShowFacingRects());
+  }, [context, dispatch])
+  
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
     //Draw on canvas each time
@@ -163,6 +169,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
         collisionRectsDebug={collisionRectsDebug}
         positionRectsDebug={positionRectsDebug}
         wateringRectsDebug={wateringRectsDebug}
+        facingRectsDebug={facingRectsDebug}
       />
     </>
   );
