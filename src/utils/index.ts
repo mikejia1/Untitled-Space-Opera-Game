@@ -67,6 +67,12 @@ export const drawState = (
 // corresponds to the background being placed in WrapSector.Middle.
 export function computeBackgroundShift(state: IGlobalState): Coord {
   let shift = CANVAS_CENTRE.minus(state.gardener.pos.x, state.gardener.pos.y);
+
+  // Make an adjustment to the vertical shift so that as the gardener climbs the ladder and heads to the base of the
+  // starfield view window, the full starfield window comes into view. This only applies to the map that existed on
+  // April 25th, 2023.
+  shift = new Coord(shift.x, remapRange(shift.y, -37, -85, 0, -85));
+
   // Prevent top of background image from dropping below top of canvas.
   if (shift.y > 0) shift = shift.minus(0, shift.y);
   // Prevent bottom of background image from rising above bottom of canvas.
@@ -85,6 +91,13 @@ export function computeBackgroundShift(state: IGlobalState): Coord {
   // Prevent right edge of background image from moving farther left than the padding amount.
   if ((shift.x + BACKGROUND_WIDTH) < (CANVAS_WIDTH - padding)) shift = shift.plus((CANVAS_WIDTH - padding) - (shift.x + BACKGROUND_WIDTH), 0);
   return shift;
+}
+
+// Given a value (val), if it falls within the range [inA, inB] then linearly remap it to the range [outA, outB].
+export function remapRange(val: number, inA: number, inB: number, outA: number, outB: number): number {
+  let pos = (val - inA) / (inB - inA);
+  if ((pos < 0) || (pos > 1)) return val;
+  return outA + ((outB - outA) * pos);
 }
 
 // Compute a displacement that would shift a given tile into the correct place to make it visible.
