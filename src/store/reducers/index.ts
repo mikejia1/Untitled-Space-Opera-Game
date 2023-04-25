@@ -115,15 +115,18 @@ function gardenerImages(): any {
   let images = {
     walkingBase: new Image(),
     wateringBase: new Image(),
+    waterPouring: new Image(),
   };
 
   // Specify image source files.
-  images.walkingBase.src = require('../../entities/images/gardener/base_walk_strip8.png');
+  images.walkingBase.src  = require('../../entities/images/gardener/base_walk_strip8.png');
   images.wateringBase.src = require('../../entities/images/gardener/base_watering_strip5.png');
+  images.waterPouring.src = require('../../entities/images/gardener/tools_watering_strip5.png');
 
   // Set the onload handler for all images.
-  images.walkingBase.onload = () => console.log("Gardener walkcycle source image loaded.");
+  images.walkingBase.onload  = () => console.log("Gardener walkcycle source image loaded.");
   images.wateringBase.onload = () => console.log("Gardener watering source image loaded.");
+  images.waterPouring.onload = () => console.log("Water pouring source image loaded.");
 
   return images;
 }

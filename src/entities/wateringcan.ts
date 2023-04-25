@@ -16,6 +16,10 @@ export class WateringCan implements Paintable {
 
     // Paint the plant on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
+        // Don't paint watering can when gardener is watering.
+        // This is just a temporary hack and will certainly change soon.
+        if (state.gardener.watering) return;
+
         // Determine where, on the canvas, the plant should be painted.
         let shift = this.computeShift(state);
 

@@ -155,7 +155,7 @@ export class Gardener implements Paintable, Collider {
     paintWatering(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord, newPos: Coord, flip: boolean): void {
         // The watering animation only has 5 frames.
         let frameCount = 5;
-        let frame = Math.floor(state.currentFrame % (6 * frameCount) / 6);
+        let frame = Math.floor(state.currentFrame % (3 * frameCount) / 3);
 
         // Determine where, on the canvas, the gardener should be painted.
         let dest = flip
@@ -167,6 +167,12 @@ export class Gardener implements Paintable, Collider {
         // Paint gardener sprite for current frame.
         canvas.drawImage(
             state.gardenerImages.wateringBase,  // Watering base source image
+            (frame * 96) + 40, 20,              // Top-left corner of frame in source
+            48, 48,                             // Size of frame in source
+            dest.x, dest.y,                     // Position of sprite on canvas
+            48, 48);                            // Sprite size on canvas
+        canvas.drawImage(
+            state.gardenerImages.waterPouring,  // Pouring water and watering can
             (frame * 96) + 40, 20,              // Top-left corner of frame in source
             48, 48,                             // Size of frame in source
             dest.x, dest.y,                     // Position of sprite on canvas
