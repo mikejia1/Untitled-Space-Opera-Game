@@ -22,6 +22,7 @@ import {
   STOP_DOWN,
   TOGGLE_DEBUG_CONTROL_COLLISION_RECTS,
   TOGGLE_DEBUG_CONTROL_POSITION_RECTS,
+  TOGGLE_DEBUG_CONTROL_WATERING_RECTS,
 } from "../actions";
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
@@ -187,6 +188,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
     case TICK:                                  return updateFrame(state);
     case TOGGLE_DEBUG_CONTROL_COLLISION_RECTS:  return toggleDebugControlCollisionRects(state);
     case TOGGLE_DEBUG_CONTROL_POSITION_RECTS:   return toggleDebugControlPositionRects(state);
+    case TOGGLE_DEBUG_CONTROL_WATERING_RECTS:   return toggleDebugControlWateringRects(state);
     default:                                    return state;
   }
 };
@@ -341,6 +343,17 @@ function toggleDebugControlPositionRects(state: IGlobalState): IGlobalState {
     debugSettings: {
       ...state.debugSettings,
       showPositionRects: !state.debugSettings.showPositionRects,
+    },
+  };
+}
+
+// Toggle debug control showWateringRects from False to True or vice versa.
+function toggleDebugControlWateringRects(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    debugSettings: {
+      ...state.debugSettings,
+      showWateringRects: !state.debugSettings.showWateringRects,
     },
   };
 }
