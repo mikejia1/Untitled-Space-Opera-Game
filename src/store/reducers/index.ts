@@ -25,6 +25,7 @@ import {
   TOGGLE_DEBUG_CONTROL_WATERING_RECTS,
   TOGGLE_DEBUG_CONTROL_FACING_RECTS,
   TOGGLE_DEBUG_CONTROL_EQUIP_RECTS,
+  TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS,
 } from "../actions";
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
@@ -173,27 +174,28 @@ function invisibleCollidersForMapFeatures(nextColliderId: number): Collider[] {
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
-    case RIGHT:                                 return newKeyDown(state, Direction.Right);
-    case LEFT:                                  return newKeyDown(state, Direction.Left);
-    case UP:                                    return newKeyDown(state, Direction.Up);
-    case DOWN:                                  return newKeyDown(state, Direction.Down);
-    case STOP_RIGHT:                            return newKeyUp(state, Direction.Right);
-    case STOP_LEFT:                             return newKeyUp(state, Direction.Left);
-    case STOP_UP:                               return newKeyUp(state, Direction.Up);
-    case STOP_DOWN:                             return newKeyUp(state, Direction.Down);
-    case TOGGLE_EQUIP:                          return toggleEquip(state);
-    case USE_ITEM:                              return utiliseItem(state);
-    case STOP_WATERING:                         return ceaseWatering(state);
-    case RESET:                                 return initialGameState();
-    case RESET_SCORE:                           return { ...state, score: 0 };
-    case INCREMENT_SCORE:                       return { ...state, score: state.score + 1 };
-    case TICK:                                  return updateFrame(state);
-    case TOGGLE_DEBUG_CONTROL_COLLISION_RECTS:  return toggleDebugControlCollisionRects(state);
-    case TOGGLE_DEBUG_CONTROL_POSITION_RECTS:   return toggleDebugControlPositionRects(state);
-    case TOGGLE_DEBUG_CONTROL_WATERING_RECTS:   return toggleDebugControlWateringRects(state);
-    case TOGGLE_DEBUG_CONTROL_FACING_RECTS:     return toggleDebugControlFacingRects(state);
-    case TOGGLE_DEBUG_CONTROL_EQUIP_RECTS:      return toggleDebugControlEquipRects(state);
-    default:                                    return state;
+    case RIGHT:                                   return newKeyDown(state, Direction.Right);
+    case LEFT:                                    return newKeyDown(state, Direction.Left);
+    case UP:                                      return newKeyDown(state, Direction.Up);
+    case DOWN:                                    return newKeyDown(state, Direction.Down);
+    case STOP_RIGHT:                              return newKeyUp(state, Direction.Right);
+    case STOP_LEFT:                               return newKeyUp(state, Direction.Left);
+    case STOP_UP:                                 return newKeyUp(state, Direction.Up);
+    case STOP_DOWN:                               return newKeyUp(state, Direction.Down);
+    case TOGGLE_EQUIP:                            return toggleEquip(state);
+    case USE_ITEM:                                return utiliseItem(state);
+    case STOP_WATERING:                           return ceaseWatering(state);
+    case RESET:                                   return initialGameState();
+    case RESET_SCORE:                             return { ...state, score: 0 };
+    case INCREMENT_SCORE:                         return { ...state, score: state.score + 1 };
+    case TICK:                                    return updateFrame(state);
+    case TOGGLE_DEBUG_CONTROL_COLLISION_RECTS:    return toggleDebugControlCollisionRects(state);
+    case TOGGLE_DEBUG_CONTROL_POSITION_RECTS:     return toggleDebugControlPositionRects(state);
+    case TOGGLE_DEBUG_CONTROL_WATERING_RECTS:     return toggleDebugControlWateringRects(state);
+    case TOGGLE_DEBUG_CONTROL_FACING_RECTS:       return toggleDebugControlFacingRects(state);
+    case TOGGLE_DEBUG_CONTROL_EQUIP_RECTS:        return toggleDebugControlEquipRects(state);
+    case TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS: return toggleDebugControlDisableCollisions(state);
+    default:                                      return state;
   }
 };
 
@@ -380,6 +382,17 @@ function toggleDebugControlEquipRects(state: IGlobalState): IGlobalState {
     debugSettings: {
       ...state.debugSettings,
       showEquipRects: !state.debugSettings.showEquipRects,
+    },
+  };
+}
+
+// Toggle debug control disableCollisions from False to True or vice versa.
+function toggleDebugControlDisableCollisions(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    debugSettings: {
+      ...state.debugSettings,
+      collisionsDisabled: !state.debugSettings.collisionsDisabled,
     },
   };
 }

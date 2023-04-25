@@ -23,6 +23,7 @@ import {
   toggleShowWateringRects,
   toggleShowFacingRects,
   toggleShowEquipRects,
+  toggleDisableCollisions,
 } from "../store/actions";
 import { IGlobalState } from "../store/classes";
 import { clearBoard, drawState } from "../utils";
@@ -127,7 +128,12 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   const equipRectsDebug = useCallback(() => {
     dispatch(toggleShowEquipRects());
   }, [context, dispatch])
-  
+
+  // Toggle the disableCollisions debug boolean.
+  const disableCollisionsDebug = useCallback(() => {
+    dispatch(toggleDisableCollisions());
+  }, [context, dispatch])
+
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
     //Draw on canvas each time
@@ -177,6 +183,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
         wateringRectsDebug={wateringRectsDebug}
         facingRectsDebug={facingRectsDebug}
         equipRectsDebug={equipRectsDebug}
+        disableCollisionsDebug={disableCollisionsDebug}
       />
     </>
   );
