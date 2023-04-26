@@ -136,6 +136,7 @@ export class Gardener implements Paintable, Collider {
         let dest = flip
             ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
             : new Coord(newPos.x - 3, newPos.y - 18);
+        dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
         
@@ -161,6 +162,7 @@ export class Gardener implements Paintable, Collider {
         let dest = flip
             ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
             : new Coord(newPos.x - 3, newPos.y - 18);
+        dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
 
