@@ -81,8 +81,8 @@ export function computeBackgroundShift(state: IGlobalState): Coord {
 
   // Wrap-around logic for wide background ring-world type maps.
   if (BACKGROUND_WIDTH > CANVAS_WIDTH) {
-    if (shift.x >= 0) return shift.minus(BACKGROUND_WIDTH, 0);
-    return shift;
+    if (shift.x >= 0) return shift.minus(BACKGROUND_WIDTH, 0).toIntegers();
+    return shift.toIntegers();
   }
 
   // Non-wrap-around logic for narrow background bounded maps.
@@ -91,7 +91,7 @@ export function computeBackgroundShift(state: IGlobalState): Coord {
   if (shift.x > padding) shift = shift.minus(shift.x - padding, 0);
   // Prevent right edge of background image from moving farther left than the padding amount.
   if ((shift.x + BACKGROUND_WIDTH) < (CANVAS_WIDTH - padding)) shift = shift.plus((CANVAS_WIDTH - padding) - (shift.x + BACKGROUND_WIDTH), 0);
-  return shift;
+  return shift.toIntegers();
 }
 
 // Given a value (val), if it falls within the range [inA, inB] then linearly remap it to the range [outA, outB].

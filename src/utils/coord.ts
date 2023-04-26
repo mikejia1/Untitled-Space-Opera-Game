@@ -23,5 +23,9 @@ export class Coord {
     toString(): string {
       return "( " + this.x + ", " + this.y + " )";
     }
+
+    toIntegers(): Coord {
+      return new Coord(Math.floor(this.x), Math.floor(this.y));
+    }
   }
   
