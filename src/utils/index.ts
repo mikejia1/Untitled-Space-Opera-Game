@@ -97,6 +97,7 @@ export function computeBackgroundShift(state: IGlobalState): Coord {
 // Given a value (val), if it falls within the range [inA, inB] then linearly remap it to the range [outA, outB].
 export function remapRange(val: number, inA: number, inB: number, outA: number, outB: number): number {
   let pos = (val - inA) / (inB - inA);
+  if (val > inA) return outA;
   if ((pos < 0) || (pos > 1)) return val;
   return outA + ((outB - outA) * pos);
 }
