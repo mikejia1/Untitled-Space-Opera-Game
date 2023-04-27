@@ -8,10 +8,11 @@ export interface IDebugControlsProps {
   equipRectsDebug: () => void;
   disableCollisionsDebug: () => void;
   toggleSound: () => void;
+  isMuted: () => boolean;
 }
 const DebugControls = ({
     collisionRectsDebug, positionRectsDebug, wateringRectsDebug, facingRectsDebug,
-    equipRectsDebug, disableCollisionsDebug, toggleSound,
+    equipRectsDebug, disableCollisionsDebug, toggleSound, isMuted,
     }: IDebugControlsProps) => (
   <Box mt={3}>
     <Heading as="h6" size="lg">
@@ -25,7 +26,7 @@ const DebugControls = ({
         <Checkbox onChange={() => facingRectsDebug()}>Show facing rectangles</Checkbox>
         <Checkbox onChange={() => equipRectsDebug()}>Show equip rectangles</Checkbox>
         <Checkbox onChange={() => disableCollisionsDebug()}>Disables collisions</Checkbox>
-        <Checkbox onChange={() => toggleSound()}>Mute audio</Checkbox>
+        <Checkbox isChecked={isMuted()} onChange={() => toggleSound()}>Mute audio</Checkbox>
       </Flex>
     </Flex>
   </Box>

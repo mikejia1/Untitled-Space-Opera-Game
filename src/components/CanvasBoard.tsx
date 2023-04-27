@@ -103,43 +103,48 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     drawState(context, state);
     window.addEventListener("keydown", handleKeyDownEvents);
     window.addEventListener("keyup", handleKeyUpEvents);
-  }, [context, dispatch, handleKeyDownEvents, handleKeyUpEvents, height, state, width]);
+  }, [context, dispatch, handleKeyDownEvents, handleKeyUpEvents, state]);
 
   // Toggle the showCollisionRects debug boolean.
   const collisionRectsDebug = useCallback(() => {
     dispatch(toggleShowCollisionRects());
-  }, [context, dispatch])
+  }, [dispatch])
 
   // Toggle the showPositionRects debug boolean.
   const positionRectsDebug = useCallback(() => {
     dispatch(toggleShowPositionRects());
-  }, [context, dispatch])
+  }, [dispatch])
 
   // Toggle the showWateringRects debug boolean.
   const wateringRectsDebug = useCallback(() => {
     dispatch(toggleShowWateringRects());
-  }, [context, dispatch])
+  }, [dispatch])
 
   // Toggle the showFacingRects debug boolean.
   const facingRectsDebug = useCallback(() => {
     dispatch(toggleShowFacingRects());
-  }, [context, dispatch])
+  }, [dispatch])
 
   // Toggle the showEquipRects debug boolean.
   const equipRectsDebug = useCallback(() => {
     dispatch(toggleShowEquipRects());
-  }, [context, dispatch])
+  }, [dispatch])
 
   // Toggle the disableCollisions debug boolean.
   const disableCollisionsDebug = useCallback(() => {
     dispatch(toggleDisableCollisions());
-  }, [context, dispatch])
+  }, [dispatch])
 
     // Toggle audio on/off.
     const toggleSound = useCallback(() => {
       dispatch(toggleGameAudio());
     }, [context, dispatch])
-  
+
+    // Check whether audio is muted or not.
+    const audioIsMuted = useCallback(() => {
+      return state.muted;
+    }, [state])
+    
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
     //Draw on canvas each time
@@ -191,6 +196,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
         equipRectsDebug={equipRectsDebug}
         disableCollisionsDebug={disableCollisionsDebug}
         toggleSound={toggleSound}
+        isMuted={audioIsMuted}
       />
     </>
   );

@@ -93,7 +93,7 @@ function initialGameState(): IGlobalState {
     deepSpaceImage:   loadImage("Space frames", spaceframes),
     shieldImage:      loadImage("Shield", sheild),
     invisibleColliders: [...worldBoundaries, ...features],  // Map features and world boundaries both contribute invisible colliders.
-    muted: false,
+    muted: true,
     debugSettings: {
       showCollisionRects: false,   // Collision rectangles for colliders.
       showPositionRects: false,    // Position rectangles for paintables.
