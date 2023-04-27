@@ -48,7 +48,4 @@ export enum Colour {
     WATERING_RECT   = "#0022FF",
     FACING_RECT     = "#2288FF",
     EQUIP_RECT      = "#FF22FF",
-    RIPE_FRUIT      = "#FF0000",
-    UNRIPE_FRUIT    = "#33FF00",
-    FRUIT_OUTLINE   = "#CCCCCC",
 }

@@ -4,7 +4,6 @@ import {
   positionRect, fillRect, outlineRect, computeBackgroundShift, Coord, Rect,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
-import { Fruit } from './fruit';
 import { Tile } from '../scene';
 
 // Initial, min, and max value for plant health.
@@ -33,10 +32,9 @@ export class Plant {
   growthTime: number;
   dehydrationTime: number;
   alive: boolean;
-  fruits: Fruit[];
   colliderId: number;
 
-  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 0, fruits: Fruit[] = [], growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
+  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 0, growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
     this.colliderId = colliderId;
     this.pos = pos;
     this.health = initialHealth;
@@ -46,12 +44,11 @@ export class Plant {
     this.growthTime = growthTime;
     this.dehydrationTime = dehydrationTime;
     this.size = size;
-    console.log("this.size" + this.size);
     this.alive = true;
-    this.fruits = fruits;
     this.updateWidthAndHeight();
   }
 
+  /*
   // See if the plant is ready and able to grow its fruit.
   // Return boolean indicating whether or not growth occurred,
   // and, if growth occurred, also return the new plant.
@@ -78,17 +75,18 @@ export class Plant {
         newPlant: new Plant(this.colliderId, this.pos, this.health, this.size, newFruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp),
     }
   }
+  */
 
   growPlant(): Plant {
     if (this.size < 1) {
-      return new Plant(this.colliderId, this.pos, this.health, this.size + 0.25, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+      return new Plant(this.colliderId, this.pos, this.health, this.size + 0.25, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
     }
     return this;
   }
 
   dehydratePlant(): Plant {
     if (this.health > 0) {
-      return new Plant(this.colliderId, this.pos, this.health - 1, this.size, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+      return new Plant(this.colliderId, this.pos, this.health - 1, this.size, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
     }
     return this;
   }
@@ -106,7 +104,7 @@ export class Plant {
     }
     var h = this.health + WATERING_HEALTH_INCREMENT;
     h = Math.min(h, MAX_PLANT_HEALTH);
-    return new Plant(this.colliderId, this.pos, h, this.size, this.fruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+    return new Plant(this.colliderId, this.pos, h, this.size, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
   }
 
   // Paint the plant on the canvas.
@@ -126,10 +124,6 @@ export class Plant {
     let color = ["#170000", "#541704", "#964d03", "#968703", "#00a313", "#00c92f"]
     fillRect(canvas, visRect, color[this.health]);
     outlineRect(canvas, visRect, Colour.PLANT_OUTLINE);
-
-    // Paint the fruit(s), if any.
-    let fruitPos = newPos.plus(ENTITY_RECT_WIDTH / 2, -(ENTITY_RECT_HEIGHT + 2));
-    this.fruits.forEach(fruit => fruit.paint(canvas, fruitPos));
 
     // Extra debug displays.
     if (state.debugSettings.showCollisionRects) {

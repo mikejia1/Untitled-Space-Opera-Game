@@ -46,7 +46,6 @@ export const drawState = (
     }
   );
   let shift = computeBackgroundShift(state);
-  console.log("shift: "+shift.toString());
   drawBackground(state, shift, canvas);
   state.plants.forEach(plant => pq.add(plant));
   state.npcs.forEach(npc => pq.add(npc));

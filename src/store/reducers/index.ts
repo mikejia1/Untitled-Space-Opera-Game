@@ -292,34 +292,34 @@ function updateFrame(state: IGlobalState): IGlobalState {
   if (f === state.currentFrame) {
     return state;
   }
-  // Allow fruits to grow.
-  let newState = growFruits(state, f);
+//  // Allow fruits to grow.
+//  let newState = growFruits(state, f);
 
   // Get all the colliders as they exist now.
-  let allColliders = allCollidersFromState(newState);
+  let allColliders = allCollidersFromState(state);
 
   // Allow gardener to move.
-  let gardenerMoving = newState.gardener.moving;
+  let gardenerMoving = state.gardener.moving;
   if (gardenerMoving) {
-    newState = moveGardenerOnFrame(newState, allColliders);
-    allColliders.set(newState.gardener.colliderId, newState.gardener);
+    state = moveGardenerOnFrame(state, allColliders);
+    allColliders.set(state.gardener.colliderId, state.gardener);
   }
 
   // Allow gardener to (keep) watering.
-  if (newState.gardener.watering) newState = utiliseItem(newState);
+  if (state.gardener.watering) state = utiliseItem(state);
 
   // Allow NPCs to move.
   let newNPCs: NonPlayer[] = [];
-  newState.npcs.forEach(npc => {
+  state.npcs.forEach(npc => {
     // Get a new version of the npc - one that has taken its next step.
-    let newNPC = moveNPC(newState, npc);
+    let newNPC = moveNPC(state, npc);
 
     // Allow the NPC to consider adopting a new movement (forced = false).
     newNPC = considerNewNPCMovement(newNPC, false);
 
     // If this new NPC is in collision with anything, revert back to original npc
     // and force it to choose a new movement.
-    if (collisionDetected(newState, allColliders, newNPC)) {
+    if (collisionDetected(state, allColliders, newNPC)) {
       newNPC = considerNewNPCMovement(npc, true);
     }
 
@@ -330,7 +330,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   });
 
   return {
-    ...newState,
+    ...state,
     currentFrame: f,
     npcs: newNPCs,
   }
@@ -456,6 +456,7 @@ function moveNPC(state: IGlobalState, npc: NonPlayer): NonPlayer {
   return npc.move();
 }
 
+/*
 // Check all plants to see if any will grow their fruits. Return state unchanged
 // if no fruit growth occurred, otherwise return updated state.
 function growFruits(state: IGlobalState, frame: number): IGlobalState {
@@ -470,6 +471,7 @@ function growFruits(state: IGlobalState, frame: number): IGlobalState {
   if (grewAny) return { ...state, plants: newPlants };
   return state;
 }
+*/
 
 // Check whether the given collider overlaps (collides) with any other collider (excluding itself).
 function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>, collider: Collider): boolean {
