@@ -30,7 +30,18 @@ import {
 } from "../actions";
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
-import { create } from "domain";
+
+// Gardener images.
+import basewalkstrip from "../../entities/images/gardener/base_walk_strip8.png";
+import basewateringstrip from "../../entities/images/gardener/base_watering_strip5.png";
+import toolwateringstrip from "../../entities/images/gardener/tools_watering_strip5.png";
+
+// Other images.
+import npcwalkcycle from "../../entities/images/nonplayer/npcwalkcycle.png";
+import spacegarden from "../images/space_garden.png";
+import wateringcan from "../../entities/images/wateringcan/wateringcan.png";
+import spaceframes from "../images/space_frames.png";
+import sheild from "../../entities/images/shield/shield_32x160.png";
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
@@ -44,27 +55,6 @@ function initialWateringCan(): WateringCan {
 
 // Generate the game starting state.
 function initialGameState(): IGlobalState {
-  const npcimage = new Image();
-  const background = new Image();
-  const wateringcan = new Image();
-  const deepSpace = new Image();
-  npcimage.src = require('../../entities/images/nonplayer/npcwalkcycle.png');
-  npcimage.onload = () => {
-      console.log("NPC walkcycle source image loaded.")
-  };
-  background.src = require('../images/space_garden.png');
-  background.onload = () => {
-      console.log("Background image loaded.");
-  };
-  wateringcan.src = require('../../entities/images/wateringcan/wateringcan.png');
-  wateringcan.onload = () => {
-      console.log("watering can image loaded.");
-  };
-  deepSpace.src = require('../images/space_frames.png');
-  deepSpace.onload = () => {
-      console.log("deep space image loaded.");
-  };
-
   // Ensure all colliders get a unique ID.
   let colliderId = 0;
 
@@ -92,11 +82,16 @@ function initialGameState(): IGlobalState {
     plants: allPlants,
     npcs: npcs,
     currentFrame: 0,
-    gardenerImages: gardenerImages(),
-    npcimage: npcimage,
-    backgroundImage: background,
-    wateringCanImage: wateringcan,
-    deepSpaceImage: deepSpace,
+    gardenerImages: {
+      walkingBase:  loadImage("Base walk strip", basewalkstrip),
+      wateringBase: loadImage("Base watering strip", basewateringstrip),
+      waterPouring: loadImage("Tool watering strip", toolwateringstrip),
+    },
+    npcimage:         loadImage("NPC walk cycle", npcwalkcycle),
+    backgroundImage:  loadImage("Space garden", spacegarden),
+    wateringCanImage: loadImage("Watering can", wateringcan),
+    deepSpaceImage:   loadImage("Space frames", spaceframes),
+    shieldImage:      loadImage("Shield", sheild),
     invisibleColliders: [...worldBoundaries, ...features],  // Map features and world boundaries both contribute invisible colliders.
     muted: false,
     debugSettings: {
@@ -110,26 +105,13 @@ function initialGameState(): IGlobalState {
   }
 }
 
-// Load all the gardener source images.
-function gardenerImages(): any {
-  // An object to store all gardener source images.
-  let images = {
-    walkingBase: new Image(),
-    wateringBase: new Image(),
-    waterPouring: new Image(),
+function loadImage(title: string, resource: string) {
+  const img = new Image();
+  img.src = resource;
+  img.onload = () => {
+      console.log("Image loaded: " + title);
   };
-
-  // Specify image source files.
-  images.walkingBase.src  = require('../../entities/images/gardener/base_walk_strip8.png');
-  images.wateringBase.src = require('../../entities/images/gardener/base_watering_strip5.png');
-  images.waterPouring.src = require('../../entities/images/gardener/tools_watering_strip5.png');
-
-  // Set the onload handler for all images.
-  images.walkingBase.onload  = () => console.log("Gardener walkcycle source image loaded.");
-  images.wateringBase.onload = () => console.log("Gardener watering source image loaded.");
-  images.waterPouring.onload = () => console.log("Water pouring source image loaded.");
-
-  return images;
+  return img;
 }
 
 // Create a grid of NPCs with top-left one at given position, and with given spacing.
