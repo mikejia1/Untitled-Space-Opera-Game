@@ -1,4 +1,4 @@
-import { IGlobalState, Collider, Paintable } from '../store/classes';
+import { IGlobalState, Collider, Paintable, ColliderType } from '../store/classes';
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
@@ -19,6 +19,7 @@ export class Gardener implements Paintable, Collider {
     moving: boolean;            // Whether or not the gardener is moving.
     watering: boolean;          // Whether or not the gardener is watering.
     colliderId: number;         // The ID that distinguishes the collider from all others.
+    colliderType: ColliderType = ColliderType.GardenerCo; // The type of collider that the gardener is.
  
     constructor(colliderId: number, pos: Coord, facing: GardenerDirection, itemEquipped: boolean=false, moving: boolean=false, watering: boolean) {
         this.colliderId = colliderId;

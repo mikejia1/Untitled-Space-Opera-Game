@@ -2,7 +2,7 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, worldBoundaryColliders, tileRect, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, GardenerDirection } from "../../utils";
-import { Collider, IGlobalState } from "../classes";
+import { Collider, ColliderType, ColliderExceptions, IGlobalState } from "../classes";
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import {
   DOWN,
@@ -476,7 +476,11 @@ function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>
     if (colliderId === collider.colliderId) continue;
     let co = colliders.get(colliderId);
     if (co === undefined) continue; // Will never happen.
-    if (rectanglesOverlap(cRect, co.collisionRect())) return true;    
+    // Ignore collisions if there's an explicit exception for this pair of collider types.
+    let exceptions = ColliderExceptions(collider);
+    let expt = exceptions[co.colliderType.toString()];
+    if (expt === true) continue;
+    if (rectanglesOverlap(cRect, co.collisionRect())) return true;
   };
 
   // No collisions detected.

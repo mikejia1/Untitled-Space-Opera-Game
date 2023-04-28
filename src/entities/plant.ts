@@ -1,4 +1,4 @@
-import { IGlobalState } from '../store/classes';
+import { ColliderType, IGlobalState } from '../store/classes';
 import {
   ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect,
   positionRect, fillRect, outlineRect, computeBackgroundShift, Coord, Rect,
@@ -33,6 +33,7 @@ export class Plant {
   dehydrationTime: number;
   alive: boolean;
   colliderId: number;
+  colliderType: ColliderType = ColliderType.PlantCo;
 
   constructor(colliderId: number, pos: Coord, initialHealth: number, size = 0, growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
     this.colliderId = colliderId;

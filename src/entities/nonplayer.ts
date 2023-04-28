@@ -1,4 +1,4 @@
-import { Collider, IGlobalState, Paintable } from '../store/classes';
+import { Collider, ColliderType, IGlobalState, Paintable } from '../store/classes';
 import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
@@ -14,6 +14,7 @@ export class NonPlayer implements Paintable, Collider {
     stationeryCountdown: number;    // A countdown (measure in frames) for when the NPC stands still.
     moving: boolean;                // Whether or not the NPC is currently walking (vs standing still).
     colliderId: number;             // ID to distinguish the collider from all others.
+    colliderType: ColliderType = ColliderType.NPCCo; // The type of collider that NPCs are.
 
     constructor(params: any) {
         // Some default values to satisfy the requirement that everything be initialized in the constructor.
