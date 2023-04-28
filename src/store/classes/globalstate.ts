@@ -12,11 +12,11 @@ export interface IGlobalState {
     npcs: NonPlayer[];                // The various crew people wandering around in the garden
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
     gardenerImages: any;              // Source images for gardener sprites.
+    shieldImages: any;                // Source images for the blast shield image.
     npcimage: any;                    // The NPC walkcycle sprite source image.
     backgroundImage: any;             // The background image.
     wateringCanImage: any;            // The watering can image.
     deepSpaceImage: any;              // The deep space image frames x4.
-    shieldImage: any;                 // The blast shield image.
     invisibleColliders: Collider[];   // All Colliders that aren't visible.
     muted: boolean;                   // Enable / disable sounds.
     debugSettings: any;               // For configuring extra debug info and visualizations.

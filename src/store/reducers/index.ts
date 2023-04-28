@@ -32,16 +32,20 @@ import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, MAP_TILE_SIZE } from ".
 import { InvisibleCollider } from "../../scene";
 
 // Gardener images.
-import basewalkstrip from "../../entities/images/gardener/base_walk_strip8.png";
+import basewalkstrip     from "../../entities/images/gardener/base_walk_strip8.png";
 import basewateringstrip from "../../entities/images/gardener/base_watering_strip5.png";
 import toolwateringstrip from "../../entities/images/gardener/tools_watering_strip5.png";
 
+// Blast shield images.
+import closedShield from "../../entities/images/shield/shield_32x160.png";
+import topShield    from "../../entities/images/shield/shield_top_32x.png";
+import bottomShield from "../../entities/images/shield/shield_bottom_32x.png";
+
 // Other images.
 import npcwalkcycle from "../../entities/images/nonplayer/npcwalkcycle.png";
-import spacegarden from "../images/space_garden.png";
-import wateringcan from "../../entities/images/wateringcan/wateringcan.png";
-import spaceframes from "../images/space_frames.png";
-import sheild from "../../entities/images/shield/shield_32x160.png";
+import spacegarden  from "../images/space_garden.png";
+import wateringcan  from "../../entities/images/wateringcan/wateringcan.png";
+import spaceframes  from "../images/space_frames.png";
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
@@ -91,7 +95,11 @@ function initialGameState(): IGlobalState {
     backgroundImage:  loadImage("Space garden", spacegarden),
     wateringCanImage: loadImage("Watering can", wateringcan),
     deepSpaceImage:   loadImage("Space frames", spaceframes),
-    shieldImage:      loadImage("Shield", sheild),
+    shieldImages: {
+      closed:         loadImage("Closed shield", closedShield),
+      top:            loadImage("Top shield", topShield),
+      bottom:         loadImage("Bottom shield", bottomShield),
+    },
     invisibleColliders: [...worldBoundaries, ...features],  // Map features and world boundaries both contribute invisible colliders.
     muted: true,
     debugSettings: {
