@@ -1,4 +1,5 @@
 //import { Coord } from './';
+export const FPS = 24;
 
 // Width and height of background image.
 export const BACKGROUND_WIDTH = 384;//2000;
@@ -49,3 +50,7 @@ export enum Colour {
     FACING_RECT     = "#2288FF",
     EQUIP_RECT      = "#FF22FF",
 }
+
+// Named constants for colours.
+export var GROWTH_TIME = FPS * 30;
+export var DEHYDRATION_TIME = FPS * 15;

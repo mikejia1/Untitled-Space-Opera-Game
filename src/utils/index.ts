@@ -3,7 +3,7 @@ import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/positio
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
   BACKGROUND_WIDTH, BACKGROUND_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT, Direction, ALL_DIRECTIONS,
-  Colour, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH,
+  Colour, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, FPS,
  } from "./constants";
  import { Coord } from './coord';
  import { Rect } from './rect';
@@ -14,7 +14,6 @@ export * from './constants';
 export * from './priorityqueue';
 export * from './rect';
 
-export const FPS = 24;
 
 // The coord that would place the Gardener at the centre of the canvas.
 export const CANVAS_CENTRE = new Coord(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);

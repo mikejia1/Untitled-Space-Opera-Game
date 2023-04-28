@@ -182,10 +182,12 @@ function updateFrame(state: IGlobalState): IGlobalState {
     allColliders.set(newNPC.colliderId, newNPC);
   });
 
+  let newPlants = dehydratePlants(state.plants, state);
   return {
     ...state,
     currentFrame: f,
     npcs: newNPCs,
+    plants: newPlants,
   }
 }
 
@@ -307,6 +309,14 @@ function moveNPC(state: IGlobalState, npc: NonPlayer): NonPlayer {
     });
   }
   return npc.move();
+}
+
+function dehydratePlants(plants: Plant[], state: IGlobalState): Plant[] {
+  let newPlants: Plant[] = [];
+  plants.forEach(plant => {
+    newPlants = [...newPlants, plant.dehydratePlant(state)];
+  });
+  return newPlants;
 }
 
 /*

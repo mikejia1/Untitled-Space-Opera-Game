@@ -1,13 +1,13 @@
 import { ColliderType, IGlobalState } from '../store/classes';
 import {
-  ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect,
-  positionRect, outlineRect, computeBackgroundShift, Coord, Rect,
+  ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT, Colour, computeCurrentFrame, shiftForTile, shiftRect,
+  positionRect, outlineRect, computeBackgroundShift, Coord, Rect, DEHYDRATION_TIME,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 
 // Initial, min, and max value for plant health.
-export const INITIAL_PLANT_HEALTH = 0;
+export const INITIAL_PLANT_HEALTH = 3;
 export const MAX_PLANT_HEALTH = 5;
 
 // The amount of health imparted to a plant when it gets watered.
@@ -17,24 +17,20 @@ export const WATERING_HEALTH_INCREMENT = 1;
 export class Plant {
   pos: Coord;
   health: number;
-  spawnTimestamp: number;
   //stages of growth from 0 (just planted), 1 (seedling) - 4 (mature), 5 (harvested)
   growthStage: number;
-  growthTime: number;
-  dehydrationTime: number;
-  alive: boolean;
+  lastGrowthTimestamp: number;
+  lastDehydrationTimestamp: number;
   colliderId: number;
   colliderType: ColliderType = ColliderType.PlantCo;
 
-  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 4, growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
+  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 4, timestamp = computeCurrentFrame()) {
     this.colliderId = colliderId;
     this.pos = pos;
     this.health = initialHealth;
-    this.spawnTimestamp = timestamp;
-    this.growthTime = growthTime;
-    this.dehydrationTime = dehydrationTime;
+    this.lastGrowthTimestamp = timestamp;
+    this.lastDehydrationTimestamp = timestamp;
     this.growthStage = size;
-    this.alive = true;
   }
 
   /*
@@ -68,26 +64,31 @@ export class Plant {
 
   growPlant(): Plant {
     if (this.growthStage < 4) {
-      return new Plant(this.colliderId, this.pos, this.health, this.growthStage + 1, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+      this.growthStage++;
+      return this;
     }
     return this;
   }
 
-  dehydratePlant(): Plant {
+  dehydratePlant(state: IGlobalState): Plant {
     if (this.health > 0) {
-      return new Plant(this.colliderId, this.pos, this.health - 1, this.growthStage, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+      if(state.currentFrame > this.lastDehydrationTimestamp + DEHYDRATION_TIME){
+        this.health--;
+        this.lastDehydrationTimestamp = state.currentFrame;
+        return this;
+      }
     }
     return this;
   }
 
   // Absorb water and return a new plant because state is supposed to be immutable.
   absorbWater(): Plant {
-    if (!this.alive) {
+    if (this.health == 0) {
       return this;
     }
     var h = this.health + WATERING_HEALTH_INCREMENT;
-    h = Math.min(h, MAX_PLANT_HEALTH);
-    return new Plant(this.colliderId, this.pos, h, this.growthStage, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+    this.health = Math.min(h, MAX_PLANT_HEALTH);
+    return this;
   }
 
   // Paint the plant on the canvas.
@@ -95,7 +96,6 @@ export class Plant {
     // Determine where, on the canvas, the plant should be painted.
     let shift = this.computeShift(state);
     let newPos = this.pos.plus(shift.x, shift.y);
-
       // Paint plant.
       canvas.drawImage(
         state.plantImage,                           // Plant base image
