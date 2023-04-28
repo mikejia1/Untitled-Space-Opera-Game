@@ -47,6 +47,9 @@ import spacegarden  from "../images/space_garden.png";
 import wateringcan  from "../../entities/images/wateringcan/wateringcan.png";
 import spaceframes  from "../images/space_frames.png";
 
+// Plant image.
+import plantimage from "../../entities/images/plant/plants_16x16.png";
+
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
   return new Gardener(colliderId, new Coord(200, 220), GardenerDirection.Right, false, false, false);
@@ -100,6 +103,7 @@ function initialGameState(): IGlobalState {
       top:            loadImage("Top shield", topShield),
       bottom:         loadImage("Bottom shield", bottomShield),
     },
+    plantImage:       loadImage("Plant image", plantimage),
     invisibleColliders: [...worldBoundaries, ...features],  // Map features and world boundaries both contribute invisible colliders.
     muted: true,
     debugSettings: {

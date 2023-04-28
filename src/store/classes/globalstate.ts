@@ -17,6 +17,7 @@ export interface IGlobalState {
     backgroundImage: any;             // The background image.
     wateringCanImage: any;            // The watering can image.
     deepSpaceImage: any;              // The deep space image frames x4.
+    plantImage: any;                  // The plant image.
     invisibleColliders: Collider[];   // All Colliders that aren't visible.
     muted: boolean;                   // Enable / disable sounds.
     debugSettings: any;               // For configuring extra debug info and visualizations.

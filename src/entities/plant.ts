@@ -28,14 +28,15 @@ export class Plant {
   width: number;
   height: number;
   spawnTimestamp: number;
-  size: number;
+  //stages of growth from 0 (just planted), 1 (seedling) - 4 (mature), 5 (harvested)
+  growthStage: number;
   growthTime: number;
   dehydrationTime: number;
   alive: boolean;
   colliderId: number;
   colliderType: ColliderType = ColliderType.PlantCo;
 
-  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 0, growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
+  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 4, growthTime = FPS * 30, dehydrationTime = FPS * 15, timestamp = computeCurrentFrame()) {
     this.colliderId = colliderId;
     this.pos = pos;
     this.health = initialHealth;
@@ -44,7 +45,7 @@ export class Plant {
     this.spawnTimestamp = timestamp;
     this.growthTime = growthTime;
     this.dehydrationTime = dehydrationTime;
-    this.size = size;
+    this.growthStage = size;
     this.alive = true;
     this.updateWidthAndHeight();
   }
@@ -79,23 +80,23 @@ export class Plant {
   */
 
   growPlant(): Plant {
-    if (this.size < 1) {
-      return new Plant(this.colliderId, this.pos, this.health, this.size + 0.25, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+    if (this.growthStage < 4) {
+      return new Plant(this.colliderId, this.pos, this.health, this.growthStage + 1, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
     }
     return this;
   }
 
   dehydratePlant(): Plant {
     if (this.health > 0) {
-      return new Plant(this.colliderId, this.pos, this.health - 1, this.size, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+      return new Plant(this.colliderId, this.pos, this.health - 1, this.growthStage, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
     }
     return this;
   }
 
   // Set plant width and height from current health.
   updateWidthAndHeight(): void {
-    this.height = MIN_PLANT_HEIGHT + (this.size * (MAX_PLANT_HEIGHT - MIN_PLANT_HEIGHT));
-    this.width = MIN_PLANT_WIDTH + (this.size * (MAX_PLANT_WIDTH - MIN_PLANT_WIDTH));
+    this.height = MIN_PLANT_HEIGHT + (this.growthStage * (MAX_PLANT_HEIGHT - MIN_PLANT_HEIGHT));
+    this.width = MIN_PLANT_WIDTH + (this.growthStage * (MAX_PLANT_WIDTH - MIN_PLANT_WIDTH));
   }
 
   // Absorb water and return a new plant because state is supposed to be immutable.
@@ -105,7 +106,7 @@ export class Plant {
     }
     var h = this.health + WATERING_HEALTH_INCREMENT;
     h = Math.min(h, MAX_PLANT_HEALTH);
-    return new Plant(this.colliderId, this.pos, h, this.size, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
+    return new Plant(this.colliderId, this.pos, h, this.growthStage, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
   }
 
   // Paint the plant on the canvas.
@@ -114,17 +115,17 @@ export class Plant {
     let shift = this.computeShift(state);
     let newPos = this.pos.plus(shift.x, shift.y);
 
-    // The plant's rectangle.
-    let x1 = newPos.x + (ENTITY_RECT_WIDTH / 2) - (this.width / 2);
-    let y1 = newPos.y - this.height;
-    let x2 = x1 + this.width - 1;
-    let y2 = y1 + this.height - 1;
-    let visRect = { a: new Coord(x1, y1), b: new Coord(x2, y2) };
+      // Paint plant.
+      canvas.drawImage(
+        state.plantImage,                           // Plant base image
+        ((this.growthStage) * 16), this.health * 16,// Top-left corner of frame in source
+        16, 16,                                     // Size of frame in source
+        newPos.x-2, newPos.y - 10,                  // Position of sprite on canvas. Offsets were manually adjusted to align with collision box
+        16, 16);                                    // Sprite size on canvas
 
-    // Assume MAX_PLANT_HEALTH is 5
-    let color = ["#170000", "#541704", "#964d03", "#968703", "#00a313", "#00c92f"]
-    fillRect(canvas, visRect, color[this.health]);
-    outlineRect(canvas, visRect, Colour.PLANT_OUTLINE);
+    // Restore canvas transforms to normal.
+      canvas.restore();
+
 
     // Extra debug displays.
     if (state.debugSettings.showCollisionRects) {
