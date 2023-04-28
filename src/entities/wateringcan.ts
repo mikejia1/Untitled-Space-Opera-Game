@@ -1,4 +1,4 @@
-import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect } from '../utils';
+import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect, GardenerDirection } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Gardener } from './gardener';
@@ -28,13 +28,18 @@ export class WateringCan implements Paintable {
         let base: Coord;
         if (this.isEquipped) {
             // Above head of gardener.
-            base = this.pos.plus(MAP_TILE_SIZE / 2, -8);
+            base = this.pos.plus(MAP_TILE_SIZE / 2+4, 0);
         } else {
             // On the ground.
             base = this.pos.plus(MAP_TILE_SIZE / 2, 0);
         }
-        base = base.plus(shift.x, shift.y);
-        canvas.drawImage(state.wateringCanImage, base.x - (size / 2) + 8, base.y - size + 18);
+        base = base.plus(shift.x, shift.y).toIntegers();
+        canvas.save();
+        // Flip watering can image to face the same direction as the gardener.
+        let flip = this.isEquipped && state.gardener.facing == GardenerDirection.Left;
+        canvas.scale(flip ? -1 : 1, 1);
+        canvas.drawImage(state.wateringCanImage, flip ? (- base.x - 4) : (base.x - 8) , base.y - size + 18);
+        canvas.restore();
 
         // Extra debug displays.
         if (state.debugSettings.showPositionRects) {
