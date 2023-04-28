@@ -1,22 +1,14 @@
 import { ColliderType, IGlobalState } from '../store/classes';
 import {
   ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT, FPS, Colour, computeCurrentFrame, shiftForTile, shiftRect,
-  positionRect, fillRect, outlineRect, computeBackgroundShift, Coord, Rect,
+  positionRect, outlineRect, computeBackgroundShift, Coord, Rect,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 
 // Initial, min, and max value for plant health.
 export const INITIAL_PLANT_HEALTH = 0;
-export const MIN_PLANT_HEALTH = 1;
 export const MAX_PLANT_HEALTH = 5;
-
-// Min and max values for plant size.
-// NOTE: This will probably change when plants become sprites, not rectangles.
-export const MIN_PLANT_WIDTH = 5;
-export const MAX_PLANT_WIDTH = 20;
-export const MIN_PLANT_HEIGHT = 10;
-export const MAX_PLANT_HEIGHT = 60;
 
 // The amount of health imparted to a plant when it gets watered.
 export const WATERING_HEALTH_INCREMENT = 1;
@@ -25,8 +17,6 @@ export const WATERING_HEALTH_INCREMENT = 1;
 export class Plant {
   pos: Coord;
   health: number;
-  width: number;
-  height: number;
   spawnTimestamp: number;
   //stages of growth from 0 (just planted), 1 (seedling) - 4 (mature), 5 (harvested)
   growthStage: number;
@@ -40,14 +30,11 @@ export class Plant {
     this.colliderId = colliderId;
     this.pos = pos;
     this.health = initialHealth;
-    this.width = 0;   // Dummy value to silence an error message.
-    this.height = 0;  // Dummy value to silence an error message.
     this.spawnTimestamp = timestamp;
     this.growthTime = growthTime;
     this.dehydrationTime = dehydrationTime;
     this.growthStage = size;
     this.alive = true;
-    this.updateWidthAndHeight();
   }
 
   /*
@@ -91,12 +78,6 @@ export class Plant {
       return new Plant(this.colliderId, this.pos, this.health - 1, this.growthStage, this.growthTime, this.dehydrationTime, this.spawnTimestamp);
     }
     return this;
-  }
-
-  // Set plant width and height from current health.
-  updateWidthAndHeight(): void {
-    this.height = MIN_PLANT_HEIGHT + (this.growthStage * (MAX_PLANT_HEIGHT - MIN_PLANT_HEIGHT));
-    this.width = MIN_PLANT_WIDTH + (this.growthStage * (MAX_PLANT_WIDTH - MIN_PLANT_WIDTH));
   }
 
   // Absorb water and return a new plant because state is supposed to be immutable.
