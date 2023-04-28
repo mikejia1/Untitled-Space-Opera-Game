@@ -33,35 +33,6 @@ export class Plant {
     this.growthStage = size;
   }
 
-  /*
-  // See if the plant is ready and able to grow its fruit.
-  // Return boolean indicating whether or not growth occurred,
-  // and, if growth occurred, also return the new plant.
-  growFruits(frame: number): any {
-    let noGrow = { didGrow: false };
-    if (!this.alive) return noGrow;
-    if (this.health < MAX_PLANT_HEALTH) return noGrow;
-    let anyGrew = false;
-    let newFruits: Fruit[] = [];
-    if (this.fruits.length === 0) {
-        newFruits = [ new Fruit(1, frame) ];
-        anyGrew = true;
-    } else {
-        this.fruits.forEach(fruit => {
-            let result = fruit.grow(frame);
-            if (result.didGrow) newFruits = [ ...newFruits, result.newFruit ];
-            else newFruits = [ ...newFruits, fruit ];
-            anyGrew = anyGrew || result.didGrow;
-        });
-    };
-    if (!anyGrew) return noGrow;
-    return {
-        didGrow: true,
-        newPlant: new Plant(this.colliderId, this.pos, this.health, this.size, newFruits, this.growthTime, this.dehydrationTime, this.spawnTimestamp),
-    }
-  }
-  */
-
   growPlant(): Plant {
     if (this.growthStage < 4) {
       this.growthStage++;
