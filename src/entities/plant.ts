@@ -1,13 +1,13 @@
 import { ColliderType, IGlobalState } from '../store/classes';
 import {
   ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT, Colour, computeCurrentFrame, shiftForTile, shiftRect,
-  positionRect, outlineRect, computeBackgroundShift, Coord, Rect, DEHYDRATION_TIME,
+  positionRect, outlineRect, computeBackgroundShift, Coord, Rect, DEHYDRATION_TIME, GROWTH_TIME,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 
 // Initial, min, and max value for plant health.
-export const INITIAL_PLANT_HEALTH = 3;
+export const INITIAL_PLANT_HEALTH = 4;
 export const MAX_PLANT_HEALTH = 5;
 
 // The amount of health imparted to a plant when it gets watered.
@@ -24,7 +24,7 @@ export class Plant {
   colliderId: number;
   colliderType: ColliderType = ColliderType.PlantCo;
 
-  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 4, timestamp = computeCurrentFrame()) {
+  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 1, timestamp = computeCurrentFrame()) {
     this.colliderId = colliderId;
     this.pos = pos;
     this.health = initialHealth;
@@ -33,20 +33,22 @@ export class Plant {
     this.growthStage = size;
   }
 
-  growPlant(): Plant {
-    if (this.growthStage < 4) {
-      this.growthStage++;
-      return this;
+  growPlant(state: IGlobalState): Plant {
+    if (this.health > 0 && this.growthStage < 4) {
+      if(state.currentFrame > this.lastGrowthTimestamp + GROWTH_TIME){
+        this.growthStage++;
+        this.lastGrowthTimestamp = state.currentFrame;
+        this.lastDehydrationTimestamp = state.currentFrame;
+      }
     }
     return this;
   }
 
   dehydratePlant(state: IGlobalState): Plant {
-    if (this.health > 0) {
+    if (this.health > 0 && this.growthStage > 0) {
       if(state.currentFrame > this.lastDehydrationTimestamp + DEHYDRATION_TIME){
         this.health--;
         this.lastDehydrationTimestamp = state.currentFrame;
-        return this;
       }
     }
     return this;
@@ -55,6 +57,10 @@ export class Plant {
   // Absorb water and return a new plant because state is supposed to be immutable.
   absorbWater(): Plant {
     if (this.health == 0) {
+      // Return plant to seed state if it's dead.
+      this.health = MAX_PLANT_HEALTH;
+      this.growthStage = 0;
+      this.lastGrowthTimestamp = computeCurrentFrame();
       return this;
     }
     var h = this.health + WATERING_HEALTH_INCREMENT;

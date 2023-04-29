@@ -52,5 +52,5 @@ export enum Colour {
 }
 
 // Named constants for colours.
-export var GROWTH_TIME = FPS * 30;
+export var GROWTH_TIME = FPS * 35;
 export var DEHYDRATION_TIME = FPS * 15;

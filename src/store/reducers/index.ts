@@ -183,6 +183,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   });
 
   let newPlants = dehydratePlants(state.plants, state);
+  newPlants = growPlants(newPlants, state);
   return {
     ...state,
     currentFrame: f,
@@ -319,22 +320,13 @@ function dehydratePlants(plants: Plant[], state: IGlobalState): Plant[] {
   return newPlants;
 }
 
-/*
-// Check all plants to see if any will grow their fruits. Return state unchanged
-// if no fruit growth occurred, otherwise return updated state.
-function growFruits(state: IGlobalState, frame: number): IGlobalState {
-  let grewAny = false;
+function growPlants(plants: Plant[], state: IGlobalState): Plant[] {
   let newPlants: Plant[] = [];
-  state.plants.forEach(plant => {
-    let result = plant.growFruits(frame);
-    if (result.didGrow) newPlants = [ ...newPlants, result.newPlant ];
-    else newPlants = [ ...newPlants, plant ];
-    grewAny = grewAny || result.didGrow;
+  plants.forEach(plant => {
+    newPlants = [...newPlants, plant.growPlant(state)];
   });
-  if (grewAny) return { ...state, plants: newPlants };
-  return state;
+  return newPlants;
 }
-*/
 
 // Check whether the given collider overlaps (collides) with any other collider (excluding itself).
 function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>, collider: Collider): boolean {

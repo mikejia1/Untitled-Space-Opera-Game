@@ -127,12 +127,15 @@ function invisibleCollidersForMapFeatures(nextColliderId: number): Collider[] {
 
 function createPlants(colliderId: number): Plant[]{
   let all: Plant[] = [];
+  // plant array 1D array where non-zero values are plant types.
+  const baseValue = Math.max( ...plants)-3;
+  console.log("base value: " + baseValue);
   for (let r = 0; r < V_TILE_COUNT; r++) {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
       if (plants[i] == 0) continue;
-      // Shift the vertical position of plants by 4 pixels to better align with dirt patch. 
-      let plant: Plant = new Plant(colliderId++, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE+8), INITIAL_PLANT_HEALTH);
+      // Shift the vertical position of plants by 4 pixels to better align with dirt patch. Give size type based on non-zero value in plants.
+      let plant: Plant = new Plant(colliderId++, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE+6), INITIAL_PLANT_HEALTH, plants[i]-baseValue);
       all = [...all, plant];
     }
   }
