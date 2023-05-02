@@ -1,18 +1,18 @@
-import { IGlobalState, Collider, Paintable, ColliderType } from '../store/classes';
+import { IGlobalState, Paintable } from '../store/classes';
 import {
-    Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
-    ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
-    computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
-    Coord, Rect, GardenerDirection,
+    Colour, shiftForTile, shiftRect, positionRect, outlineRect,
+    computeBackgroundShift, Coord,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 
 // A button to activate a section of the multi-panel blast shield.
 export class ShieldButton implements Paintable {
-    pos: Coord;  // Position of the button in the environment.
+    index: number;  // Index to number buttons from left to right, starting at zero.
+    pos: Coord;     // Position of the button in the environment.
  
-    constructor(pos: Coord) {
+    constructor(index: number, pos: Coord) {
+        this.index = index;
         this.pos = pos;
     }
     

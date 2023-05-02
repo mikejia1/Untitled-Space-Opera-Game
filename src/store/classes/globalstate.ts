@@ -169,12 +169,14 @@ function createPlants(colliderId: number): Plant[] {
 }
 
 function createShieldButtons(): ShieldButton[] {
+    let buttonIndex = 0;
     let all: ShieldButton[] = [];
     for (let r = 0; r < V_TILE_COUNT; r++) {
       for (let c = 0; c < H_TILE_COUNT; c++) {
         let i = (r * H_TILE_COUNT) + c;
         if (buttons[i] == 0) continue;
-        let sb: ShieldButton = new ShieldButton(new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE));
+        let sb: ShieldButton = new ShieldButton(buttonIndex, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE));
+        buttonIndex += 1;
         all = [...all, sb];
       }
     }
