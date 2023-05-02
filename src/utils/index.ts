@@ -252,6 +252,7 @@ export function worldBoundaryColliders(nextColliderId: number): InvisibleCollide
 
 // Paint a Rect on a canvas with a given colour.
 export function outlineRect(canvas: CanvasRenderingContext2D, rect: Rect, colour: string): void {
+  canvas.lineWidth = 1;
   canvas.strokeStyle = colour;
   canvas.strokeRect(rect.a.x, rect.a.y, rect.b.x - rect.a.x + 1, rect.b.y - rect.a.y + 1);
 }
