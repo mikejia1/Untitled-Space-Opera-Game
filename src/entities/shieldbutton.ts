@@ -34,6 +34,7 @@ export class ShieldButton implements Paintable {
         dest = dest.toIntegers();
         
         // Paint the concentric expanding rings of transparent red, if button is currently alarming.
+        // Draw alarm pulses first so they'll be *behind* the buttons.
         if (this.isAlarming) this.paintAlarmPulses(canvas, dest);
 
         // Paint button sprite for current frame.
@@ -53,12 +54,12 @@ export class ShieldButton implements Paintable {
     // Paint expanding concentric circles representing the alarm going off.
     paintAlarmPulses(canvas: CanvasRenderingContext2D, dest: Coord): void {
         let f = computeCurrentFrame();
-        let alarmTime = Math.max(f - this.alarmStartTime, 0);
-        if (alarmTime > (FPS * 5)) {
+        let alarmTime = Math.max(f - this.alarmStartTime, 0);   // Time since alarm began.
+        if (alarmTime > (FPS * 5)) {    // Urgent mode.
             for (let i = 0; i < 4; i++) {
                 this.paintPulseForAlarmTime(canvas, dest, Math.max(alarmTime - (i * 10), 0));
             }
-        } else {
+        } else {                        // Non-urgent mode.
             for (let i = 0; i < 2; i++) {
                 this.paintPulseForAlarmTime(canvas, dest, Math.max(alarmTime - (i * 20), 0));
             }
@@ -66,18 +67,18 @@ export class ShieldButton implements Paintable {
     }
 
     paintPulseForAlarmTime(canvas: CanvasRenderingContext2D, dest: Coord, alarmTime: number): void {
-        if (alarmTime === 0) return;
-        let rad = alarmTime % 30;
-        let alpha = (29 - rad) / 30;
-        if (alarmTime < (FPS * 5)) alpha *= 0.75;
-        let thick = alpha * 6;
-        canvas.strokeStyle = `rgba(255,0,0,${alpha})`;
-        canvas.lineWidth = thick;
+        if (alarmTime === 0) return;                    // Ignore pulses of age zero.
+        let rad = alarmTime % 30;                       // Radius is pulse age mod 30.
+        let alpha = (29 - rad) / 30;                    // Alpha transparency fades to zero by the time radius is 29.
+        if (alarmTime < (FPS * 5)) alpha *= 0.75;       // Non-urgent pulses are 25% more transparent.
+        let thick = alpha * 6;                          // Line thickness goes from thick to thin.
+        canvas.strokeStyle = `rgba(255,0,0,${alpha})`;  // Set stroke colour to transparent red.
+        canvas.lineWidth = thick;                       // Set stroke thickness.
         canvas.beginPath();
-        canvas.arc(
-            dest.x + 16, dest.y + 16,     // Centre of circle.
-            rad,                          // Radius of the circle.
-            0, 2 * Math.PI);              // Start and end angles.
+        canvas.arc(                         // Draw a single alarm pulse circle.
+            dest.x + 16, dest.y + 16,       // Centre of circle.
+            rad,                            // Radius of the circle.
+            0, 2 * Math.PI);                // Start and end angles.
         canvas.stroke();
     }
 
