@@ -48,6 +48,7 @@ export const drawState = (
   drawBackground(state, shift, canvas);
   state.plants.forEach(plant => pq.add(plant));
   state.npcs.forEach(npc => pq.add(npc));
+  state.shieldButtons.forEach(sb => pq.add(sb));
   pq.add(state.gardener);
   pq.add(state.wateringCan);
   while (!pq.isEmpty()) {

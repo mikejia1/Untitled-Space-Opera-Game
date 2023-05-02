@@ -2,7 +2,7 @@ import { Collider, ColliderType } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import { Coord, Direction, GardenerDirection, tileRect, worldBoundaryColliders } from '../../utils';
 
-import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, ladders, MAP_TILE_SIZE } from "../data/positions";
+import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
 
 // Gardener images.
@@ -20,9 +20,11 @@ import npcwalkcycle from "../../entities/images/nonplayer/npcwalkcycle.png";
 import spacegarden  from "../images/space_garden.png";
 import wateringcan  from "../../entities/images/wateringcan/wateringcan.png";
 import spaceframes  from "../images/space_frames.png";
+import shieldButton from "../../entities/images/button/button_32x32.png";
 
 // Plant image.
 import plantimage from "../../entities/images/plant/plants_16x16.png";
+import { ShieldButton } from '../../entities/shieldbutton';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -32,9 +34,11 @@ export interface IGlobalState {
     wateringCan: WateringCan;         // The watering can that the gardener uses to water plants
     plants: Plant[];                  // All the plants currently living
     npcs: NonPlayer[];                // The various crew people wandering around in the garden
+    shieldButtons: ShieldButton[];    // The buttons that activate sections of the blast shield
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
     gardenerImages: any;              // Source images for gardener sprites.
     shieldImages: any;                // Source images for the blast shield image.
+    shieldButtonImage: any;           // Source image for the shield button animation.
     npcimage: any;                    // The NPC walkcycle sprite source image.
     backgroundImage: any;             // The background image.
     wateringCanImage: any;            // The watering can image.
@@ -69,6 +73,9 @@ export function initialGameState(): IGlobalState {
   let npcs = gridOfNPCs(colliderId, new Coord(200, 250), 25, 2, 2);
   colliderId += npcs.length;
 
+  // Create the buttons that activate the sections of the blast shield.
+  let shieldButtons = createShieldButtons();
+
   return {
     gardener: initialGardener(colliderId++),
     keysPressed: [],
@@ -76,6 +83,7 @@ export function initialGameState(): IGlobalState {
     wateringCan: initialWateringCan(),
     plants: allPlants,
     npcs: npcs,
+    shieldButtons: shieldButtons,
     currentFrame: 0,
     gardenerImages: {
       walkingBase:  loadImage("Base walk strip", basewalkstrip),
@@ -91,6 +99,7 @@ export function initialGameState(): IGlobalState {
       top:            loadImage("Top shield", topShield),
       bottom:         loadImage("Bottom shield", bottomShield),
     },
+    shieldButtonImage: loadImage("Shield button", shieldButton),
     plantImage:       loadImage("Plant image", plantimage),
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
     muted: true,
@@ -142,9 +151,9 @@ function invisibleCollidersForLadders(nextColliderId: number): Collider[] {
   return all;
 }
 
-function createPlants(colliderId: number): Plant[]{
+function createPlants(colliderId: number): Plant[] {
   let all: Plant[] = [];
-  // plant array 1D array where non-zero values are plant types.
+  // Plant array 1D array where non-zero values are plant types.
   const baseValue = Math.max( ...plants)-3;
   console.log("base value: " + baseValue);
   for (let r = 0; r < V_TILE_COUNT; r++) {
@@ -157,6 +166,19 @@ function createPlants(colliderId: number): Plant[]{
     }
   }
   return all;
+}
+
+function createShieldButtons(): ShieldButton[] {
+    let all: ShieldButton[] = [];
+    for (let r = 0; r < V_TILE_COUNT; r++) {
+      for (let c = 0; c < H_TILE_COUNT; c++) {
+        let i = (r * H_TILE_COUNT) + c;
+        if (buttons[i] == 0) continue;
+        let sb: ShieldButton = new ShieldButton(new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE));
+        all = [...all, sb];
+      }
+    }
+    return all;  
 }
 
 // Create a grid of NPCs with top-left one at given position, and with given spacing.
