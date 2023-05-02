@@ -8,12 +8,16 @@ import { Tile } from '../scene';
 
 // A button to activate a section of the multi-panel blast shield.
 export class ShieldButton implements Paintable {
-    index: number;  // Index to number buttons from left to right, starting at zero.
-    pos: Coord;     // Position of the button in the environment.
+    index: number;              // Index to number buttons from left to right, starting at zero.
+    pos: Coord;                 // Position of the button in the environment.
+    alarmStartTime: number;     // The frame number when the alarm began.
+    isAlarming: boolean;        // Whether or not the alarm is flashing.
  
-    constructor(index: number, pos: Coord) {
+    constructor(index: number, pos: Coord, alarmStartTime: number, isAlarming: boolean) {
         this.index = index;
         this.pos = pos;
+        this.alarmStartTime = alarmStartTime;
+        this.isAlarming = isAlarming;
     }
     
     // Paint the button on the canvas.
@@ -36,11 +40,26 @@ export class ShieldButton implements Paintable {
             32, 32,                     // Size of frame in source
             dest.x, dest.y,             // Position of sprite on canvas
             32, 32);                    // Sprite size on canvas
+        
+        // Paint the concentric expanding rings of transparent red, if button is currently alarming.
+        if (this.isAlarming) this.paintAlarmPulses(canvas, dest);
     
         // Extra debug displays.
         if (state.debugSettings.showPositionRects) {
             outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
         }
+    }
+
+    // Paint expanding concentric circles representing the alarm going off.
+    paintAlarmPulses(canvas: CanvasRenderingContext2D, dest: Coord): void {
+        canvas.strokeStyle = `rgba(255,0,0,0.5)`;
+        canvas.lineWidth = 5;
+        canvas.beginPath();
+        canvas.arc(
+            dest.x + 16, dest.y + 16,     // Centre of circle.
+            15,                          // Radius of the circle.
+            0, 2 * Math.PI);            // Start and end angles.
+        canvas.stroke();
     }
 
     // Compute a displacement that will place the button at the correct place on the canvas.
