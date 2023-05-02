@@ -56,16 +56,17 @@ export class ShieldButton implements Paintable {
         let alarmTime = Math.max(f - this.alarmStartTime, 0);
         if (alarmTime > (FPS * 5)) {
             for (let i = 0; i < 4; i++) {
-                this.paintPulseForAlarmTime(canvas, dest, Math.max(alarmTime + (i * 10), 0));
+                this.paintPulseForAlarmTime(canvas, dest, Math.max(alarmTime - (i * 10), 0));
             }
         } else {
             for (let i = 0; i < 2; i++) {
-                this.paintPulseForAlarmTime(canvas, dest, Math.max(alarmTime + (i * 20), 0));
+                this.paintPulseForAlarmTime(canvas, dest, Math.max(alarmTime - (i * 20), 0));
             }
         }
     }
 
     paintPulseForAlarmTime(canvas: CanvasRenderingContext2D, dest: Coord, alarmTime: number): void {
+        if (alarmTime === 0) return;
         let rad = alarmTime % 30;
         let alpha = (29 - rad) / 30;
         if (alarmTime < (FPS * 5)) alpha *= 0.75;
