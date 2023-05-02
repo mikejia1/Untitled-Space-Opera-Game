@@ -11,7 +11,7 @@ export const CANVAS_HEIGHT = 240;
 
 // The default collision/action rectangle width and height for visible colliders.
 export const ENTITY_RECT_WIDTH = 10;
-export const ENTITY_RECT_HEIGHT = 10;
+export const ENTITY_RECT_HEIGHT = 5;
 
 // The number of pixels left/right/up/down that the gardener moves on WASD input.
 export const MOVE_HORZ = 5;
