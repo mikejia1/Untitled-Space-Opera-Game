@@ -2,7 +2,7 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS } from "../../utils";
-import { Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
+import { AnimEvent, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
 import { NonPlayer, Plant } from '../../entities';
 import {
   DOWN,
@@ -183,14 +183,23 @@ function updateFrame(state: IGlobalState): IGlobalState {
   });
 
   let newPlants = dehydratePlants(state.plants, state);
+  let animQueue = updateAnimationQueue(state);
   newPlants = growPlants(newPlants, state);
   return {
     ...state,
     currentFrame: f,
     npcs: newNPCs,
     plants: newPlants,
+    animationQueue: animQueue
   }
 }
+
+// Remove expired animation events from animationQueue.
+function updateAnimationQueue(state: IGlobalState): AnimEvent[] {
+  let newQueue: AnimEvent[] = state.animationQueue.filter(animEvent => animEvent.startTime + animEvent.frameCount > state.currentFrame);
+  return newQueue;
+}
+
 
 // Toggle debug control showCollisionRects from False to True or vice versa.
 function toggleDebugControlCollisionRects(state: IGlobalState): IGlobalState {

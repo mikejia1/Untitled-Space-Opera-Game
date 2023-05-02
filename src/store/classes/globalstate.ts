@@ -1,4 +1,4 @@
-import { Collider, ColliderType } from './';
+import { AnimEvent, Event, Collider, ColliderType, SUPERNOVA_DELAY } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import { Coord, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders } from '../../utils';
 
@@ -16,10 +16,11 @@ import topShield    from "../../entities/images/shield/shield_top_32x.png";
 import bottomShield from "../../entities/images/shield/shield_bottom_32x.png";
 
 // Other images.
-import npcwalkcycle from "../../entities/images/nonplayer/npcwalkcycle.png";
-import spacegarden  from "../images/space_garden.png";
-import wateringcan  from "../../entities/images/wateringcan/wateringcan.png";
-import spaceframes  from "../images/space_frames.png";
+import npcwalkcycle       from "../../entities/images/nonplayer/npcwalkcycle.png";
+import spacegardenimpact  from "../images/space_garden_impact.png";
+import spacegarden        from "../images/space_garden.png";
+import wateringcan        from "../../entities/images/wateringcan/wateringcan.png";
+import spaceframes        from "../images/space_frames.png";
 import shieldButton from "../../entities/images/button/button_32x32.png";
 
 // Plant image.
@@ -36,13 +37,13 @@ export interface IGlobalState {
     npcs: NonPlayer[];                // The various crew people wandering around in the garden
     shieldButtons: ShieldButton[];    // The buttons that activate sections of the blast shield
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
+    animationQueue: AnimEvent[];      // Queue of one-off event animations to draw
     gardenerImages: any;              // Source images for gardener sprites.
     shieldImages: any;                // Source images for the blast shield image.
     shieldButtonImage: any;           // Source image for the shield button animation.
     npcimage: any;                    // The NPC walkcycle sprite source image.
-    backgroundImage: any;             // The background image.
+    backgroundImages: any;            // The background image.
     wateringCanImage: any;            // The watering can image.
-    deepSpaceImage: any;              // The deep space image frames x4.
     plantImage: any;                  // The plant image.
     invisibleColliders: Collider[];   // All Colliders that aren't visible.
     muted: boolean;                   // Enable / disable sounds.
@@ -85,15 +86,19 @@ export function initialGameState(): IGlobalState {
     npcs: npcs,
     shieldButtons: shieldButtons,
     currentFrame: 0,
+    animationQueue: getEvents(),
     gardenerImages: {
       walkingBase:  loadImage("Base walk strip", basewalkstrip),
       wateringBase: loadImage("Base watering strip", basewateringstrip),
       waterPouring: loadImage("Tool watering strip", toolwateringstrip),
     },
     npcimage:         loadImage("NPC walk cycle", npcwalkcycle),
-    backgroundImage:  loadImage("Space garden", spacegarden),
+    backgroundImages:{
+      default:      loadImage("Space garden", spacegarden),
+      impact:       loadImage("Space garden impact", spacegardenimpact),
+      deepSpace:    loadImage("Space frames", spaceframes),
+    },
     wateringCanImage: loadImage("Watering can", wateringcan),
-    deepSpaceImage:   loadImage("Space frames", spaceframes),
     shieldImages: {
       closed:         loadImage("Closed shield", closedShield),
       top:            loadImage("Top shield", topShield),
@@ -209,3 +214,7 @@ function initialWateringCan(): WateringCan {
   return new WateringCan(new Coord(200, 150), false);
 }
 
+function getEvents(): AnimEvent[] {
+  let anim: AnimEvent = new AnimEvent(Event.IMPACT, computeCurrentFrame() + SUPERNOVA_DELAY, 24);
+  return [anim];
+}

@@ -1,4 +1,4 @@
-import { ColliderType, IGlobalState, Paintable } from "../store/classes";
+import { ColliderType, AnimEvent, Event, IGlobalState, Paintable } from "../store/classes";
 import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/positions";
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
@@ -128,47 +128,63 @@ export function rectanglesOverlap(rect1: any, rect2: any): boolean {
 // If any of the WrapSector.Left copy of the world should be visible, paint a copy there as well.
 // If any of the WrapSector.Right copy of the world should be visible, paint a copy there as well.
 function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
-  drawDeepSpaceFrame(state, canvas, shift);
-  canvas.drawImage(state.backgroundImage, shift.x, shift.y);
+  drawShiftedBackground(state, canvas, shift);
   //outlineRect(canvas, {a: new Coord(shift.x, shift.y), b: new Coord(shift.x + BACKGROUND_WIDTH - 1, shift.y + BACKGROUND_HEIGHT - 1)}, "#000000");
   // A ring-world background image wider than the canvas. 
   if (BACKGROUND_WIDTH > CANVAS_WIDTH) {
     if (shift.x >= 0) {
       let reshift = shift.minus(BACKGROUND_WIDTH, 0);
-      drawDeepSpaceFrame(state, canvas, reshift);
-      canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);
+      drawShiftedBackground(state, canvas, reshift);
     } else if ((shift.x + BACKGROUND_WIDTH) < CANVAS_WIDTH) {
       let reshift = shift.plus(BACKGROUND_WIDTH, 0);
-      drawDeepSpaceFrame(state, canvas, reshift);
-      canvas.drawImage(state.backgroundImage, reshift.x, reshift.y);  
+      drawShiftedBackground(state, canvas, reshift);
     }
   } else {
     // A narrow bounded map that is not wider than the canvas.
-    drawDeepSpaceFrame(state, canvas, shift);
-    canvas.drawImage(state.backgroundImage, shift.x, shift.y);  
+      drawShiftedBackground(state, canvas, shift);
   }
 }
 
-function drawDeepSpaceFrame(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord){
-  let frame = Math.floor(state.currentFrame % 24 / 6);
+function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord){
+  // draw deep space
+  let deepSpaceFrame = Math.floor(state.currentFrame % 24 / 6);
   canvas.drawImage(
-    state.deepSpaceImage,                                     // Sprite source image
-    frame * MAP_TILE_SIZE * H_TILE_COUNT, 0,                  // Top-left corner of frame in source
+    state.backgroundImages.deepSpace,                         // Sprite source image
+    deepSpaceFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,         // Top-left corner of frame in source
     H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE,   // Size of frame in source
     shift.x,                                                  // X position of top-left corner on canvas
     shift.y,                                                  // Y position of top-left corner on canvas
     H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
-}
 
-function randomNumber(min: number, max: number) {
-  let random = Math.random() * max;
-  return random - (random % 20);
+  if (state.animationQueue.length == 0 || state.animationQueue[0].startTime > state.currentFrame) {
+    canvas.drawImage(state.backgroundImages.default, shift.x, shift.y);
+  }
+  else {
+    console.log("examining animation queue");
+    let anim: AnimEvent = state.animationQueue[0];
+    if(anim.event == Event.IMPACT){
+      console.log("begin supernova animation");
+      let impactFrame = 0;
+      if (state.currentFrame - anim.startTime == 1){
+        impactFrame = 1;
+      }
+      else if (state.currentFrame - anim.startTime == 2){
+        impactFrame = 0;
+      }
+      else{
+        impactFrame = Math.min(Math.floor((state.currentFrame - anim.startTime)/4), 3);
+      }
+      console.log("impact frame: " + impactFrame);
+      canvas.drawImage(
+        state.backgroundImages.impact,                         // Sprite source image
+        impactFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,         // Top-left corner of frame in source
+        H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE,   // Size of frame in source
+        shift.x,                                                  // X position of top-left corner on canvas
+        shift.y,                                                  // Y position of top-left corner on canvas
+        H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
+    }
+  }
 }
-/*
-export const generateRandomPosition = (width: number, height: number) => {
-  return new Coord(randomNumber(0, width), randomNumber(0, height));
-};
-*/
 
 export function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
