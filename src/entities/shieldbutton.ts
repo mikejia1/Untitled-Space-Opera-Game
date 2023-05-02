@@ -1,7 +1,7 @@
 import { IGlobalState, Paintable } from '../store/classes';
 import {
     Colour, shiftForTile, shiftRect, positionRect, outlineRect,
-    computeBackgroundShift, Coord,
+    computeBackgroundShift, Coord, computeCurrentFrame, FPS,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -33,6 +33,9 @@ export class ShieldButton implements Paintable {
         let dest = new Coord(newPos.x - 11, newPos.y - 28);
         dest = dest.toIntegers();
         
+        // Paint the concentric expanding rings of transparent red, if button is currently alarming.
+        if (this.isAlarming) this.paintAlarmPulses(canvas, dest);
+
         // Paint button sprite for current frame.
         canvas.drawImage(
             state.shieldButtonImage,    // Shield button source image
@@ -40,10 +43,7 @@ export class ShieldButton implements Paintable {
             32, 32,                     // Size of frame in source
             dest.x, dest.y,             // Position of sprite on canvas
             32, 32);                    // Sprite size on canvas
-        
-        // Paint the concentric expanding rings of transparent red, if button is currently alarming.
-        if (this.isAlarming) this.paintAlarmPulses(canvas, dest);
-    
+            
         // Extra debug displays.
         if (state.debugSettings.showPositionRects) {
             outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
@@ -52,13 +52,31 @@ export class ShieldButton implements Paintable {
 
     // Paint expanding concentric circles representing the alarm going off.
     paintAlarmPulses(canvas: CanvasRenderingContext2D, dest: Coord): void {
-        canvas.strokeStyle = `rgba(255,0,0,0.5)`;
-        canvas.lineWidth = 5;
+        let f = computeCurrentFrame();
+        let alarmTime = Math.max(f - this.alarmStartTime, 0);
+        if (alarmTime > (FPS * 5)) {
+            for (let i = 0; i < 4; i++) {
+                this.paintPulseForAlarmTime(canvas, dest, Math.max(alarmTime + (i * 10), 0));
+            }
+        } else {
+            for (let i = 0; i < 2; i++) {
+                this.paintPulseForAlarmTime(canvas, dest, Math.max(alarmTime + (i * 20), 0));
+            }
+        }
+    }
+
+    paintPulseForAlarmTime(canvas: CanvasRenderingContext2D, dest: Coord, alarmTime: number): void {
+        let rad = alarmTime % 30;
+        let alpha = (29 - rad) / 30;
+        if (alarmTime < (FPS * 5)) alpha *= 0.75;
+        let thick = alpha * 6;
+        canvas.strokeStyle = `rgba(255,0,0,${alpha})`;
+        canvas.lineWidth = thick;
         canvas.beginPath();
         canvas.arc(
             dest.x + 16, dest.y + 16,     // Centre of circle.
-            15,                          // Radius of the circle.
-            0, 2 * Math.PI);            // Start and end angles.
+            rad,                          // Radius of the circle.
+            0, 2 * Math.PI);              // Start and end angles.
         canvas.stroke();
     }
 
