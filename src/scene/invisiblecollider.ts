@@ -5,11 +5,12 @@ import { Rect, rectToString } from '../utils';
 export class InvisibleCollider implements Collider {
     rect: Rect;
     colliderId: number;
-    colliderType: ColliderType = ColliderType.WallCo;   // Treat invisible colliders like walls.
+    colliderType: ColliderType;
   
-    constructor(colliderId: number, rect: Rect) {
+    constructor(colliderId: number, rect: Rect, colliderType: ColliderType) {
         this.colliderId = colliderId;
         this.rect = rect;
+        this.colliderType = colliderType;
     }
   
     collisionRect(): Rect {

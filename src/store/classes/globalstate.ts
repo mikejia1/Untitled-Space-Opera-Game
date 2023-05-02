@@ -1,8 +1,8 @@
-import { Collider } from './';
+import { Collider, ColliderType } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import { Coord, Direction, GardenerDirection, tileRect, worldBoundaryColliders } from '../../utils';
 
-import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, MAP_TILE_SIZE } from "../data/positions";
+import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
 
 // Gardener images.
@@ -54,6 +54,9 @@ export function initialGameState(): IGlobalState {
   let features = invisibleCollidersForMapFeatures(colliderId);
   colliderId += features.length;
 
+  let ladders = invisibleCollidersForLadders(colliderId);
+  colliderId += ladders.length;
+
   // Create plants from initial plant positions. 
   let allPlants = createPlants(colliderId);
   colliderId += allPlants.length;
@@ -89,7 +92,7 @@ export function initialGameState(): IGlobalState {
       bottom:         loadImage("Bottom shield", bottomShield),
     },
     plantImage:       loadImage("Plant image", plantimage),
-    invisibleColliders: [...worldBoundaries, ...features],  // Map features and world boundaries both contribute invisible colliders.
+    invisibleColliders: [worldBoundaries, features, ladders].flat(),
     muted: true,
     debugSettings: {
       showCollisionRects: false,   // Collision rectangles for colliders.
@@ -118,7 +121,21 @@ function invisibleCollidersForMapFeatures(nextColliderId: number): Collider[] {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
       if (collisions[i] == 0) continue;
-      let ic = new InvisibleCollider(nextColliderId + all.length, tileRect(r,c));
+      let ic = new InvisibleCollider(nextColliderId + all.length, tileRect(r,c), ColliderType.WallCo);
+      all = [...all, ic];
+    }
+  }
+  return all;
+}
+
+// Return an array of invisible colliders based on ladder data in store/data/collisions.tsx
+function invisibleCollidersForLadders(nextColliderId: number): Collider[] {
+    let all: Collider[] = [];
+  for (let r = 0; r < V_TILE_COUNT; r++) {
+    for (let c = 0; c < H_TILE_COUNT; c++) {
+      let i = (r * H_TILE_COUNT) + c;
+      if (ladders[i] == 0) continue;
+      let ic = new InvisibleCollider(nextColliderId + all.length, tileRect(r,c), ColliderType.LadderCo);
       all = [...all, ic];
     }
   }

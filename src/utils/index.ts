@@ -1,4 +1,4 @@
-import { IGlobalState, Paintable } from "../store/classes";
+import { ColliderType, IGlobalState, Paintable } from "../store/classes";
 import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/positions";
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
@@ -214,14 +214,16 @@ export function worldBoundaryColliders(nextColliderId: number): InvisibleCollide
       {
         a: new Coord(-thickness, -thickness),
         b: new Coord(BACKGROUND_WIDTH + thickness, -1),
-      }),
+      },
+      ColliderType.WallCo),
     // Below background image.
     new InvisibleCollider(
       nextColliderId + 1,
       {
         a: new Coord(-thickness, BACKGROUND_HEIGHT),
         b: new Coord(BACKGROUND_WIDTH + thickness, BACKGROUND_HEIGHT + thickness),
-      }),
+      },
+      ColliderType.WallCo),
   ];
 
   // For ring-world maps that are wider than the canvas, the above boundaries are all that are needed.
@@ -235,13 +237,15 @@ export function worldBoundaryColliders(nextColliderId: number): InvisibleCollide
       {
         a: new Coord(-thickness, -thickness),
         b: new Coord(-1, BACKGROUND_HEIGHT + thickness),
-      }),
+      },
+      ColliderType.WallCo),
     new InvisibleCollider(
       nextColliderId + 3,
       {
         a: new Coord(BACKGROUND_WIDTH, -thickness),
         b: new Coord(BACKGROUND_WIDTH + thickness, BACKGROUND_HEIGHT + thickness),
-      }),
+      },
+      ColliderType.WallCo),
   ];
   }
 

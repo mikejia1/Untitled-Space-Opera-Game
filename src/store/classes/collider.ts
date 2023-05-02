@@ -1,11 +1,5 @@
 import { Rect } from '../../utils';
 
-const GARDENER  = "Gardener";
-const NPC       = "NPC";
-const WALL      = "Wall";
-const PLANT     = "Plant";
-const LADDER    = "Ladder";
-
 // Colliders have types.
 // By default, all types collide.
 // Exceptions must be listed explicitly in ColliderExceptions.
@@ -25,11 +19,11 @@ export interface StrSet {
 // All exceptions should appear twice here.
 export function ColliderExceptions(col: Collider): StrSet {
     switch (col.colliderType) {
-        case ColliderType.GardenerCo:   return { LADDER: true };
+        case ColliderType.GardenerCo:   return { Ladder: true };
         case ColliderType.NPCCo:        return { };
         case ColliderType.WallCo:       return { };
         case ColliderType.PlantCo:      return { };
-        case ColliderType.LadderCo:     return { GARDENER: true };
+        case ColliderType.LadderCo:     return { Gardener: true };
     }
 };
 
