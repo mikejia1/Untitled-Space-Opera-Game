@@ -109,12 +109,13 @@ export function initialGameState(): IGlobalState {
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
     muted: true,
     debugSettings: {
-      showCollisionRects: false,   // Collision rectangles for colliders.
-      showPositionRects: false,    // Position rectangles for paintables.
-      showWateringRects: false,    // Watering interaction rectangles for plants.
-      showFacingRects: false,      // Facing direction rectangle for gardener.
-      showEquipRects: false,       // Equipping interaction rectangle for watering can.
-      collisionsDisabled: false,   // Disable collision checks - Gardener can walk through anything.
+      showCollisionRects: false,    // Collision rectangles for colliders.
+      showPositionRects: false,     // Position rectangles for paintables.
+      showWateringRects: false,     // Watering interaction rectangles for plants.
+      showFacingRects: false,       // Facing direction rectangle for gardener.
+      showEquipRects: false,        // Equipping interaction rectangle for watering can.
+      showInteractionRects: false,  // Interaction rectangles.
+      collisionsDisabled: false,    // Disable collision checks - Gardener can walk through anything.
     },
   }
 }

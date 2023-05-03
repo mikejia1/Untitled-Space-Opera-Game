@@ -1,4 +1,4 @@
-import { IGlobalState, Collider, Paintable, ColliderType } from '../store/classes';
+import { IGlobalState, Collider, Paintable, Interactable, ColliderType } from '../store/classes';
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
@@ -12,7 +12,7 @@ import { Tile } from '../scene';
 export const GARDENER_HEIGHT = 20;
 
 // The gardener who tends the garden.
-export class Gardener implements Paintable, Collider {
+export class Gardener implements Paintable, Collider, Interactable {
     pos: Coord;                 // Position of the gardener in the environment.
     facing: GardenerDirection;  // Direction the gardener is currently facing.
     itemEquipped: boolean;      // Whether or not the gardener has an item equipped.
@@ -125,6 +125,9 @@ export class Gardener implements Paintable, Collider {
         if (state.debugSettings.showFacingRects) {
             outlineRect(canvas, shiftRect(this.facingDetectionRect(), shift.x, shift.y), Colour.FACING_RECT);
         }
+        if (state.debugSettings.showInteractionRects) {
+            outlineRect(canvas, shiftRect(this.interactionRect(), shift.x, shift.y), Colour.INTERACTION_RECT);
+        }
     }
 
     // Paint the gardener standing still or walking.
@@ -203,6 +206,13 @@ export class Gardener implements Paintable, Collider {
             a: this.pos.plus(0, -ENTITY_RECT_HEIGHT),
             b: this.pos.plus(ENTITY_RECT_WIDTH, 0),
         }
+    }
+
+    interactionRect(): Rect {
+        return {
+            a: this.pos.plus(-10, -20),
+            b: this.pos.plus(20, 8),
+        };
     }
 
     // Return a rectangle adjacent to the gardener in the direction it is facing.

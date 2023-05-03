@@ -43,12 +43,13 @@ export const ALL_DIRECTIONS = [Direction.Up, Direction.Down, Direction.Left, Dir
 
 // Named constants for colours.
 export enum Colour {
-    PLANT_OUTLINE   = "#146356",
-    COLLISION_RECT  = "#FF2200",
-    POSITION_RECT   = "#22FF00",
-    WATERING_RECT   = "#0022FF",
-    FACING_RECT     = "#2288FF",
-    EQUIP_RECT      = "#FF22FF",
+    PLANT_OUTLINE       = "#146356",
+    COLLISION_RECT      = "#FF2200",
+    POSITION_RECT       = "#22FF00",
+    WATERING_RECT       = "#0022FF",
+    FACING_RECT         = "#2288FF",
+    EQUIP_RECT          = "#FF22FF",
+    INTERACTION_RECT    = "#FFFF22",
 }
 
 // Named constants for colours.

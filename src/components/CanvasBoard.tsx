@@ -23,6 +23,7 @@ import {
   toggleShowWateringRects,
   toggleShowFacingRects,
   toggleShowEquipRects,
+  toggleShowInteractionRects,
   toggleDisableCollisions,
   toggleGameAudio,
 } from "../store/actions";
@@ -130,6 +131,11 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     dispatch(toggleShowEquipRects());
   }, [dispatch])
 
+  // Toggle the showInteractionRects debug boolean.
+  const interactionRectsDebug = useCallback(() => {
+    dispatch(toggleShowInteractionRects());
+  }, [dispatch])
+
   // Toggle the disableCollisions debug boolean.
   const disableCollisionsDebug = useCallback(() => {
     dispatch(toggleDisableCollisions());
@@ -194,6 +200,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
         wateringRectsDebug={wateringRectsDebug}
         facingRectsDebug={facingRectsDebug}
         equipRectsDebug={equipRectsDebug}
+        interactionRectsDebug={interactionRectsDebug}
         disableCollisionsDebug={disableCollisionsDebug}
         toggleSound={toggleSound}
         isMuted={audioIsMuted}

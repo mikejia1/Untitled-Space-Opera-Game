@@ -3,7 +3,7 @@
 
 import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS } from "../../utils";
 import { AnimEvent, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
-import { NonPlayer, Plant } from '../../entities';
+import { NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -25,6 +25,7 @@ import {
   TOGGLE_DEBUG_CONTROL_WATERING_RECTS,
   TOGGLE_DEBUG_CONTROL_FACING_RECTS,
   TOGGLE_DEBUG_CONTROL_EQUIP_RECTS,
+  TOGGLE_DEBUG_CONTROL_INTERACTION_RECTS,
   TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS,
   TOGGLE_GAME_AUDIO,
 } from "../actions";
@@ -52,6 +53,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
     case TOGGLE_DEBUG_CONTROL_WATERING_RECTS:     return toggleDebugControlWateringRects(state);
     case TOGGLE_DEBUG_CONTROL_FACING_RECTS:       return toggleDebugControlFacingRects(state);
     case TOGGLE_DEBUG_CONTROL_EQUIP_RECTS:        return toggleDebugControlEquipRects(state);
+    case TOGGLE_DEBUG_CONTROL_INTERACTION_RECTS:  return toggleDebugControlInteractionRects(state);
     case TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS: return toggleDebugControlDisableCollisions(state);
     default:                                      return state;
   }
@@ -256,6 +258,17 @@ function toggleDebugControlEquipRects(state: IGlobalState): IGlobalState {
   };
 }
 
+// Toggle debug control showInteractionRects from False to True or vice versa.
+function toggleDebugControlInteractionRects(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    debugSettings: {
+      ...state.debugSettings,
+      showInteractionRects: !state.debugSettings.showInteractionRects,
+    },
+  };
+}
+
 // Toggle debug control disableCollisions from False to True or vice versa.
 function toggleDebugControlDisableCollisions(state: IGlobalState): IGlobalState {
   return {
@@ -398,11 +411,11 @@ function canEquip(state: IGlobalState): boolean {
   return rectanglesOverlap(faceRect, rect);
 }
 
-// Use currently equipped item, if possible.
+// Use currently equipped item, if equipped, other use item that is nearby (like a button).
 // Note: Named "utilise" instead of "use" because "useItem" exists elsewhere.
 function utiliseItem(state: IGlobalState): IGlobalState {
   if (!state.gardener.itemEquipped) {
-    return state;
+    return utiliseNearbyItem(state);
   }
   var newPlants: Plant[] = [];
   let faceRect = state.gardener.facingDetectionRect();
@@ -422,6 +435,36 @@ function utiliseItem(state: IGlobalState): IGlobalState {
     ...state,
     plants: newPlants,
     gardener: state.gardener.setWatering(true),
+  };
+}
+
+function utiliseNearbyItem(state: IGlobalState): IGlobalState {
+  let sb = getNearbyShieldButton(state);
+  if (sb === undefined) {
+    console.log("Nothing to interact with");
+    return state;
+  }
+  return activateShieldButton(sb, state);
+}
+
+function getNearbyShieldButton(state: IGlobalState): ShieldButton | undefined {
+  for (let i = 0; i < state.shieldButtons.length; i++) {
+    let sb = state.shieldButtons[i];
+    if (rectanglesOverlap(state.gardener.interactionRect(), sb.interactionRect())) return sb;
+  }
+  return undefined;
+}
+
+function activateShieldButton(sb: ShieldButton, state: IGlobalState): IGlobalState {
+  console.log("Activating shield button");
+  let newButtons: ShieldButton[] = [];
+  state.shieldButtons.forEach(b => {
+    if (b.index === sb.index) newButtons = [...newButtons, b.activate(state)];
+    else newButtons = [...newButtons, b];
+  });
+  return {
+    ...state,
+    shieldButtons: newButtons,
   };
 }
 

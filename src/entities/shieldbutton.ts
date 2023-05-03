@@ -1,13 +1,13 @@
-import { IGlobalState, Paintable } from '../store/classes';
+import { IGlobalState, Paintable, Interactable } from '../store/classes';
 import {
     Colour, shiftForTile, shiftRect, positionRect, outlineRect,
-    computeBackgroundShift, Coord, computeCurrentFrame, FPS,
+    computeBackgroundShift, Coord, computeCurrentFrame, FPS, Rect,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 
 // A button to activate a section of the multi-panel blast shield.
-export class ShieldButton implements Paintable {
+export class ShieldButton implements Paintable, Interactable {
     index: number;              // Index to number buttons from left to right, starting at zero.
     pos: Coord;                 // Position of the button in the environment.
     alarmStartTime: number;     // The frame number when the alarm began.
@@ -48,6 +48,9 @@ export class ShieldButton implements Paintable {
         // Extra debug displays.
         if (state.debugSettings.showPositionRects) {
             outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
+        }
+        if (state.debugSettings.showInteractionRects) {
+            outlineRect(canvas, shiftRect(this.interactionRect(), shift.x, shift.y), Colour.INTERACTION_RECT);
         }
     }
 
@@ -92,5 +95,17 @@ export class ShieldButton implements Paintable {
         return new Tile(
             Math.floor(this.pos.x / MAP_TILE_SIZE),
             Math.floor(this.pos.y / MAP_TILE_SIZE));
+    }
+
+    interactionRect(): Rect {
+        return {
+            a: this.pos.plus(-10, -10),
+            b: this.pos.plus(20, 8),
+        };
+    }
+
+    activate(state: IGlobalState): ShieldButton {
+        // TODO: Trigger 4 blast shield panels here as well.
+        return new ShieldButton(this.index, this.pos, this.alarmStartTime, false);
     }
   }
