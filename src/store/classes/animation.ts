@@ -3,7 +3,7 @@ import { FPS } from "../../utils/constants";
 // An enum for event types.
 export enum AnimEventType {
     IMPACT,
-    EXTINCTION,
+    GAMEOVER,
 }
 
 // Interface for one-off event animations.

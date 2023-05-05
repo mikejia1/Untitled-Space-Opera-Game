@@ -143,12 +143,18 @@ function playBumpSound(): void {
 
 // TODO: See if we can animate from within a saga instead of the way we're doing it now.
 function updateFrame(state: IGlobalState): IGlobalState {
+
   let f = computeCurrentFrame();
   if (f === state.currentFrame) {
     return state;
   }
-//  // Allow fruits to grow.
-//  let newState = growFruits(state, f);
+
+  if(state.gameover){
+    return {
+      ...state,
+      currentFrame: f,
+    }
+  }
 
   // Get all the colliders as they exist now.
   let allColliders = allCollidersFromState(state);
@@ -186,32 +192,44 @@ function updateFrame(state: IGlobalState): IGlobalState {
 
   let newPlants = dehydratePlants(state.plants, state);
   newPlants = growPlants(newPlants, state);
-  return {
-    ...state,
-    currentFrame: f,
-    npcs: newNPCs,
-    plants: newPlants,
-    pendingEvents: updatePendingEvents(state),
-    activeEvents: updateActiveEvents(state),
-  }
-}
 
-// Move pending events to active events
-function updatePendingEvents(state: IGlobalState): AnimEvent[] {
+  let activeEvents: AnimEvent[] = [...state.activeEvents.filter(animEvent => !animEvent.finished), ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
   let pendingEvents: AnimEvent[] = state.pendingEvents.filter(animEvent => animEvent.startTime > state.currentFrame);
   let triggeredEvents: AnimEvent[] = [];
+  let gameover: boolean = false;
+  
+  // Process active events
   for(let i = 0; i < state.activeEvents.length; i++){
     const event = state.activeEvents[i];
     if(event.processed) continue;
     if(event.event == AnimEventType.IMPACT){
       if(!state.shieldDoors.allDoorsClosed()){
-        triggeredEvents = [...triggeredEvents, new AnimEvent(AnimEventType.EXTINCTION, event.startTime + 24)];
+        triggeredEvents = [...triggeredEvents, new AnimEvent(AnimEventType.GAMEOVER, event.startTime + 24)];
       }
     }
+    if(event.event == AnimEventType.GAMEOVER){
+        console.log("GAME OVER");
+        //Kill all plants
+        for(let i = 0; i < newPlants.length; i++){
+          newPlants[i].health = 0;
+        }
+        gameover = true;
+    }
+    event.processed = true;
   }
 
-  return [...pendingEvents, ...triggeredEvents];
+  return  {
+    ...state,
+    currentFrame: f,
+    npcs: newNPCs,
+    plants: newPlants,
+    activeEvents: activeEvents,
+    pendingEvents: [...pendingEvents, ...triggeredEvents], 
+    gameover: gameover,
+    gameOverFrame: gameover ? f : state.gameOverFrame,
+  };
 }
+
 
 function updateActiveEvents(state: IGlobalState): AnimEvent[] {
   return  [...state.activeEvents.filter(animEvent => !animEvent.finished), ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];

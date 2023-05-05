@@ -7,6 +7,7 @@ import {
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
+import { paintGameOver } from './skeleton';
 
 export class NonPlayer implements Paintable, Collider {
     pos: Coord;                     // NPC's current location, in pixels, relative to background image.
@@ -69,6 +70,8 @@ export class NonPlayer implements Paintable, Collider {
         // Determine where, on the canvas, the NPC should be painted.
         let shift = this.computeShift(state);
         let newPos = this.pos.plus(shift.x, shift.y);
+        let flip = (this.facing === Direction.Left);
+        if (state.gameover) return paintGameOver(canvas, state, newPos, flip);
 
         // Paint NPC with small adjustment to place it exactly where you'd expect it to be.
         canvas.drawImage(

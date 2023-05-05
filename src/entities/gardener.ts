@@ -7,6 +7,7 @@ import {
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
+import { paintGameOver } from './skeleton';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
@@ -112,7 +113,8 @@ export class Gardener implements Paintable, Collider, Interactable {
         let flip = (this.facing === GardenerDirection.Left);
 
         // The particular sprite cycle to use depends on what the gardener is currently doing.
-        if (this.watering) this.paintWatering(canvas, state, shift, newPos, flip);
+        if (state.gameover) paintGameOver(canvas, state, newPos, flip);
+        else if (this.watering) this.paintWatering(canvas, state, shift, newPos, flip);
         else this.paintWalking(canvas, state, shift, newPos, flip);
 
         // Extra debug displays.

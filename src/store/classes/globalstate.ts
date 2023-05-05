@@ -16,6 +16,7 @@ import topShield    from "../../entities/images/shield/shield_top_32x.png";
 import bottomShield from "../../entities/images/shield/shield_bottom_32x.png";
 
 // Other images.
+import skeleton           from "../../entities/images/skeleton/skeleton_death.png";
 import npcwalkcycle       from "../../entities/images/nonplayer/npcwalkcycle.png";
 import spacegardenimpact  from "../images/space_garden_impact.png";
 import spacegarden        from "../images/space_garden.png";
@@ -30,6 +31,7 @@ import { ShieldDoor } from '../../entities/shielddoor';
 
 // Interface for full game state object.
 export interface IGlobalState {
+    gameover: boolean;                // Is the game over?
     gardener: Gardener;               // The gardener tending the garden. Controlled by the player.
     keysPressed: Direction[];         // The movement keys currently pressed by the player.
     score: number;                    // The current game score
@@ -39,8 +41,10 @@ export interface IGlobalState {
     shieldButtons: ShieldButton[];    // The buttons that activate sections of the blast shield
     shieldDoors: ShieldDoor;          // The blast shield that protects the garden
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
+    gameOverFrame: number;            // The frame number when the game ended
     pendingEvents: AnimEvent[];      // Queue of one-off event animations to draw
     activeEvents: AnimEvent[];      // Queue of one-off event animations to draw
+    skeleton: any;                    // The skeleton death animation.
     gardenerImages: any;              // Source images for gardener sprites.
     shieldImages: any;                // Source images for the blast shield image.
     shieldButtonImage: any;           // Source image for the shield button animation.
@@ -81,6 +85,7 @@ export function initialGameState(): IGlobalState {
   let shieldButtons = createShieldButtons();
 
   return {
+    gameover: false,
     gardener: initialGardener(colliderId++),
     keysPressed: [],
     score: 0,
@@ -90,6 +95,7 @@ export function initialGameState(): IGlobalState {
     shieldButtons: shieldButtons,
     shieldDoors: new ShieldDoor(),
     currentFrame: 0,
+    gameOverFrame: 0,
     pendingEvents: getEvents(),
     activeEvents: [],
     gardenerImages: {
@@ -97,6 +103,7 @@ export function initialGameState(): IGlobalState {
       wateringBase: loadImage("Base watering strip", basewateringstrip),
       waterPouring: loadImage("Tool watering strip", toolwateringstrip),
     },
+    skeleton:         loadImage("Skeleton death", skeleton),
     npcimage:         loadImage("NPC walk cycle", npcwalkcycle),
     backgroundImages:{
       default:      loadImage("Space garden", spacegarden),
