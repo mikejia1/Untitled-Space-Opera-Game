@@ -11,12 +11,12 @@ export class AnimEvent {
     //The start time of the animation as frame number
     startTime: number;
     //Total number of frames in the animation
-    frameCount: number;
+    finished: boolean;
 
-    constructor(event: Event, startTime: number, frameCount: number) {
+    constructor(event: Event, startTime: number) {
         this.event = event;
         this.startTime = startTime;
-        this.frameCount = frameCount;
+        this.finished = false;
     }
 }
 

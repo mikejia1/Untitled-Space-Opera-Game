@@ -185,21 +185,24 @@ function updateFrame(state: IGlobalState): IGlobalState {
   });
 
   let newPlants = dehydratePlants(state.plants, state);
-  let animQueue = updateAnimationQueue(state);
+  let {pendingEvents, activeEvents} = updateEvents(state);
   newPlants = growPlants(newPlants, state);
   return {
     ...state,
     currentFrame: f,
     npcs: newNPCs,
     plants: newPlants,
-    animationQueue: animQueue
+    pendingEvents: pendingEvents,
+    activeEvents: activeEvents,
   }
 }
 
-// Remove expired animation events from animationQueue.
-function updateAnimationQueue(state: IGlobalState): AnimEvent[] {
-  let newQueue: AnimEvent[] = state.animationQueue.filter(animEvent => animEvent.startTime + animEvent.frameCount > state.currentFrame);
-  return newQueue;
+// Move pending events to active events
+function updateEvents(state: IGlobalState): any {
+  let activeEvents: AnimEvent[] = [...state.activeEvents.filter(animEvent => !animEvent.finished), 
+                                   ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
+  let pendingEvents: AnimEvent[] = state.pendingEvents.filter(animEvent => animEvent.startTime > state.currentFrame);
+  return {pendingEvents, activeEvents};
 }
 
 

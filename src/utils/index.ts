@@ -56,7 +56,7 @@ export const drawState = (
     if (ptbl === undefined) continue;
     ptbl.paint(canvas, state);
   }
-
+  drawAnimationEvent(state, shift, canvas);
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
@@ -123,13 +123,54 @@ export function rectanglesOverlap(rect1: any, rect2: any): boolean {
   return true;
 }
 
+function drawAnimationEvent(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
+  if (state.activeEvents.length == 0) {
+    return;
+  }
+  let anim: AnimEvent = state.activeEvents[0];
+  if(anim.event == Event.IMPACT){
+    const frameCount = state.currentFrame - anim.startTime;
+    console.log("Begin supernova animation");
+    let impactFrame = 0;
+    if (frameCount == 1){
+      impactFrame = 1;
+    }
+    else if (frameCount == 2){
+      impactFrame = 0;
+    }
+    else {
+      impactFrame = Math.min(Math.floor((frameCount)/4), 3);
+    }
+    // SUPERNOVA IMPACT
+    if (frameCount < 24){
+      canvas.drawImage(
+        state.backgroundImages.impact,                         // Sprite source image
+        impactFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,         // Top-left corner of frame in source
+        H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE,   // Size of frame in source
+        shift.x,                                                  // X position of top-left corner on canvas
+        shift.y,                                                  // Y position of top-left corner on canvas
+        H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
+    }
+    // FADE OUT WHITE
+    else if (frameCount < 48) { 
+      //fade back from white
+      let opacity = (24 - (frameCount-24))/24;
+      canvas.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
+      canvas.fillRect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    }
+    else{
+      //remove event from pending
+      anim.finished = true;
+    }
+  }
+}
+
 // Paint the background onto the canvas.
 // First paint it in the WrapSector.Middle or "normal" position/sector.
 // If any of the WrapSector.Left copy of the world should be visible, paint a copy there as well.
 // If any of the WrapSector.Right copy of the world should be visible, paint a copy there as well.
 function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
   drawShiftedBackground(state, canvas, shift);
-  //outlineRect(canvas, {a: new Coord(shift.x, shift.y), b: new Coord(shift.x + BACKGROUND_WIDTH - 1, shift.y + BACKGROUND_HEIGHT - 1)}, "#000000");
   // A ring-world background image wider than the canvas. 
   if (BACKGROUND_WIDTH > CANVAS_WIDTH) {
     if (shift.x >= 0) {
@@ -155,35 +196,8 @@ function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingConte
     shift.x,                                                  // X position of top-left corner on canvas
     shift.y,                                                  // Y position of top-left corner on canvas
     H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
-
-  if (state.animationQueue.length == 0 || state.animationQueue[0].startTime > state.currentFrame) {
+    //draw static background
     canvas.drawImage(state.backgroundImages.default, shift.x, shift.y);
-  }
-  else {
-    console.log("examining animation queue");
-    let anim: AnimEvent = state.animationQueue[0];
-    if(anim.event == Event.IMPACT){
-      console.log("begin supernova animation");
-      let impactFrame = 0;
-      if (state.currentFrame - anim.startTime == 1){
-        impactFrame = 1;
-      }
-      else if (state.currentFrame - anim.startTime == 2){
-        impactFrame = 0;
-      }
-      else{
-        impactFrame = Math.min(Math.floor((state.currentFrame - anim.startTime)/4), 3);
-      }
-      console.log("impact frame: " + impactFrame);
-      canvas.drawImage(
-        state.backgroundImages.impact,                         // Sprite source image
-        impactFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,         // Top-left corner of frame in source
-        H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE,   // Size of frame in source
-        shift.x,                                                  // X position of top-left corner on canvas
-        shift.y,                                                  // Y position of top-left corner on canvas
-        H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
-    }
-  }
 }
 
 export function randomInt(min: number, max: number): number {

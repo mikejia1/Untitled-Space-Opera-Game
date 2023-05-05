@@ -26,6 +26,7 @@ import shieldButton from "../../entities/images/button/button_32x32.png";
 // Plant image.
 import plantimage from "../../entities/images/plant/plants_16x16.png";
 import { ShieldButton } from '../../entities/shieldbutton';
+import { ShieldDoor } from '../../entities/shielddoor';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -36,8 +37,10 @@ export interface IGlobalState {
     plants: Plant[];                  // All the plants currently living
     npcs: NonPlayer[];                // The various crew people wandering around in the garden
     shieldButtons: ShieldButton[];    // The buttons that activate sections of the blast shield
+    shieldDoors: ShieldDoor;          // The blast shield that protects the garden
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
-    animationQueue: AnimEvent[];      // Queue of one-off event animations to draw
+    pendingEvents: AnimEvent[];      // Queue of one-off event animations to draw
+    activeEvents: AnimEvent[];      // Queue of one-off event animations to draw
     gardenerImages: any;              // Source images for gardener sprites.
     shieldImages: any;                // Source images for the blast shield image.
     shieldButtonImage: any;           // Source image for the shield button animation.
@@ -85,8 +88,10 @@ export function initialGameState(): IGlobalState {
     plants: allPlants,
     npcs: npcs,
     shieldButtons: shieldButtons,
+    shieldDoors: new ShieldDoor(),
     currentFrame: 0,
-    animationQueue: getEvents(),
+    pendingEvents: getEvents(),
+    activeEvents: [],
     gardenerImages: {
       walkingBase:  loadImage("Base walk strip", basewalkstrip),
       wateringBase: loadImage("Base watering strip", basewateringstrip),
@@ -216,6 +221,6 @@ function initialWateringCan(): WateringCan {
 }
 
 function getEvents(): AnimEvent[] {
-  let anim: AnimEvent = new AnimEvent(Event.IMPACT, computeCurrentFrame() + SUPERNOVA_DELAY, 24);
+  let anim: AnimEvent = new AnimEvent(Event.IMPACT, computeCurrentFrame() + SUPERNOVA_DELAY);
   return [anim];
 }
