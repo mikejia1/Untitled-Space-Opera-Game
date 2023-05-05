@@ -1,22 +1,26 @@
 import { FPS } from "../../utils/constants";
 
 // An enum for event types.
-export enum Event {
+export enum AnimEventType {
     IMPACT,
+    EXTINCTION,
 }
 
 // Interface for one-off event animations.
 export class AnimEvent {
-    event: Event;
+    event: AnimEventType;
     //The start time of the animation as frame number
     startTime: number;
     //Total number of frames in the animation
     finished: boolean;
+    //Whether the event has been processed by reducer (potentially triggering other events)
+    processed: boolean;
 
-    constructor(event: Event, startTime: number) {
+    constructor(event: AnimEventType, startTime: number) {
         this.event = event;
         this.startTime = startTime;
         this.finished = false;
+        this.processed = false;
     }
 }
 

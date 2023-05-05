@@ -18,4 +18,8 @@ export class ShieldDoor implements Paintable {
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         //paint doors
     }
+
+    allDoorsClosed(): boolean {
+        return this.sheildDoorStates.every((state) => state == ShieldDoorState.CLOSED);
+    }
 }

@@ -2,7 +2,7 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS } from "../../utils";
-import { AnimEvent, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
+import { AnimEvent, AnimEventType, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
 import { NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
   DOWN,
@@ -185,24 +185,36 @@ function updateFrame(state: IGlobalState): IGlobalState {
   });
 
   let newPlants = dehydratePlants(state.plants, state);
-  let {pendingEvents, activeEvents} = updateEvents(state);
   newPlants = growPlants(newPlants, state);
   return {
     ...state,
     currentFrame: f,
     npcs: newNPCs,
     plants: newPlants,
-    pendingEvents: pendingEvents,
-    activeEvents: activeEvents,
+    pendingEvents: updatePendingEvents(state),
+    activeEvents: updateActiveEvents(state),
   }
 }
 
 // Move pending events to active events
-function updateEvents(state: IGlobalState): any {
-  let activeEvents: AnimEvent[] = [...state.activeEvents.filter(animEvent => !animEvent.finished), 
-                                   ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
+function updatePendingEvents(state: IGlobalState): AnimEvent[] {
   let pendingEvents: AnimEvent[] = state.pendingEvents.filter(animEvent => animEvent.startTime > state.currentFrame);
-  return {pendingEvents, activeEvents};
+  let triggeredEvents: AnimEvent[] = [];
+  for(let i = 0; i < state.activeEvents.length; i++){
+    const event = state.activeEvents[i];
+    if(event.processed) continue;
+    if(event.event == AnimEventType.IMPACT){
+      if(!state.shieldDoors.allDoorsClosed()){
+        triggeredEvents = [...triggeredEvents, new AnimEvent(AnimEventType.EXTINCTION, event.startTime + 24)];
+      }
+    }
+  }
+
+  return [...pendingEvents, ...triggeredEvents];
+}
+
+function updateActiveEvents(state: IGlobalState): AnimEvent[] {
+  return  [...state.activeEvents.filter(animEvent => !animEvent.finished), ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
 }
 
 

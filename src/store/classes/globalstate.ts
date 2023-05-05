@@ -1,4 +1,4 @@
-import { AnimEvent, Event, Collider, ColliderType, SUPERNOVA_DELAY } from './';
+import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
 import { Coord, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders } from '../../utils';
 
@@ -221,6 +221,6 @@ function initialWateringCan(): WateringCan {
 }
 
 function getEvents(): AnimEvent[] {
-  let anim: AnimEvent = new AnimEvent(Event.IMPACT, computeCurrentFrame() + SUPERNOVA_DELAY);
+  let anim: AnimEvent = new AnimEvent(AnimEventType.IMPACT, computeCurrentFrame() + SUPERNOVA_DELAY);
   return [anim];
 }
