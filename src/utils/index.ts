@@ -57,6 +57,7 @@ export const drawState = (
     ptbl.paint(canvas, state);
   }
   drawAnimationEvent(state, shift, canvas);
+  state.shieldDoors.paint(canvas, state);
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));

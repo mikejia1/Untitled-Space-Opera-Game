@@ -193,6 +193,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let newPlants = dehydratePlants(state.plants, state);
   newPlants = growPlants(newPlants, state);
 
+  let newShield = state.shieldDoors.updateStates();
+
   let activeEvents: AnimEvent[] = [...state.activeEvents.filter(animEvent => !animEvent.finished), ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
   let pendingEvents: AnimEvent[] = state.pendingEvents.filter(animEvent => animEvent.startTime > state.currentFrame);
   let triggeredEvents: AnimEvent[] = [];
@@ -227,6 +229,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
     pendingEvents: [...pendingEvents, ...triggeredEvents], 
     gameover: gameover,
     gameOverFrame: gameover ? f : state.gameOverFrame,
+    shieldDoors: newShield,
   };
 }
 
@@ -495,9 +498,11 @@ function activateShieldButton(sb: ShieldButton, state: IGlobalState): IGlobalSta
     if (b.index === sb.index) newButtons = [...newButtons, b.activate(state)];
     else newButtons = [...newButtons, b];
   });
+  let newShield = state.shieldDoors.triggerDoor(sb.index);
   return {
     ...state,
     shieldButtons: newButtons,
+    shieldDoors: newShield,
   };
 }
 

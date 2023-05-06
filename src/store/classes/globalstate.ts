@@ -28,7 +28,7 @@ import shieldButton from "../../entities/images/button/button_32x32.png";
 // Plant image.
 import plantimage from "../../entities/images/plant/plants_16x16.png";
 import { ShieldButton } from '../../entities/shieldbutton';
-import { ShieldDoor } from '../../entities/shielddoor';
+import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -95,7 +95,7 @@ export function initialGameState(): IGlobalState {
     plants: allPlants,
     npcs: npcs,
     shieldButtons: shieldButtons,
-    shieldDoors: new ShieldDoor(),
+    shieldDoors: initialShieldDoor(),
     currentFrame: 0,
     gameOverFrame: 0,
     pendingEvents: getEvents(),
