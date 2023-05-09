@@ -24,6 +24,8 @@ const SlatTopHeight = 96;
 
 // Number of pixels to shift slat top images upward to get perfect alignment with closed door image.
 const SlatTopAdjust = 5;
+// Number of pixels to shift slat bottom images downward to get perfect alignment with closed door image.
+const SlatBottomAdjust = -27;
 
 // Number of pixels to shift all door images upward. Used to have close close in *middle* of starfield.
 const ShieldDoorAdjust = 10;
@@ -85,11 +87,24 @@ export class ShieldDoor implements Paintable {
             let prcnt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100);
             debug = debug + " " + prcnt;
             let gap = percent * SlatCloseDistance;
-            let y = SlatCloseDistance - SlatTopHeight - gap - SlatTopAdjust - ShieldDoorAdjust;
-            let x = this.slatX(i, j);
-            let slatPos = new Coord(x + shift.x, y + shift.y);
-            slatPos = slatPos.toIntegers();
-            canvas.drawImage(state.shieldImages.top, slatPos.x, slatPos.y);
+            // If a slat is (basically) closed, paint the full closed slat image instead of the 2 parts.
+            if (gap < 2) {
+                this.paintClosedSlat(i, j, canvas, state, shift);
+            } else {            
+                let x = this.slatX(i, j);
+
+                // Top of slat.
+                let y = SlatCloseDistance - SlatTopHeight - gap - SlatTopAdjust - ShieldDoorAdjust;
+                let slatPos = new Coord(x + shift.x, y + shift.y);
+                slatPos = slatPos.toIntegers();
+                canvas.drawImage(state.shieldImages.top, slatPos.x, slatPos.y);
+
+                // Bottom of slat.
+                y = SlatCloseDistance + gap + SlatBottomAdjust - ShieldDoorAdjust;
+                slatPos = new Coord(x + shift.x, y + shift.y);
+                slatPos = slatPos.toIntegers();
+                canvas.drawImage(state.shieldImages.bottom, slatPos.x, slatPos.y);
+            }
         }
         if (ShowPercentages) console.log(debug);
     }
@@ -104,11 +119,24 @@ export class ShieldDoor implements Paintable {
             let prcnt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100);
             debug = debug + " " + prcnt;
             let dist = percent * SlatCloseDistance;
-            let y = dist - SlatTopHeight - SlatTopAdjust - ShieldDoorAdjust;
-            let x = this.slatX(i, j);
-            let slatPos = new Coord(x + shift.x, y + shift.y);
-            slatPos = slatPos.toIntegers();
-            canvas.drawImage(state.shieldImages.top, slatPos.x, slatPos.y);
+            // If a slat is (basically) closed, paint the full closed slat image instead of the 2 parts.
+            if (percent > 0.98) {
+                this.paintClosedSlat(i, j, canvas, state, shift);
+            } else {
+                let x = this.slatX(i, j);
+
+                // Top of slat.
+                let y = dist - SlatTopHeight - SlatTopAdjust - ShieldDoorAdjust;
+                let slatPos = new Coord(x + shift.x, y + shift.y);
+                slatPos = slatPos.toIntegers();
+                canvas.drawImage(state.shieldImages.top, slatPos.x, slatPos.y);
+
+                // Bottom of slat.
+                y = SlatCloseDistance + (SlatCloseDistance - dist) + SlatBottomAdjust - ShieldDoorAdjust;
+                slatPos = new Coord(x + shift.x, y + shift.y);
+                slatPos = slatPos.toIntegers();
+                canvas.drawImage(state.shieldImages.bottom, slatPos.x, slatPos.y);
+            }
         }
         if (ShowPercentages) console.log(debug);
     }
@@ -122,13 +150,17 @@ export class ShieldDoor implements Paintable {
             let percent = Math.min(st / SlatClosedDur, 1);
             let prcnt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100);
             debug = debug + " " + prcnt;
-            let y = 0 - ShieldDoorAdjust;
-            let x = this.slatX(i, j);
-            let slatPos = new Coord(x + shift.x, y + shift.y);
-            slatPos = slatPos.toIntegers();
-            canvas.drawImage(state.shieldImages.closed, 0,0, 32, 160, slatPos.x, slatPos.y, 32, 160);
+            this.paintClosedSlat(i, j, canvas, state, shift);
         }
         if (ShowPercentages) console.log(debug);
+    }
+
+    paintClosedSlat(door: number, slat: number, canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord): void {
+        let y = 0 - ShieldDoorAdjust;
+        let x = this.slatX(door, slat);
+        let slatPos = new Coord(x + shift.x, y + shift.y);
+        slatPos = slatPos.toIntegers();
+        canvas.drawImage(state.shieldImages.closed, 0,0, 32, 160, slatPos.x, slatPos.y, 32, 160);
     }
 
     // Compute the current animation frame number for a specific slat of a specific door.
