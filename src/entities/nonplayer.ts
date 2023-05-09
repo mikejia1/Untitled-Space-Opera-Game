@@ -53,35 +53,33 @@ export class NonPlayer implements Paintable, Collider {
 
     // Paint the NPC on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
-        // If the NPC is moving, animate the sprite. 
-        let frame = this.moving ? Math.floor(state.currentFrame % 24 / 6) : 0;
-        let row = 0;
-        switch (this.facing) {
-            case Direction.Down:
-                row = 0; break;
-            case Direction.Up:
-                row = 1; break;
-            case Direction.Left:
-                row = 2; break;
-            case Direction.Right:
-                row = 3; break;
-        }
-
-        // Determine where, on the canvas, the NPC should be painted.
+        // The walking animation has 8 frames.
+        let frameCount = 8;
+        let frame = this.moving ? Math.floor(state.currentFrame % (6 * frameCount) / 6) : 0;
         let shift = this.computeShift(state);
         let newPos = this.pos.plus(shift.x, shift.y);
         let flip = (this.facing === Direction.Left);
         if (state.gameover) return paintGameOver(canvas, state, newPos, flip);
 
-        // Paint NPC with small adjustment to place it exactly where you'd expect it to be.
+        // Determine where, on the canvas, the gardener should be painted.
+        let dest = flip
+            ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
+            : new Coord(newPos.x - 3, newPos.y - 18);
+        dest = dest.toIntegers();
+        canvas.save();
+        canvas.scale(flip ? -1 : 1, 1);
+        
+        // Paint gardener sprite for current frame.
         canvas.drawImage(
-            state.npcimage,        // Sprite source image
-            frame * 48, row * 48,  // Top-left corner of frame in source
-            48, 48,                // Size of frame in source
-            newPos.x - 7,          // X position of top-left corner on canvas
-            newPos.y - 20,         // Y position of top-left corner on canvas
-            30, 30);               // Sprite size on canvas
+            state.npcimage,                    // Walking base source image
+            (frame * 96) + 40, 20,             // Top-left corner of frame in source
+            48, 48,                            // Size of frame in source
+            dest.x, dest.y,                    // Position of sprite on canvas
+            48, 48);                           // Sprite size on canvas
     
+        // Restore canvas transforms to normal.
+        canvas.restore();
+
         // Extra debug displays.
         if (state.debugSettings.showCollisionRects) {
             outlineRect(canvas, shiftRect(this.collisionRect(), shift.x, shift.y), Colour.COLLISION_RECT);
