@@ -18,7 +18,7 @@ export function paintGameOver(canvas: CanvasRenderingContext2D, state: IGlobalSt
     // Paint gardener sprite for current frame.
     canvas.drawImage(
         state.skeleton,                    // Walking base source image
-        (frame * 96) + 40, 20,             // Top-left corner of frame in source
+        (frame * 96) + 40, 18,             // Top-left corner of frame in source
         48, 48,                            // Size of frame in source
         dest.x, dest.y,                    // Position of sprite on canvas
         48, 48);                           // Sprite size on canvas
