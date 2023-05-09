@@ -4,6 +4,9 @@ import { FPS } from "../../utils/constants";
 export enum AnimEventType {
     IMPACT,
     GAMEOVER,
+    ALARM_1,
+    ALARM_2,
+    ALARM_3,
 }
 
 // Interface for one-off event animations.
@@ -24,4 +27,4 @@ export class AnimEvent {
     }
 }
 
-export const SUPERNOVA_DELAY = FPS*50;
+export const SUPERNOVA_DELAY = FPS*3;

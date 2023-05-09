@@ -197,7 +197,7 @@ function createShieldButtons(): ShieldButton[] {
       for (let c = 0; c < H_TILE_COUNT; c++) {
         let i = (r * H_TILE_COUNT) + c;
         if (buttons[i] == 0) continue;
-        let sb: ShieldButton = new ShieldButton(buttonIndex, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE), f + (FPS * 3), true);
+        let sb: ShieldButton = new ShieldButton(buttonIndex, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE), f, false);
         buttonIndex += 1;
         all = [...all, sb];
       }
@@ -231,6 +231,13 @@ function initialWateringCan(): WateringCan {
 }
 
 function getEvents(): AnimEvent[] {
-  let anim: AnimEvent = new AnimEvent(AnimEventType.IMPACT, computeCurrentFrame() + SUPERNOVA_DELAY);
-  return [anim];
+  return [...createSupernovaEvents(SUPERNOVA_DELAY)];
+}
+
+function createSupernovaEvents(delay: number): AnimEvent[] {
+  let alarm1: AnimEvent = new AnimEvent(AnimEventType.ALARM_1, computeCurrentFrame() + delay-15*FPS);
+  let alarm2: AnimEvent = new AnimEvent(AnimEventType.ALARM_2, computeCurrentFrame() + delay-15*FPS);
+  let alarm3: AnimEvent = new AnimEvent(AnimEventType.ALARM_3, computeCurrentFrame() + delay-15*FPS);
+  let supernova: AnimEvent = new AnimEvent(AnimEventType.IMPACT, computeCurrentFrame() + delay);
+  return [alarm1, alarm2, alarm3, supernova];
 }
