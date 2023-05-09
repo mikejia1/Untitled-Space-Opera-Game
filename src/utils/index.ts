@@ -57,7 +57,6 @@ export const drawState = (
     ptbl.paint(canvas, state);
   }
   drawAnimationEvent(state, shift, canvas);
-  state.shieldDoors.paint(canvas, state);
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
@@ -193,8 +192,17 @@ function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderi
   }
 }
 
-function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord){
-  // draw deep space
+function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord) {
+  // Draw the starfield visible through the ship's window.
+  drawStarfield(state, canvas, shift);
+  // Draw the blast shield.
+  state.shieldDoors.paint(canvas, state);
+  // Draw the static background of the ship interior.
+  canvas.drawImage(state.backgroundImages.default, shift.x, shift.y);
+}
+
+// Draw the starfield seen through the window of the ship.
+function drawStarfield(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord) {
   let deepSpaceFrame = Math.floor(state.currentFrame % 24 / 6);
   canvas.drawImage(
     state.backgroundImages.deepSpace,                         // Sprite source image
@@ -203,8 +211,6 @@ function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingConte
     shift.x,                                                  // X position of top-left corner on canvas
     shift.y,                                                  // Y position of top-left corner on canvas
     H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
-    //draw static background
-    canvas.drawImage(state.backgroundImages.default, shift.x, shift.y);
 }
 
 export function randomInt(min: number, max: number): number {
