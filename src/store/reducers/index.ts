@@ -149,7 +149,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
     return state;
   }
 
-  if(state.gameover){
+  if (state.gameover) {
+    console.log("GAME OVER");
     return {
       ...state,
       currentFrame: f,

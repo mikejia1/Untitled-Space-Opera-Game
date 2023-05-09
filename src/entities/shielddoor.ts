@@ -7,13 +7,13 @@ import { Coord, computeBackgroundShift, computeCurrentFrame, shiftForTile } from
 const InterSlatDelay = 10;
 
 // Amount of time, in animation frames, required to close one of the 12 shield slats.
-const SlatClosingDuration = 20;
+const SlatClosingDur = 20;
 
 // Amount of time, in animation frames, during which time a shield slat remains closed.
-const SlatClosedDuration = 200;
+const SlatClosedDur = 200;
 
 // Amount of time, in animation frames, required to open one of the 12 shield slats.
-const SlatOpeningDuration = 40;
+const SlatOpeningDur = 40;
 
 // The number of vertical pixels between a fully opened and a fully closed (top or bottom) half-slat.
 const SlatCloseDistance = 96;
@@ -21,6 +21,15 @@ const SlatCloseDistance = 96;
 // Some important dimensions of the various shield door slat images.
 const SlatWidth = 32;
 const SlatTopHeight = 96;
+
+// Number of pixels to shift slat top images upward to get perfect alignment with closed door image.
+const SlatTopAdjust = 5;
+
+// Number of pixels to shift all door images upward. Used to have close close in *middle* of starfield.
+const ShieldDoorAdjust = 10;
+
+// For use in debugging.
+const ShowPercentages = false;
 
 enum ShieldDoorState {OPENING, CLOSING, OPEN, CLOSED}
 
@@ -62,51 +71,64 @@ export class ShieldDoor implements Paintable {
             case ShieldDoorState.OPEN:      return; // Nothing to paint if door is fully open.
             case ShieldDoorState.OPENING:   return this.paintOpeningDoor(i, canvas, state, currentFrame, shift);
             case ShieldDoorState.CLOSING:   return this.paintClosingDoor(i, canvas, state, currentFrame, shift);
-            case ShieldDoorState.CLOSED:    return this.paintClosedDoor(i, canvas, state, shift); // Closed door is static. Doesn't require currentFrame.
+            case ShieldDoorState.CLOSED:    return this.paintClosedDoor(i, canvas, state, currentFrame, shift);
         }
     }
 
     // Paint one of the three blast shield doors while it is opening.
     paintOpeningDoor(i: number, canvas: CanvasRenderingContext2D, state: IGlobalState, currentFrame: number, shift: Coord): void {
-        console.log("OPENING");
+        let debug = "Opening: ";
         for (let j = 0; j < 4; j++) {
             let st = this.slatTime(i, j, currentFrame);
-            st = st - (SlatClosingDuration + SlatClosedDuration);
-            let percent = Math.min(st / SlatOpeningDuration, 1);
-            if (j === 0) console.log("Opening percent: " + (percent * 100));
+            st = Math.max(st - (SlatClosingDur + (InterSlatDelay * 3) + SlatClosedDur + (InterSlatDelay * 3)), 0);
+            let percent = Math.min(st / SlatOpeningDur, 1);
+            let prcnt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100);
+            debug = debug + " " + prcnt;
             let gap = percent * SlatCloseDistance;
-            let y = SlatCloseDistance - SlatTopHeight - gap;
+            let y = SlatCloseDistance - SlatTopHeight - gap - SlatTopAdjust - ShieldDoorAdjust;
             let x = this.slatX(i, j);
             let slatPos = new Coord(x + shift.x, y + shift.y);
             slatPos = slatPos.toIntegers();
             canvas.drawImage(state.shieldImages.top, slatPos.x, slatPos.y);
         }
+        if (ShowPercentages) console.log(debug);
     }
 
     // Paint one of the three blast shield doors while it is closing.
     paintClosingDoor(i: number, canvas: CanvasRenderingContext2D, state: IGlobalState, currentFrame: number, shift: Coord): void {
+        let debug = "Closing: ";
         for (let j = 0; j < 4; j++) {
             let st = this.slatTime(i, j, currentFrame);
-            let percent = Math.min(st / SlatClosingDuration, 1);
-            if (j === 0) console.log("Closing percent: " + (percent * 100));
+            st = Math.max(st, 0);
+            let percent = Math.min(st / SlatClosingDur, 1);
+            let prcnt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100);
+            debug = debug + " " + prcnt;
             let dist = percent * SlatCloseDistance;
-            let y = dist - SlatTopHeight;
+            let y = dist - SlatTopHeight - SlatTopAdjust - ShieldDoorAdjust;
             let x = this.slatX(i, j);
             let slatPos = new Coord(x + shift.x, y + shift.y);
             slatPos = slatPos.toIntegers();
             canvas.drawImage(state.shieldImages.top, slatPos.x, slatPos.y);
         }
+        if (ShowPercentages) console.log(debug);
     }
 
     // Paint one of the three blast shield doors in its fully closed state.
-    paintClosedDoor(i: number, canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord): void {
+    paintClosedDoor(i: number, canvas: CanvasRenderingContext2D, state: IGlobalState, currentFrame: number, shift: Coord): void {
+        let debug = "Closed: ";
         for (let j = 0; j < 4; j++) {
-            let y = 0;
+            let st = this.slatTime(i, j, currentFrame);
+            st = Math.max(st - (SlatClosingDur + (InterSlatDelay * 3)), 0);
+            let percent = Math.min(st / SlatClosedDur, 1);
+            let prcnt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100);
+            debug = debug + " " + prcnt;
+            let y = 0 - ShieldDoorAdjust;
             let x = this.slatX(i, j);
             let slatPos = new Coord(x + shift.x, y + shift.y);
             slatPos = slatPos.toIntegers();
             canvas.drawImage(state.shieldImages.closed, 0,0, 32, 160, slatPos.x, slatPos.y, 32, 160);
         }
+        if (ShowPercentages) console.log(debug);
     }
 
     // Compute the current animation frame number for a specific slat of a specific door.
@@ -156,13 +178,13 @@ export class ShieldDoor implements Paintable {
             let ds: string = "";
             let s: ShieldDoorState = ShieldDoorState.OPEN;
             let t = f - this.shieldDoorActivationTimes[i];
-            if (t > (SlatClosingDuration + SlatClosedDuration + SlatOpeningDuration + (InterSlatDelay * 3))) {
+            if (t > (SlatClosingDur + SlatClosedDur + SlatOpeningDur + (InterSlatDelay * 9))) {
                 s = ShieldDoorState.OPEN;
                 ds = "OPEN   ";
-            } else if (t > (SlatClosingDuration + SlatClosedDuration + (InterSlatDelay * 3))) {
+            } else if (t > (SlatClosingDur + SlatClosedDur + (InterSlatDelay * 6))) {
                 s = ShieldDoorState.OPENING;
                 ds = "OPENING";
-            } else if (t > (SlatClosingDuration + (InterSlatDelay * 3))) {
+            } else if (t > (SlatClosingDur + (InterSlatDelay * 3))) {
                 s = ShieldDoorState.CLOSED;
                 ds = "CLOSED  ";
             } else {
