@@ -19,6 +19,12 @@ export class ShieldButton implements Paintable, Interactable {
         this.alarmStartTime = alarmStartTime;
         this.isAlarming = isAlarming;
     }
+
+    startAlarm(state: IGlobalState): ShieldButton {
+        this.alarmStartTime = state.currentFrame;
+        this.isAlarming = true;
+        return this;
+    }
     
     // Paint the button on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {

@@ -199,7 +199,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let pendingEvents: AnimEvent[] = state.pendingEvents.filter(animEvent => animEvent.startTime > state.currentFrame);
   let triggeredEvents: AnimEvent[] = [];
   let gameover: boolean = false;
-  
+  let newShieldButtons: ShieldButton[] = state.shieldButtons;
   // Process active events
   for(let i = 0; i < state.activeEvents.length; i++){
     const event = state.activeEvents[i];
@@ -208,6 +208,21 @@ function updateFrame(state: IGlobalState): IGlobalState {
       if(!state.shieldDoors.allDoorsClosed()){
         triggeredEvents = [...triggeredEvents, new AnimEvent(AnimEventType.GAMEOVER, event.startTime + 24)];
       }
+    }
+    if(event.event == AnimEventType.ALARM_1){
+      newShieldButtons[0] = newShieldButtons[0].startAlarm(state);
+      event.processed = true;
+      event.finished = true;
+    }
+    if(event.event == AnimEventType.ALARM_2){
+      newShieldButtons[1] = newShieldButtons[1].startAlarm(state);
+      event.processed = true;
+      event.finished = true;
+    }
+    if(event.event == AnimEventType.ALARM_3){
+      newShieldButtons[2] = newShieldButtons[2].startAlarm(state);
+      event.processed = true;
+      event.finished = true;
     }
     if(event.event == AnimEventType.GAMEOVER){
         console.log("GAME OVER");
@@ -229,6 +244,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
     pendingEvents: [...pendingEvents, ...triggeredEvents], 
     gameover: gameover,
     gameOverFrame: gameover ? f : state.gameOverFrame,
+    shieldButtons: newShieldButtons,
     shieldDoors: newShield,
   };
 }
