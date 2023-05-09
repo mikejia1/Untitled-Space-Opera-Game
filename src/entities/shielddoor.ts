@@ -140,8 +140,8 @@ export class ShieldDoor implements Paintable {
                 newStates = [...newStates, ShieldDoorState.CLOSING];
                 newTimes = [...newTimes, computeCurrentFrame()];
             } else {
-                newStates = [...newStates, this.shieldDoorStates[door]];
-                newTimes = [...newTimes, this.shieldDoorActivationTimes[door]];
+                newStates = [...newStates, this.shieldDoorStates[i]];
+                newTimes = [...newTimes, this.shieldDoorActivationTimes[i]];
             }
         }
         return new ShieldDoor(newStates, newTimes);
