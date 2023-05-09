@@ -7,6 +7,9 @@ export enum AnimEventType {
     ALARM_1,
     ALARM_2,
     ALARM_3,
+    EARLY_OPEN_SHIELD_1,
+    EARLY_OPEN_SHIELD_2,
+    EARLY_OPEN_SHIELD_3,
 }
 
 // Interface for one-off event animations.

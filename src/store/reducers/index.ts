@@ -29,6 +29,7 @@ import {
   TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS,
   TOGGLE_GAME_AUDIO,
 } from "../actions";
+import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -202,12 +203,21 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let gameover: boolean = false;
   let newShieldButtons: ShieldButton[] = state.shieldButtons;
   // Process active events
-  for(let i = 0; i < state.activeEvents.length; i++){
+  for (let i = 0; i < state.activeEvents.length; i++){
     const event = state.activeEvents[i];
-    if(event.processed) continue;
-    if(event.event == AnimEventType.IMPACT){
-      if(!state.shieldDoors.allDoorsClosed()){
+    if (event.processed) continue;
+    if (event.event == AnimEventType.IMPACT){
+      // If IMPACT occurs without all shield doors being closed, trigger GAMEOVER event.
+      if (!state.shieldDoors.allDoorsClosed()){
         triggeredEvents = [...triggeredEvents, new AnimEvent(AnimEventType.GAMEOVER, event.startTime + 24)];
+      } else {
+        // Otherwise, go ahead and tell all three shield doors to open early - the danger has passed.
+        triggeredEvents = [
+          ...triggeredEvents,
+          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_1, event.startTime + 30),
+          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_2, event.startTime + 30 + (INTER_SLAT_DELAY * 4)),
+          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_3, event.startTime + 30 + (INTER_SLAT_DELAY * 8)),
+        ];
       }
     }
     if(event.event == AnimEventType.ALARM_1){
@@ -222,6 +232,21 @@ function updateFrame(state: IGlobalState): IGlobalState {
     }
     if(event.event == AnimEventType.ALARM_3){
       newShieldButtons[2] = newShieldButtons[2].startAlarm(state);
+      event.processed = true;
+      event.finished = true;
+    }
+    if (event.event == AnimEventType.EARLY_OPEN_SHIELD_1) {
+      newShield = newShield.openDoorEarly(0);
+      event.processed = true;
+      event.finished = true;
+    }
+    if (event.event == AnimEventType.EARLY_OPEN_SHIELD_2) {
+      newShield = newShield.openDoorEarly(1);
+      event.processed = true;
+      event.finished = true;
+    }
+    if (event.event == AnimEventType.EARLY_OPEN_SHIELD_3) {
+      newShield = newShield.openDoorEarly(2);
       event.processed = true;
       event.finished = true;
     }
