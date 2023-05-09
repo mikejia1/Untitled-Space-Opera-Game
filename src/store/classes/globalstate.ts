@@ -1,6 +1,6 @@
 import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
-import { Coord, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders } from '../../utils';
+import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_SUBTLE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, SHAKER_NO_SHAKE } from '../../utils';
 
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { InvisibleCollider } from "../../scene";
@@ -44,8 +44,8 @@ export interface IGlobalState {
     shieldDoors: ShieldDoor;          // The blast shield that protects the garden
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
     gameOverFrame: number;            // The frame number when the game ended
-    pendingEvents: AnimEvent[];      // Queue of one-off event animations to draw
-    activeEvents: AnimEvent[];      // Queue of one-off event animations to draw
+    pendingEvents: AnimEvent[];       // Queue of one-off event animations to draw
+    activeEvents: AnimEvent[];        // Queue of one-off event animations to draw
     skeleton: any;                    // The skeleton death animation.
     gardenerImages: any;              // Source images for gardener sprites.
     shieldImages: any;                // Source images for the blast shield image.
@@ -58,6 +58,7 @@ export interface IGlobalState {
     replayImage: any,                 // The replay prompt image
     invisibleColliders: Collider[];   // All Colliders that aren't visible.
     muted: boolean;                   // Enable / disable sounds.
+    screenShaker: Shaker;             // For causing the screen to shake at key moments.  
     debugSettings: any;               // For configuring extra debug info and visualizations.
   }
 
@@ -126,6 +127,7 @@ export function initialGameState(): IGlobalState {
     replayImage:      loadImage("Replay prompt", replayPrompt),
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
     muted: true,
+    screenShaker:     SHAKER_NO_SHAKE, // Initially, the screen is not shaking.
     debugSettings: {
       showCollisionRects: false,    // Collision rectangles for colliders.
       showPositionRects: false,     // Position rectangles for paintables.
@@ -238,9 +240,19 @@ function getEvents(): AnimEvent[] {
 }
 
 function createSupernovaEvents(delay: number): AnimEvent[] {
-  let alarm1: AnimEvent = new AnimEvent(AnimEventType.ALARM_1, computeCurrentFrame() + delay-15*FPS);
-  let alarm2: AnimEvent = new AnimEvent(AnimEventType.ALARM_2, computeCurrentFrame() + delay-15*FPS);
-  let alarm3: AnimEvent = new AnimEvent(AnimEventType.ALARM_3, computeCurrentFrame() + delay-15*FPS);
-  let supernova: AnimEvent = new AnimEvent(AnimEventType.IMPACT, computeCurrentFrame() + delay);
-  return [alarm1, alarm2, alarm3, supernova];
+    let f = computeCurrentFrame();
+    let alarm1: AnimEvent = new AnimEvent(AnimEventType.ALARM_1, f + delay-15*FPS);
+    let alarm2: AnimEvent = new AnimEvent(AnimEventType.ALARM_2, f + delay-15*FPS);
+    let alarm3: AnimEvent = new AnimEvent(AnimEventType.ALARM_3, f + delay-15*FPS);
+    let supernova: AnimEvent = new AnimEvent(AnimEventType.IMPACT, f + delay);
+    let shake1: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1, f + delay - (15 * FPS));
+    let shake2: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2, f + delay - (11 * FPS));
+    let shake3: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3, f + delay - (7 * FPS));
+    let shake4: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_4, f + delay - (3 * FPS));
+    let shake5: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3, f + delay);
+    let shake6: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2, f + delay + (1 * FPS));
+    let shake7: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1, f + delay + (2 * FPS));
+    let shakeStop: AnimEvent = new AnimEvent(AnimEventType.SHAKE_STOP, f + delay + (3 * FPS));
+
+    return [alarm1, alarm2, alarm3, supernova, shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop];
 }
