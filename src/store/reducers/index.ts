@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS } from "../../utils";
+import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Shaker } from "../../utils";
 import { AnimEvent, AnimEventType, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
 import { NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
@@ -197,6 +197,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
 
   let newShield = state.shieldDoors.updateStates();
 
+  let newShaker = state.screenShaker;
+
   let activeEvents: AnimEvent[] = [...state.activeEvents.filter(animEvent => !animEvent.finished), ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
   let pendingEvents: AnimEvent[] = state.pendingEvents.filter(animEvent => animEvent.startTime > state.currentFrame);
   let triggeredEvents: AnimEvent[] = [];
@@ -250,6 +252,31 @@ function updateFrame(state: IGlobalState): IGlobalState {
       event.processed = true;
       event.finished = true;
     }
+    if (event.event == AnimEventType.SHAKE_STOP) {
+      newShaker = new Shaker(0, 0);
+      event.processed = true;
+      event.finished = true;
+    }
+    if (event.event == AnimEventType.SHAKE_LEVEL_1) {
+      newShaker = new Shaker(0.005, 0.008);
+      event.processed = true;
+      event.finished = true;
+    }
+    if (event.event == AnimEventType.SHAKE_LEVEL_2) {
+      newShaker = new Shaker(0.05, 0.04);
+      event.processed = true;
+      event.finished = true;
+    }
+    if (event.event == AnimEventType.SHAKE_LEVEL_3) {
+      newShaker = new Shaker(0.5, 0.2);
+      event.processed = true;
+      event.finished = true;
+    }
+    if (event.event == AnimEventType.SHAKE_LEVEL_4) {
+      newShaker = new Shaker(5, 1);
+      event.processed = true;
+      event.finished = true;
+    }
     if(event.event == AnimEventType.GAMEOVER){
         console.log("GAME OVER");
         //Kill all plants
@@ -272,6 +299,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
     gameOverFrame: gameover ? f : state.gameOverFrame,
     shieldButtons: newShieldButtons,
     shieldDoors: newShield,
+    screenShaker: newShaker,
   };
 }
 

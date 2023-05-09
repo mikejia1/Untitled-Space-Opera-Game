@@ -14,7 +14,7 @@ export * from './coord';
 export * from './constants';
 export * from './priorityqueue';
 export * from './rect';
-
+export * from './shaker';
 
 // The coord that would place the Gardener at the centre of the canvas.
 export const CANVAS_CENTRE = new Coord(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
@@ -65,8 +65,20 @@ export const drawState = (
 };
 
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
-// corresponds to the background being placed in WrapSector.Middle.
+// corresponds to the background being placed in WrapSector.Middle. This includes any screen shake.
 export function computeBackgroundShift(state: IGlobalState): Coord {
+  let shift = computeBackgroundShiftWithoutShake(state);
+
+  // Let the screenShaker do its thing.
+  let shake = state.screenShaker.shake();
+  shift = shift.plus(shake.x, shake.y);
+
+  return shift.toIntegers();
+}
+
+// Compute a displacement that would shift the background to the "right" place. In tile.ts this
+// corresponds to the background being placed in WrapSector.Middle. This is without any screen shake.
+export function computeBackgroundShiftWithoutShake(state: IGlobalState): Coord {
   let shift = CANVAS_CENTRE.minus(state.gardener.pos.x, state.gardener.pos.y);
 
   // Make an adjustment to the vertical shift so that as the gardener climbs the ladder and heads to the base of the

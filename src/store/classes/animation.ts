@@ -2,14 +2,19 @@ import { FPS } from "../../utils/constants";
 
 // An enum for event types.
 export enum AnimEventType {
-    IMPACT,
-    GAMEOVER,
-    ALARM_1,
-    ALARM_2,
-    ALARM_3,
-    EARLY_OPEN_SHIELD_1,
-    EARLY_OPEN_SHIELD_2,
-    EARLY_OPEN_SHIELD_3,
+    IMPACT,                 // Supernova impact event.
+    GAMEOVER,               // End the game.
+    ALARM_1,                // Trigger leftmost shield button alarm.
+    ALARM_2,                // Trigger middle shield button alarm.
+    ALARM_3,                // Trigger rightmost shield button alarm.
+    EARLY_OPEN_SHIELD_1,    // Open leftmost shield early.
+    EARLY_OPEN_SHIELD_2,    // Open middle shield early.
+    EARLY_OPEN_SHIELD_3,    // Open rightmost shield early.
+    SHAKE_STOP,             // Set screen shake back to zero/none.
+    SHAKE_LEVEL_1,          // Set screen shake to level 1 (weakest).
+    SHAKE_LEVEL_2,          // Set screen shake to level 2.
+    SHAKE_LEVEL_3,          // Set screen shake to level 3.
+    SHAKE_LEVEL_4,          // Set screen shake to level 4 (strongest).
 }
 
 // Interface for one-off event animations.
