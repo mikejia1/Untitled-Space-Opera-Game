@@ -8,6 +8,7 @@ import {
  import { Coord } from './coord';
  import { Rect } from './rect';
  import { Tile, WrapSector, InvisibleCollider } from '../scene';
+import { drawAnimationEvent } from "./drawevent";
 
 export * from './coord';
 export * from './constants';
@@ -121,54 +122,6 @@ export function rectanglesOverlap(rect1: any, rect2: any): boolean {
   if (Math.max(a.y, b.y) < Math.min(c.y, d.y)) return false;
   if (Math.min(a.y, b.y) > Math.max(c.y, d.y)) return false;
   return true;
-}
-
-function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
-  const frameCount = state.currentFrame - anim.startTime;
-  console.log("Begin supernova animation");
-  let impactFrame = 0;
-  if (frameCount == 1){
-    impactFrame = 1;
-  }
-  else if (frameCount == 2){
-    impactFrame = 0;
-  }
-  else {
-    impactFrame = Math.min(Math.floor((frameCount)/4), 3);
-  }
-  // SUPERNOVA IMPACT
-  if (frameCount < 24){
-    canvas.drawImage(
-      state.backgroundImages.impact,                         // Sprite source image
-      impactFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,         // Top-left corner of frame in source
-      H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE,   // Size of frame in source
-      shift.x,                                                  // X position of top-left corner on canvas
-      shift.y,                                                  // Y position of top-left corner on canvas
-      H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
-  }
-  // FADE OUT WHITE
-  else if (frameCount < 48) { 
-    //fade back from white
-    let opacity = (24 - (frameCount-24))/24;
-    canvas.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
-    canvas.fillRect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  }
-  else{
-    //remove event from pending
-    anim.finished = true;
-  }
-}
-
-function drawAnimationEvent(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
-  if (state.activeEvents.length == 0) {
-    return;
-  }
-  for(let i = 0; i < state.activeEvents.length; i++){
-    let anim: AnimEvent = state.activeEvents[0];
-    if(anim.event == AnimEventType.IMPACT){
-      drawImpactEvent(anim, state, shift, canvas);
-    }
-  }
 }
 
 // Paint the background onto the canvas.

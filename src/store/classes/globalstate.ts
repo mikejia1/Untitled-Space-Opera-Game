@@ -20,7 +20,8 @@ import skeleton           from "../../entities/images/skeleton/skeleton_death.pn
 import npcwalkcycle       from "../../entities/images/nonplayer/npcwalkcycle.png";
 import spacegardenimpact  from "../images/space_garden_impact.png";
 import spacegarden        from "../images/space_garden.png";
-import gameover           from "../images/gameover.png";
+import gameoverImg        from "../images/gameover.png";
+import replayPrompt       from "../images/replay_prompt.png";
 import wateringcan        from "../../entities/images/wateringcan/wateringcan.png";
 import spaceframes        from "../images/space_frames.png";
 import shieldButton from "../../entities/images/button/button_32x32.png";
@@ -54,6 +55,7 @@ export interface IGlobalState {
     wateringCanImage: any;            // The watering can image.
     plantImage: any;                  // The plant image.
     gameOverImage: any,               // The game over image
+    replayImage: any,                 // The replay prompt image
     invisibleColliders: Collider[];   // All Colliders that aren't visible.
     muted: boolean;                   // Enable / disable sounds.
     debugSettings: any;               // For configuring extra debug info and visualizations.
@@ -120,7 +122,8 @@ export function initialGameState(): IGlobalState {
     },
     shieldButtonImage: loadImage("Shield button", shieldButton),
     plantImage:       loadImage("Plant image", plantimage),
-    gameOverImage:    loadImage("Game over", gameover),
+    gameOverImage:    loadImage("Game over", gameoverImg),
+    replayImage:      loadImage("Replay prompt", replayPrompt),
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
     muted: true,
     debugSettings: {
