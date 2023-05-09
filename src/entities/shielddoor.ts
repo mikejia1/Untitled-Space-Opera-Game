@@ -7,10 +7,10 @@ import { Coord, computeBackgroundShift, computeCurrentFrame, shiftForTile } from
 const InterSlatDelay = 10;
 
 // Amount of time, in animation frames, required to close one of the 12 shield slats.
-const SlatClosingDur = 20;
+const SlatClosingDur = 15;
 
 // Amount of time, in animation frames, during which time a shield slat remains closed.
-const SlatClosedDur = 200;
+const SlatClosedDur = 20;
 
 // Amount of time, in animation frames, required to open one of the 12 shield slats.
 const SlatOpeningDur = 40;

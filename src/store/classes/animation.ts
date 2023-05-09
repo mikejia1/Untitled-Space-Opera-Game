@@ -27,4 +27,4 @@ export class AnimEvent {
     }
 }
 
-export const SUPERNOVA_DELAY = FPS*3;
+export const SUPERNOVA_DELAY = FPS*30;
