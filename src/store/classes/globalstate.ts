@@ -22,6 +22,7 @@ import spacegardenimpact  from "../images/space_garden_impact.png";
 import spacegarden        from "../images/space_garden.png";
 import gameoverImg        from "../images/gameover.png";
 import replayPrompt       from "../images/replay_prompt.png";
+import blackHoleImg       from "../images/drifting_planets/planet_black_hole_256px_30f.png";
 import wateringcan        from "../../entities/images/wateringcan/wateringcan.png";
 import spaceframes        from "../images/space_frames.png";
 import shieldButton from "../../entities/images/button/button_32x32.png";
@@ -56,6 +57,7 @@ export interface IGlobalState {
     plantImage: any;                  // The plant image.
     gameOverImage: any,               // The game over image
     replayImage: any,                 // The replay prompt image
+    blackHoleImage: any,              // Images containing animation frames for the black hole
     invisibleColliders: Collider[];   // All Colliders that aren't visible.
     muted: boolean;                   // Enable / disable sounds.
     screenShaker: Shaker;             // For causing the screen to shake at key moments.  
@@ -125,6 +127,7 @@ export function initialGameState(): IGlobalState {
     plantImage:       loadImage("Plant image", plantimage),
     gameOverImage:    loadImage("Game over", gameoverImg),
     replayImage:      loadImage("Replay prompt", replayPrompt),
+    blackHoleImage:   loadImage("Black hole", blackHoleImg),
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
     muted: true,
     screenShaker:     SHAKER_NO_SHAKE, // Initially, the screen is not shaking.
