@@ -30,6 +30,7 @@ import {
   TOGGLE_GAME_AUDIO,
 } from "../actions";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
+import { Cat } from "../../entities/cat";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -192,6 +193,11 @@ function updateFrame(state: IGlobalState): IGlobalState {
     allColliders.set(newNPC.colliderId, newNPC);
   });
 
+  let cats : Cat[] = [];
+  for(let i = 0; i < state.cats.length; i++){
+    cats = [...cats, state.cats[i].move()]
+  }
+
   let newPlants = dehydratePlants(state.plants, state);
   newPlants = growPlants(newPlants, state);
 
@@ -292,6 +298,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
     ...state,
     currentFrame: f,
     npcs: newNPCs,
+    cats: cats,
     plants: newPlants,
     activeEvents: activeEvents,
     pendingEvents: [...pendingEvents, ...triggeredEvents], 

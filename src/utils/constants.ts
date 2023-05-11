@@ -29,6 +29,10 @@ export const GARDENER_DH_PIXEL_SPEED = 2.12;
 export const NPC_V_PIXEL_SPEED = 1;
 export const NPC_H_PIXEL_SPEED = 1;
 
+// Running speed of cats.
+export const CAT_V_PIXEL_SPEED = 2.5;
+export const CAT_H_PIXEL_SPEED = 2.5;
+
 // An enum for the directions.
 export enum Direction {
     Up, Down, Left, Right,

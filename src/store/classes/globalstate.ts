@@ -18,6 +18,7 @@ import bottomShield from "../../entities/images/shield/shield_bottom_32x.png";
 // Other images.
 import skeleton           from "../../entities/images/skeleton/skeleton_death.png";
 import npcwalkcycle       from "../../entities/images/nonplayer/npcwalkcycle.png";
+import catswalkcycle      from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
 import spacegardenimpact  from "../images/space_garden_impact.png";
 import spacegarden        from "../images/space_garden.png";
 import gameoverImg        from "../images/gameover.png";
@@ -30,6 +31,7 @@ import shieldButton from "../../entities/images/button/button_32x32.png";
 import plantimage from "../../entities/images/plant/plants_16x16.png";
 import { ShieldButton } from '../../entities/shieldbutton';
 import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
+import { Cat } from '../../entities/cat';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -40,6 +42,7 @@ export interface IGlobalState {
     wateringCan: WateringCan;         // The watering can that the gardener uses to water plants
     plants: Plant[];                  // All the plants currently living
     npcs: NonPlayer[];                // The various crew people wandering around in the garden
+    cats: Cat[];                      // Murderous cats on a rampage
     shieldButtons: ShieldButton[];    // The buttons that activate sections of the blast shield
     shieldDoors: ShieldDoor;          // The blast shield that protects the garden
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
@@ -47,6 +50,7 @@ export interface IGlobalState {
     pendingEvents: AnimEvent[];       // Queue of one-off event animations to draw
     activeEvents: AnimEvent[];        // Queue of one-off event animations to draw
     skeleton: any;                    // The skeleton death animation.
+    catImage: any;                    // The cat walk cycle animation.
     gardenerImages: any;              // Source images for gardener sprites.
     shieldImages: any;                // Source images for the blast shield image.
     shieldButtonImage: any;           // Source image for the shield button animation.
@@ -86,6 +90,9 @@ export function initialGameState(): IGlobalState {
   let npcs = gridOfNPCs(colliderId, new Coord(200, 250), 25, 2, 2);
   colliderId += npcs.length;
 
+  // Create a bunch of cats. 
+  let cats = gridOfCats(colliderId, new Coord(200, 250), 25, 2, 2);
+
   // Create the buttons that activate the sections of the blast shield.
   let shieldButtons = createShieldButtons();
 
@@ -97,6 +104,7 @@ export function initialGameState(): IGlobalState {
     wateringCan: initialWateringCan(),
     plants: allPlants,
     npcs: npcs,
+    cats: cats,
     shieldButtons: shieldButtons,
     shieldDoors: initialShieldDoor(),
     currentFrame: 0,
@@ -109,6 +117,7 @@ export function initialGameState(): IGlobalState {
       waterPouring: loadImage("Tool watering strip", toolwateringstrip),
     },
     skeleton:         loadImage("Skeleton death", skeleton),
+    catImage:      loadImage("Cat walk cycle", catswalkcycle),
     npcimage:         loadImage("NPC walk cycle", npcwalkcycle),
     backgroundImages:{
       default:      loadImage("Space garden", spacegarden),
@@ -220,6 +229,22 @@ function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: numbe
         pos: pos.plus(col * spacing, row * spacing), 
       });
       all = [...all, npc];
+    }
+  }
+  return all;
+}
+
+// Create a grid of NPCs with top-left one at given position, and with given spacing.
+function gridOfCats(colliderId: number, pos: Coord, spacing: number, cols: number, rows: number): Cat[] {
+  let all: Cat[] = [];
+  for (let col = 0; col < cols; col++) {
+    for (let row = 0; row < rows; row++) {
+      let cat = new Cat({
+        colliderId: colliderId + (row * cols) + col,
+        pos: pos.plus(col * spacing, row * spacing), 
+        color: ( col * cols + row ) % 5,
+      });
+      all = [...all, cat];
     }
   }
   return all;

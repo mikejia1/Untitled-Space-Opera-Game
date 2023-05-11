@@ -9,6 +9,7 @@ export enum ColliderType {
     WallCo      = "Wall",     // A wall or other solid obstacle
     PlantCo     = "Plant",    // A plant
     LadderCo    = "Ladder",   // A ladder
+    CatCo       = "Cat",      // A murderous feline
 };
 
 export interface StrSet {
@@ -24,6 +25,7 @@ export function ColliderExceptions(col: Collider): StrSet {
         case ColliderType.WallCo:       return { };
         case ColliderType.PlantCo:      return { };
         case ColliderType.LadderCo:     return { Gardener: true };
+        case ColliderType.CatCo:        return { };
     }
 };
 
