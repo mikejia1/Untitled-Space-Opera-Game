@@ -16,6 +16,7 @@ export const TOGGLE_EQUIP = "TOGGLE_EQUIP";
 export const USE_ITEM = "USE_ITEM";
 export const TICK = "TICK";
 export const STOP_WATERING = "STOP_WATERING";
+export const TOGGLE_FREEZE = "TOGGLE_FREEZE";
 export const TOGGLE_GAME_AUDIO = "TOGGLE_GAME_AUDIO";
 
 export const TOGGLE_DEBUG_CONTROL_COLLISION_RECTS = "TOGGLE_DEBUG_CONTROL_COLLISION_RECTS";
@@ -32,6 +33,10 @@ export const makeMove = (move: string) => ({
 
 export const stopWatering = () => ({
   type: STOP_WATERING
+});
+
+export const toggleFreeze = () => ({
+  type: TOGGLE_FREEZE
 });
 
 export const resetGame = () => ({

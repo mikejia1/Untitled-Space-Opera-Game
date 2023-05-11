@@ -16,6 +16,7 @@ import {
   UP,
   USE_ITEM,
   STOP_WATERING,
+  TOGGLE_FREEZE,
   STOP_RIGHT,
   STOP_LEFT,
   STOP_UP,
@@ -46,6 +47,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
     case TOGGLE_EQUIP:                            return toggleEquip(state);
     case USE_ITEM:                                return utiliseItem(state);
     case STOP_WATERING:                           return ceaseWatering(state);
+    case TOGGLE_FREEZE:                           return toggleDrawStateFreeze(state);
     case RESET:                                   return initialGameState();
     case RESET_SCORE:                             return { ...state, score: 0 };
     case INCREMENT_SCORE:                         return { ...state, score: state.score + 1 };
@@ -597,6 +599,16 @@ function ceaseWatering(state: IGlobalState): IGlobalState {
     ...state,
     gardener: state.gardener.setWatering(false),
   };
+}
+
+function toggleDrawStateFreeze(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    debugSettings: {
+      ...state.debugSettings,
+      freeze: !state.debugSettings.freeze,
+    },
+  }
 }
 
 export default gameReducer;

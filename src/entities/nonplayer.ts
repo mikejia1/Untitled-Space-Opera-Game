@@ -95,7 +95,7 @@ export class NonPlayer implements Paintable, Collider {
 
     // Compute a displacement that will place the NPC at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
     }
 
     // Determine the grid tile that is the closest approximation to the NPC's position.

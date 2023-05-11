@@ -93,7 +93,7 @@ export class ShieldButton implements Paintable, Interactable {
 
     // Compute a displacement that will place the button at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
     }
 
     // Determine the grid tile that is the closest approximation to the button's position.

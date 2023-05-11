@@ -1,4 +1,4 @@
-import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, computeBackgroundShift, Coord, computeCurrentFrame } from '../utils';
+import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, computeBackgroundShift, Coord, computeCurrentFrame, drawClippedImage, CANVAS_RECT } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Tile } from '../scene';
@@ -26,12 +26,19 @@ export class BlackHole implements Paintable {
         dest = dest.plus(0, (computeCurrentFrame() - this.startFrame) * 0.5);
         dest = dest.toIntegers();
         let frame = this.computeAnimationFrame();
+        let shake = state.screenShaker.shakeDeterministic(state.currentFrame);
         // Draw the current animation frame.
-        canvas.drawImage(state.blackHoleImage,
+        drawClippedImage(
+            canvas,
+            state.blackHoleImage,
             frame * 512, 0,                 // Top-left corner of frame in source
             512, 512,                       // Size of frame in source
             dest.x, dest.y,                 // Position of sprite on canvas
-            512, 512);                      // Sprite size on canvas
+            512, 512,                       // Sprite size on canvas
+            {
+                a: CANVAS_RECT.a.plus(shake.x, shake.y),
+                b: CANVAS_RECT.b.plus(shake.x, shake.y),
+            });
 
         // Extra debug displays.
         if (state.debugSettings.showPositionRects) {
@@ -46,8 +53,9 @@ export class BlackHole implements Paintable {
     }
 
     // Compute a displacement that will place the black hole at the correct place on the canvas.
+    // Using deterministic shake to keep black hole aligned with starfield and ship shake for good clipping.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, true));
     }
 
     // Determine the grid tile that is the closest approximation to the watering can's position.

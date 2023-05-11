@@ -150,6 +150,7 @@ export function initialGameState(): IGlobalState {
       showEquipRects: false,        // Equipping interaction rectangle for watering can.
       showInteractionRects: false,  // Interaction rectangles.
       collisionsDisabled: false,    // Disable collision checks - Gardener can walk through anything.
+      freeze: false,                // When true, drawState becomes a no-opp.
     },
   }
 }

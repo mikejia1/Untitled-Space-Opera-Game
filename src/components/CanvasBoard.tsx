@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   makeMove,
   stopWatering,
+  toggleFreeze,
   tick,
   DOWN,
   LEFT,
@@ -63,6 +64,9 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
             break;
           case "f":
             dispatch(stopWatering());
+            break;
+          case "p":
+            dispatch(toggleFreeze());
             break;
         }
       },

@@ -37,6 +37,7 @@ export const drawState = (
   state: IGlobalState
 ) => {
   if (!canvas) return;
+  if (state.debugSettings.freeze) return;
 
   // Put all paintable objects into a heap-based priority queue.
   // They'll come out sorted by ascending y coordinate for faking 3D.
@@ -45,8 +46,9 @@ export const drawState = (
       return a.pos.y < b.pos.y;
     }
   );
-  let shift = computeBackgroundShift(state);
-  drawBackground(state, shift, canvas);
+  let shift = computeBackgroundShift(state, false);
+  let deterministicShift = computeBackgroundShift(state, true);
+  drawBackground(state, shift, deterministicShift, canvas);
   state.plants.forEach(plant => pq.add(plant));
   state.npcs.forEach(npc => pq.add(npc));
   state.cats.forEach(cat => pq.add(cat));
@@ -67,11 +69,11 @@ export const drawState = (
 
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle. This includes any screen shake.
-export function computeBackgroundShift(state: IGlobalState): Coord {
+export function computeBackgroundShift(state: IGlobalState, deterministic: boolean): Coord {
   let shift = computeBackgroundShiftWithoutShake(state);
 
   // Let the screenShaker do its thing.
-  let shake = state.screenShaker.shake();
+  let shake = deterministic ? state.screenShaker.shakeDeterministic(state.currentFrame) : state.screenShaker.shake();
   shift = shift.plus(shake.x, shake.y);
 
   return shift.toIntegers();
@@ -141,32 +143,34 @@ export function rectanglesOverlap(rect1: any, rect2: any): boolean {
 // First paint it in the WrapSector.Middle or "normal" position/sector.
 // If any of the WrapSector.Left copy of the world should be visible, paint a copy there as well.
 // If any of the WrapSector.Right copy of the world should be visible, paint a copy there as well.
-function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
-  drawShiftedBackground(state, canvas, shift);
+function drawBackground(state: IGlobalState, shift: Coord, deterministicShift: Coord, canvas: CanvasRenderingContext2D): void {
+  drawShiftedBackground(state, canvas, shift, deterministicShift);
   // A ring-world background image wider than the canvas. 
   if (BACKGROUND_WIDTH > CANVAS_WIDTH) {
     if (shift.x >= 0) {
       let reshift = shift.minus(BACKGROUND_WIDTH, 0);
-      drawShiftedBackground(state, canvas, reshift);
+      let deterministicReshift = deterministicShift.minus(BACKGROUND_WIDTH, 0);
+      drawShiftedBackground(state, canvas, reshift, deterministicReshift);
     } else if ((shift.x + BACKGROUND_WIDTH) < CANVAS_WIDTH) {
       let reshift = shift.plus(BACKGROUND_WIDTH, 0);
-      drawShiftedBackground(state, canvas, reshift);
+      let deterministicReshift = deterministicShift.plus(BACKGROUND_WIDTH, 0);
+      drawShiftedBackground(state, canvas, reshift, deterministicReshift);
     }
   } else {
     // A narrow bounded map that is not wider than the canvas.
-      drawShiftedBackground(state, canvas, shift);
+      drawShiftedBackground(state, canvas, shift, deterministicShift);
   }
 }
 
-function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord) {
+function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord, deterministicShift: Coord) {
   // Draw the starfield visible through the ship's window.
-  drawStarfield(state, canvas, shift);
+  drawStarfield(state, canvas, deterministicShift);
   // Draw objects that are in space, visible through the window.
   drawSpaceObjects(state, canvas);
   // Draw the blast shield.
   state.shieldDoors.paint(canvas, state);
   // Draw the static background of the ship interior.
-  canvas.drawImage(state.backgroundImages.default, shift.x, shift.y);
+  canvas.drawImage(state.backgroundImages.default, deterministicShift.x, deterministicShift.y);
 }
 
 // Draw objects that are in space, visible through the window.
@@ -335,15 +339,29 @@ export function drawClippedImage(
 
 // Compute the rectangle that is the overlap between two rectangles a and b.
 // Note: only call this if you already know the rectangles overlap.
-export function computeRectOverlap(a: Rect, b: Rect): Rect {
-  // TODO: proper code goes here
-  return a;
+export function computeRectOverlap(u: Rect, v: Rect): Rect {
+  return {
+    a: new Coord(Math.max(u.a.x, v.a.x), Math.max(u.a.y, v.a.y)),
+    b: new Coord(Math.min(u.b.x, v.b.x), Math.min(u.b.y, v.b.y)),
+  };
 }
 
 // Given three rectangles, a, b, c, where a is the source rectangle in a source image, b is
 // the corresponding destination rectangle on a canvas, and c is clipped version of b, return
 // the rectangle that is a clipped version of a that does the *same* clipping in the source image.
 export function computeCorrespondingRect(a: Rect, b: Rect, c: Rect): Rect {
-  // TODO: proper code goes here
-  return a;
+  let destW = b.b.x - b.a.x + 1;
+  let destH = b.b.y - b.a.y + 1;
+  let srcW = a.b.x - a.a.x + 1;
+  let srcH = a.b.y - a.a.y + 1;
+  let topLeft = new Coord(
+    a.a.x + (srcW * ((c.a.x - b.a.x) / destW)),
+    a.a.y + (srcH * ((c.a.y - b.a.y) / destH)));
+  let botRight = new Coord(
+    a.b.x + (srcW * ((c.b.x - b.b.x) / destW)),
+    a.b.y + (srcH * ((c.b.y - b.b.y) / destH)));
+  return {
+    a: topLeft,
+    b: botRight,
+  };
 }

@@ -52,7 +52,7 @@ export class WateringCan implements Paintable {
 
     // Compute a displacement that will place the Plant at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
     }
 
     // Determine the grid tile that is the closest approximation to the watering can's position.
