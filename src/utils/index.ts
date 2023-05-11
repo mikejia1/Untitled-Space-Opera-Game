@@ -160,10 +160,18 @@ function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderi
 function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord) {
   // Draw the starfield visible through the ship's window.
   drawStarfield(state, canvas, shift);
+  // Draw objects that are in space, visible through the window.
+  drawSpaceObjects(state, canvas);
   // Draw the blast shield.
   state.shieldDoors.paint(canvas, state);
   // Draw the static background of the ship interior.
   canvas.drawImage(state.backgroundImages.default, shift.x, shift.y);
+}
+
+// Draw objects that are in space, visible through the window.
+function drawSpaceObjects(state: IGlobalState, canvas: CanvasRenderingContext2D) {
+  if (state.blackHole === null) return;
+  state.blackHole.paint(canvas, state);
 }
 
 // Draw the starfield seen through the window of the ship.
@@ -290,4 +298,51 @@ export function tileRect(row: number, col: number): Rect {
 
 export function rectToString(rect: Rect): string {
   return "{ " + rect.a.toString() + " " + rect.b.toString() + " }";
+}
+
+// Draw an image on the canvas in such a way that it will be clipped within
+// a given destination rectangle.
+export function drawClippedImage(
+  canvas: CanvasRenderingContext2D, img: any,
+  srcX: number, srcY: number,
+  srcW: number, srcH: number,
+  dstX: number, dstY: number,
+  dstW: number, dstH: number,
+  clipRect: Rect): void {
+    // Compute the non-clipped destination Rect for the image.
+    let destRect: Rect = {
+      a: new Coord(dstX, dstY),
+      b: new Coord(dstX + dstW - 1, dstY + dstH - 1),
+    };
+    // If clipRect and destRect don't overlap, there's nothing to draw.
+    if (!rectanglesOverlap(destRect, clipRect)) return;
+    // Get the overlap rectangle representing the only region to be painted.
+    let overlap: Rect = computeRectOverlap(destRect, clipRect);
+    // Get the source rectangle.
+    let srcRect = {
+      a: new Coord(srcX, srcY),
+      b: new Coord(srcX + srcW - 1, srcY + srcH - 1),
+    };
+    let clippedSrcRect = computeCorrespondingRect(srcRect, destRect, overlap);
+    canvas.drawImage(
+      img,
+      clippedSrcRect.a.x, clippedSrcRect.a.y,
+      clippedSrcRect.b.x - clippedSrcRect.a.x + 1, clippedSrcRect.b.y - clippedSrcRect.a.y + 1,
+      overlap.a.x, overlap.a.y,
+      overlap.b.x - overlap.a.x + 1, overlap.b.y - overlap.a.y + 1);
+}
+
+// Compute the rectangle that is the overlap between two rectangles a and b.
+// Note: only call this if you already know the rectangles overlap.
+export function computeRectOverlap(a: Rect, b: Rect): Rect {
+  // TODO: proper code goes here
+  return a;
+}
+
+// Given three rectangles, a, b, c, where a is the source rectangle in a source image, b is
+// the corresponding destination rectangle on a canvas, and c is clipped version of b, return
+// the rectangle that is a clipped version of a that does the *same* clipping in the source image.
+export function computeCorrespondingRect(a: Rect, b: Rect, c: Rect): Rect {
+  // TODO: proper code goes here
+  return a;
 }

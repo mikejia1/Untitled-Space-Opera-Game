@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Shaker } from "../../utils";
+import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Shaker, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE } from "../../utils";
 import { AnimEvent, AnimEventType, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
 import { NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
@@ -30,6 +30,7 @@ import {
   TOGGLE_GAME_AUDIO,
 } from "../actions";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
+import { BlackHole } from "../../scene";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -196,8 +197,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
   newPlants = growPlants(newPlants, state);
 
   let newShield = state.shieldDoors.updateStates();
-
   let newShaker = state.screenShaker;
+  let newBlackHole: BlackHole | null = state.blackHole;
 
   let activeEvents: AnimEvent[] = [...state.activeEvents.filter(animEvent => !animEvent.finished), ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
   let pendingEvents: AnimEvent[] = state.pendingEvents.filter(animEvent => animEvent.startTime > state.currentFrame);
@@ -253,27 +254,33 @@ function updateFrame(state: IGlobalState): IGlobalState {
       event.finished = true;
     }
     if (event.event == AnimEventType.SHAKE_STOP) {
-      newShaker = new Shaker(0, 0);
+      newShaker = SHAKER_NO_SHAKE; // new Shaker(0, 0);
       event.processed = true;
       event.finished = true;
     }
     if (event.event == AnimEventType.SHAKE_LEVEL_1) {
-      newShaker = new Shaker(0.005, 0.008);
+      newShaker = SHAKER_SUBTLE; // new Shaker(0.005, 0.008);
       event.processed = true;
       event.finished = true;
     }
     if (event.event == AnimEventType.SHAKE_LEVEL_2) {
-      newShaker = new Shaker(0.05, 0.04);
+      newShaker = SHAKER_MILD; // new Shaker(0.05, 0.04);
       event.processed = true;
       event.finished = true;
     }
     if (event.event == AnimEventType.SHAKE_LEVEL_3) {
-      newShaker = new Shaker(0.5, 0.2);
+      newShaker = SHAKER_MEDIUM; // new Shaker(0.5, 0.2);
       event.processed = true;
       event.finished = true;
     }
     if (event.event == AnimEventType.SHAKE_LEVEL_4) {
-      newShaker = new Shaker(5, 1);
+      newShaker = SHAKER_INTENSE; // new Shaker(5, 1);
+      event.processed = true;
+      event.finished = true;
+    }
+    if (event.event == AnimEventType.BLACK_HOLE_APPEARS) {
+      console.log("Handling BLACK_HOLE_APPEARS event");
+      newBlackHole = new BlackHole(new Coord((CANVAS_WIDTH - 512) / 2, -345), computeCurrentFrame());
       event.processed = true;
       event.finished = true;
     }
@@ -300,6 +307,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
     shieldButtons: newShieldButtons,
     shieldDoors: newShield,
     screenShaker: newShaker,
+    blackHole: newBlackHole,
   };
 }
 

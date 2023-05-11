@@ -187,9 +187,9 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     <>
       <canvas
         ref={canvasRef}
-        style={{
+        /*style={{
           border: `3px solid ${gameEnded ? "red" : "black"}`,
-        }}
+        }}*/
         width={width}
         height={height}
       />
