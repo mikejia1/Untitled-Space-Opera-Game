@@ -1,9 +1,9 @@
 import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
-import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_SUBTLE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, SHAKER_NO_SHAKE } from '../../utils';
+import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE } from '../../utils';
 
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
-import { InvisibleCollider } from "../../scene";
+import { BlackHole, InvisibleCollider } from "../../scene";
 
 // Gardener images.
 import basewalkstrip     from "../../entities/images/gardener/base_walk_strip8.png";
@@ -23,9 +23,10 @@ import spacegardenimpact  from "../images/space_garden_impact.png";
 import spacegarden        from "../images/space_garden.png";
 import gameoverImg        from "../images/gameover.png";
 import replayPrompt       from "../images/replay_prompt.png";
+import blackHoleImg       from "../images/drifting_planets/planet_black_hole_256px_30f.png";
 import wateringcan        from "../../entities/images/wateringcan/wateringcan.png";
 import spaceframes        from "../images/space_frames.png";
-import shieldButton from "../../entities/images/button/button_32x32.png";
+import shieldButton       from "../../entities/images/button/button_32x32.png";
 
 // Plant image.
 import plantimage from "../../entities/images/plant/plants_16x16.png";
@@ -60,9 +61,11 @@ export interface IGlobalState {
     plantImage: any;                  // The plant image.
     gameOverImage: any,               // The game over image
     replayImage: any,                 // The replay prompt image
+    blackHoleImage: any,              // Images containing animation frames for the black hole
     invisibleColliders: Collider[];   // All Colliders that aren't visible.
     muted: boolean;                   // Enable / disable sounds.
-    screenShaker: Shaker;             // For causing the screen to shake at key moments.  
+    screenShaker: Shaker;             // For causing the screen to shake at key moments.
+    blackHole: BlackHole | null;      // The black hole in view, or null if none in view.
     debugSettings: any;               // For configuring extra debug info and visualizations.
   }
 
@@ -134,9 +137,11 @@ export function initialGameState(): IGlobalState {
     plantImage:       loadImage("Plant image", plantimage),
     gameOverImage:    loadImage("Game over", gameoverImg),
     replayImage:      loadImage("Replay prompt", replayPrompt),
+    blackHoleImage:   loadImage("Black hole", blackHoleImg),
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
     muted: true,
-    screenShaker:     SHAKER_NO_SHAKE, // Initially, the screen is not shaking.
+    screenShaker:     SHAKER_NO_SHAKE,  // Initially, the screen is not shaking.
+    blackHole:        null,             // Initially, there's no black hole in view.
     debugSettings: {
       showCollisionRects: false,    // Collision rectangles for colliders.
       showPositionRects: false,     // Position rectangles for paintables.
@@ -264,20 +269,22 @@ function getEvents(): AnimEvent[] {
   return [...createSupernovaEvents(SUPERNOVA_DELAY)];
 }
 
+// Setup the timed schedule of all events associated with a dangerous supernova encounter.
 function createSupernovaEvents(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
-    let alarm1: AnimEvent = new AnimEvent(AnimEventType.ALARM_1, f + delay-15*FPS);
-    let alarm2: AnimEvent = new AnimEvent(AnimEventType.ALARM_2, f + delay-15*FPS);
-    let alarm3: AnimEvent = new AnimEvent(AnimEventType.ALARM_3, f + delay-15*FPS);
-    let supernova: AnimEvent = new AnimEvent(AnimEventType.IMPACT, f + delay);
-    let shake1: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1, f + delay - (15 * FPS));
-    let shake2: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2, f + delay - (11 * FPS));
-    let shake3: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3, f + delay - (7 * FPS));
-    let shake4: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_4, f + delay - (3 * FPS));
-    let shake5: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3, f + delay);
-    let shake6: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2, f + delay + (1 * FPS));
-    let shake7: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1, f + delay + (2 * FPS));
-    let shakeStop: AnimEvent = new AnimEvent(AnimEventType.SHAKE_STOP, f + delay + (3 * FPS));
+    let enterBH: AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_APPEARS,  f + delay - (16 * FPS));
+    let alarm1: AnimEvent = new AnimEvent(AnimEventType.ALARM_1,              f + delay - (15 * FPS));
+    let alarm2: AnimEvent = new AnimEvent(AnimEventType.ALARM_2,              f + delay - (15 * FPS));
+    let alarm3: AnimEvent = new AnimEvent(AnimEventType.ALARM_3,              f + delay - (15 * FPS));
+    let supernova: AnimEvent = new AnimEvent(AnimEventType.IMPACT,            f + delay);
+    let shake1: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay - (15 * FPS));
+    let shake2: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay - (11 * FPS));
+    let shake3: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay - (7 * FPS));
+    let shake4: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_4,        f + delay - (3 * FPS));
+    let shake5: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay);
+    let shake6: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay + (1 * FPS));
+    let shake7: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay + (2 * FPS));
+    let shakeStop: AnimEvent = new AnimEvent(AnimEventType.SHAKE_STOP,        f + delay + (3 * FPS));
 
-    return [alarm1, alarm2, alarm3, supernova, shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop];
+    return [enterBH, alarm1, alarm2, alarm3, supernova, shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop];
 }

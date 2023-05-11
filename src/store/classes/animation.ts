@@ -15,6 +15,7 @@ export enum AnimEventType {
     SHAKE_LEVEL_2,          // Set screen shake to level 2.
     SHAKE_LEVEL_3,          // Set screen shake to level 3.
     SHAKE_LEVEL_4,          // Set screen shake to level 4 (strongest).
+    BLACK_HOLE_APPEARS,     // Bring black hole into view.
 }
 
 // Interface for one-off event animations.
