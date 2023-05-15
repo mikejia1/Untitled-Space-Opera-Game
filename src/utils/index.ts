@@ -25,6 +25,14 @@ export const CANVAS_RECT = {
   b: new Coord(CANVAS_WIDTH-1, CANVAS_HEIGHT-1),
 };
 
+// The clipping rectangle for the starfield. Used to clip the shield doors,
+// preventing them from being draw so far down that they're visible through
+// the air lock.
+export const STARFIELD_RECT = {
+  a: new Coord(0,0),
+  b: new Coord(CANVAS_WIDTH-1, 145),  // Y coord here is the key value.
+};
+
 export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
   if (canvas) {
     canvas.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
