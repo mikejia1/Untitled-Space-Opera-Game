@@ -69,10 +69,9 @@ export class ShieldDoor implements Paintable {
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         let f = computeCurrentFrame();
         let shift = this.computeShift(state);
-        let shake = state.screenShaker.shakeDeterministic(state.currentFrame);
         let clipRect = {
-            a: STARFIELD_RECT.a.plus(shake.x, shake.y).plus(shift.x, shift.y),
-            b: STARFIELD_RECT.b.plus(shake.x, shake.y).plus(shift.x, shift.y),
+            a: STARFIELD_RECT.a.plus(shift.x, shift.y),
+            b: STARFIELD_RECT.b.plus(shift.x, shift.y),
         };
         for (let i = 0; i < 3; i++) {
             this.paintShieldDoor(i, canvas, state, f, shift, clipRect);
@@ -196,7 +195,7 @@ export class ShieldDoor implements Paintable {
 
     // Compute a displacement that will place the blast shield at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(new Tile(0,0), state, computeBackgroundShift(state, false));
+        return shiftForTile(new Tile(0,0), state, computeBackgroundShift(state, true));
     }
 
     // Trigger a specific door to being its CLOSING -> CLOSED -> OPENING -> OPEN animation sequence.
