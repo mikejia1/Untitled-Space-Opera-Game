@@ -9,6 +9,15 @@ const NUM_BLACK_HOLE_FRAMES = 30;
 // Black hole pulsation speed.
 const PULSE_SPEED = 0.005;
 
+// The black hole's base radius.
+const BASE_RADIUS = 55;
+
+// The four pulse magnitudes that the black hole transitions through.
+export const PULSE_SUBTLE  = 0.2;
+export const PULSE_MILD    = 0.5;
+export const PULSE_MEDIUM  = 2.5;
+export const PULSE_INTENSE = 30;
+
 // The big bad black hole.
 export class BlackHole implements Paintable {
     pos: Coord;
@@ -34,20 +43,36 @@ export class BlackHole implements Paintable {
         dest = dest.toIntegers();
         let frame = this.computeAnimationFrame();
         let shake = state.screenShaker.shakeDeterministic(state.currentFrame);
-        // Draw the pulsating heart of the black hole - i.e. the black hole.
-        this.drawPulsatingHeart(canvas, dest);
-        // Draw the current animation frame for the disc of material around the black hole.
-        drawClippedImage(
-            canvas,
-            state.blackHoleImage,
-            frame * 512, 0,                 // Top-left corner of frame in source
-            512, 512,                       // Size of frame in source
-            dest.x, dest.y,                 // Position of sprite on canvas
-            512, 512,                       // Sprite size on canvas
-            {
-                a: CANVAS_RECT.a.plus(shake.x, shake.y),
-                b: CANVAS_RECT.b.plus(shake.x, shake.y),
-            });
+
+        // A lambda to draw the black hole.
+        let bh = (): void => {
+            this.drawPulsatingHeart(canvas, dest);
+        };
+
+        // A lambda to draw the disc of material around the black hole.
+        let disc = (): void => {
+            drawClippedImage(
+                canvas,
+                state.blackHoleImage,
+                frame * 512, 0,                 // Top-left corner of frame in source
+                512, 512,                       // Size of frame in source
+                dest.x, dest.y,                 // Position of sprite on canvas
+                512, 512,                       // Sprite size on canvas
+                {
+                    a: CANVAS_RECT.a.plus(shake.x, shake.y),
+                    b: CANVAS_RECT.b.plus(shake.x, shake.y),
+                });    
+        };
+
+        if (this.pulseMagnitude < 23) {
+            // Draw black hole behind disc.
+            bh();
+            disc();
+        } else {
+            // Draw disc behind black hole (only for split second when BH is really large).
+            disc();
+            bh();
+        }
 
         // Extra debug displays.
         if (state.debugSettings.showPositionRects) {
@@ -99,7 +124,18 @@ export class BlackHole implements Paintable {
         let pulse = Math.sin(t * PULSE_SPEED);
         if (pulse > 0) pulse = Math.sqrt(pulse) * 2.0;
         pulse = (1.0 + pulse) * this.pulseMagnitude;
-        return 55 + pulse;
+        return BASE_RADIUS + pulse;
+    }
+
+    // Have the black hole's pulse magnitude move (asymptotically) closed to its target magnitude.
+    adjustPulseMagnitude(): BlackHole {
+        let newMag = this.pulseMagnitude + ((this.targetPulseMagnitude - this.pulseMagnitude) * 0.1);
+        return new BlackHole(this.pos, this.startFrame, newMag, this.targetPulseMagnitude);
+    }
+
+    // Make a new version of the black hole with a different target pulse magnitude.
+    setTargetPulseMagnitude(targ: number): BlackHole {
+        return new BlackHole(this.pos, this.startFrame, this.pulseMagnitude, targ);
     }
 
     // Compute the current animation frame to use for the black hole.

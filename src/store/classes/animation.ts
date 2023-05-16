@@ -16,6 +16,11 @@ export enum AnimEventType {
     SHAKE_LEVEL_3,          // Set screen shake to level 3.
     SHAKE_LEVEL_4,          // Set screen shake to level 4 (strongest).
     BLACK_HOLE_APPEARS,     // Bring black hole into view.
+    BH_PULSE_STOP,          // Bring black hole pulse magnitude to zero.
+    BH_PULSE_LEVEL_1,       // Bring black hole pulse magnitude to level 1 (weakest).
+    BH_PULSE_LEVEL_2,       // Bring black hole pulse magnitude to level 2.
+    BH_PULSE_LEVEL_3,       // Bring black hole pulse magnitude to level 3.
+    BH_PULSE_LEVEL_4,       // Bring black hole pulse magnitude to level 4 (strongest).
 }
 
 // Interface for one-off event animations.

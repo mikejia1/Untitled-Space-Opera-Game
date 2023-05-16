@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Shaker, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE } from "../../utils";
+import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE } from "../../utils";
 import { AnimEvent, AnimEventType, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
 import { MentalState, NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
@@ -32,7 +32,7 @@ import {
 } from "../actions";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
 import { Cat } from "../../entities/cat";
-import { BlackHole } from "../../scene";
+import { BlackHole, PULSE_SUBTLE, PULSE_MILD, PULSE_MEDIUM, PULSE_INTENSE } from "../../scene";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -207,6 +207,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let newShield = state.shieldDoors.updateStates();
   let newShaker = state.screenShaker;
   let newBlackHole: BlackHole | null = state.blackHole;
+  if (newBlackHole !== null) newBlackHole = newBlackHole.adjustPulseMagnitude();
 
   let activeEvents: AnimEvent[] = [...state.activeEvents.filter(animEvent => !animEvent.finished), ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
   let pendingEvents: AnimEvent[] = state.pendingEvents.filter(animEvent => animEvent.startTime > state.currentFrame);
@@ -291,10 +292,45 @@ function updateFrame(state: IGlobalState): IGlobalState {
       newBlackHole = new BlackHole(
         new Coord((CANVAS_WIDTH - 512) / 2, -345),  // Position of black hole.
         computeCurrentFrame(),                      // Time at which it first appears.
-        2.5,                                          // Starting pulse magnitude.
+        0,                                          // Starting pulse magnitude.
         0);                                         // Target pulse magnitude.
       event.processed = true;
       event.finished = true;
+    }
+    if (event.event === AnimEventType.BH_PULSE_LEVEL_1) {
+      if (newBlackHole !== null) {
+        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_SUBTLE);
+        event.processed = true;
+        event.finished = true;
+      }
+    }
+    if (event.event === AnimEventType.BH_PULSE_LEVEL_2) {
+      if (newBlackHole !== null) {
+        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_MILD);
+        event.processed = true;
+        event.finished = true;
+      }
+    }
+    if (event.event === AnimEventType.BH_PULSE_LEVEL_3) {
+      if (newBlackHole !== null) {
+        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_MEDIUM);
+        event.processed = true;
+        event.finished = true;
+      }
+    }
+    if (event.event === AnimEventType.BH_PULSE_LEVEL_4) {
+      if (newBlackHole !== null) {
+        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_INTENSE);
+        event.processed = true;
+        event.finished = true;
+      }
+    }
+    if (event.event === AnimEventType.BH_PULSE_STOP) {
+      if (newBlackHole !== null) {
+        newBlackHole = newBlackHole.setTargetPulseMagnitude(0);
+        event.processed = true;
+        event.finished = true;
+      }
     }
     if(event.event == AnimEventType.GAMEOVER){
         console.log("GAME OVER");

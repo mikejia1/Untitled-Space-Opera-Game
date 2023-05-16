@@ -282,14 +282,28 @@ function createSupernovaEvents(delay: number): AnimEvent[] {
     let alarm2: AnimEvent = new AnimEvent(AnimEventType.ALARM_2,              f + delay - (15 * FPS));
     let alarm3: AnimEvent = new AnimEvent(AnimEventType.ALARM_3,              f + delay - (15 * FPS));
     let supernova: AnimEvent = new AnimEvent(AnimEventType.IMPACT,            f + delay);
+    let pulse1: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay - (16 * FPS))
     let shake1: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay - (15 * FPS));
+    let pulse2: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_2,     f + delay - (12 * FPS));
     let shake2: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay - (11 * FPS));
+    let pulse3: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (8 * FPS));
     let shake3: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay - (7 * FPS));
+    let pulse4: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_4,     f + delay - (2 * FPS));
     let shake4: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_4,        f + delay - (3 * FPS));
+    let pulse5: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (0.5 * FPS));
     let shake5: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay);
+    let pulse6: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_2,     f + delay + (2 * FPS));
     let shake6: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay + (1 * FPS));
+    let pulse7: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay + (3 * FPS));
     let shake7: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay + (2 * FPS));
+    let pulseStop: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_STOP,     f + delay + (4 * FPS));
     let shakeStop: AnimEvent = new AnimEvent(AnimEventType.SHAKE_STOP,        f + delay + (3 * FPS));
 
-    return [enterBH, alarm1, alarm2, alarm3, supernova, shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop];
+    return [
+      enterBH,
+      alarm1, alarm2, alarm3,
+      supernova,
+      shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop,
+      pulse1, pulse2, pulse3, pulse4, pulse5, pulse6, pulse7, pulseStop,
+    ];
 }
