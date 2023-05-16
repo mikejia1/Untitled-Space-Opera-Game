@@ -61,6 +61,7 @@ export const drawState = (
   state.npcs.forEach(npc => pq.add(npc));
   state.cats.forEach(cat => pq.add(cat));
   state.shieldButtons.forEach(sb => pq.add(sb));
+  pq.add(state.airlockButton);
   pq.add(state.gardener);
   pq.add(state.wateringCan);
   while (!pq.isEmpty()) {
