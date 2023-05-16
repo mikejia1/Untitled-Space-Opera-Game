@@ -45,6 +45,7 @@ export interface IGlobalState {
     npcs: NonPlayer[];                // The various crew people wandering around in the garden
     cats: Cat[];                      // Murderous cats on a rampage
     shieldButtons: ShieldButton[];    // The buttons that activate sections of the blast shield
+    airlockButton: ShieldButton;      // The button that opens the airlock
     shieldDoors: ShieldDoor;          // The blast shield that protects the garden
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
     gameOverFrame: number;            // The frame number when the game ended
@@ -98,6 +99,7 @@ export function initialGameState(): IGlobalState {
 
   // Create the buttons that activate the sections of the blast shield.
   let shieldButtons = createShieldButtons();
+  let airlockButton = new ShieldButton(0, new Coord(148, 234), 0, false);
 
   return {
     gameover: false,
@@ -109,6 +111,7 @@ export function initialGameState(): IGlobalState {
     npcs: npcs,
     cats: cats,
     shieldButtons: shieldButtons,
+    airlockButton: airlockButton,
     shieldDoors: initialShieldDoor(),
     currentFrame: 0,
     gameOverFrame: 0,
