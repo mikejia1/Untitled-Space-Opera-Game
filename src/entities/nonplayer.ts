@@ -3,27 +3,35 @@ import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
-    Coord, Rect,
+    Coord, Rect, randomInt,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 import { paintGameOver } from './skeleton';
+
+// Complete set of possible NPC mental states.
+export enum MentalState {
+    Normal,     // NPC acting "normal" wandering randomly around the ship
+    Frazzled,   // NPC has cabin fever, acting erratic
+}
 
 export class NonPlayer implements Paintable, Collider {
     pos: Coord;                     // NPC's current location, in pixels, relative to background image.
     facing: Direction;              // The direction that the NPC is currently facing.
     stationeryCountdown: number;    // A countdown (measure in frames) for when the NPC stands still.
     moving: boolean;                // Whether or not the NPC is currently walking (vs standing still).
+    mentalState: MentalState;       // The current mental state of the NPC.
     colliderId: number;             // ID to distinguish the collider from all others.
     colliderType: ColliderType = ColliderType.NPCCo; // The type of collider that NPCs are.
 
     constructor(params: any) {
         // Some default values to satisfy the requirement that everything be initialized in the constructor.
-        this.colliderId = 8675309;          // A dummy collider ID, meant to be overwritten.
-        this.pos = new Coord(50, 50);       // A dummy position, meant to be overwritten.
-        this.facing = randomDirection();    // Choose a random facing direction.
-        this.stationeryCountdown = 0;       // Start with NPC not standing still.
-        this.moving = true;                 // Start with NPC moving.
+        this.colliderId = 8675309;              // A dummy collider ID, meant to be overwritten.
+        this.pos = new Coord(50, 50);           // A dummy position, meant to be overwritten.
+        this.facing = randomDirection();        // Choose a random facing direction.
+        this.stationeryCountdown = 0;           // Start with NPC not standing still.
+        this.moving = true;                     // Start with NPC moving.
+        this.mentalState = MentalState.Normal;  // Start NPC in normal (~calm) mental state.
 
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
         if (params.clone !== undefined) this.cloneFrom(params.clone);
@@ -32,6 +40,7 @@ export class NonPlayer implements Paintable, Collider {
         if (params.facing !== undefined) this.facing = params.facing;
         if (params.stationeryCountdown !== undefined) this.stationeryCountdown = params.stationeryCountdown;
         if (params.moving !== undefined) this.moving = params.moving;
+        if (params.mentalState !== undefined) this.mentalState = params.mentalState;
     }
 
     // An initializer that clones an existing NPC.
@@ -41,6 +50,7 @@ export class NonPlayer implements Paintable, Collider {
         this.facing = other.facing;
         this.stationeryCountdown = other.stationeryCountdown;
         this.moving = other.moving;
+        this.mentalState = other.mentalState;
     }
 
     // Return the invisible rectangle that determines collision behaviour for the NPC.
@@ -53,11 +63,32 @@ export class NonPlayer implements Paintable, Collider {
 
     // Paint the NPC on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
+        // Additional vertical displacement caused by mental state.
+        let jitter: number;
+        switch (this.mentalState) {
+            case MentalState.Normal:
+                jitter = 0;
+                break;
+            case MentalState.Frazzled:
+                jitter = randomInt(-1, 1);
+                break;
+        }
         // The walking animation has 8 frames.
         let frameCount = 8;
-        let frame = this.moving ? Math.floor(state.currentFrame % (6 * frameCount) / 6) : 0;
+        let frame: number;
+        switch (this.mentalState) {
+            // A normal NPC moves at a normal walking pace.
+            case MentalState.Normal:
+                frame = this.moving ? Math.floor(state.currentFrame % (6 * frameCount) / 6) : 0;
+                break;
+            // A frazzled NPC moves at a frantic pace.
+            case MentalState.Frazzled:
+                frame = this.moving ? Math.floor(state.currentFrame % (3 * frameCount) / 3) : 0;
+                break;
+        }
         let shift = this.computeShift(state);
         let newPos = this.pos.plus(shift.x, shift.y);
+        newPos = newPos.plus(0, jitter);
         let flip = (this.facing === Direction.Left);
         if (state.gameover) return paintGameOver(canvas, state, newPos, flip);
 
@@ -107,6 +138,20 @@ export class NonPlayer implements Paintable, Collider {
 
     // Let the NPC move. Randomly (more or less). Returns new updated version of the NPC.
     move(): NonPlayer {
+        let vPixelSpeed: number;
+        let hPixelSpeed: number;
+        switch (this.mentalState) {
+            // A normal NPC moves at a slow speed.
+            case MentalState.Normal:
+                vPixelSpeed = NPC_V_PIXEL_SPEED;
+                hPixelSpeed = NPC_H_PIXEL_SPEED;
+                break;
+            // A frazzled NPC moves faster.
+            case MentalState.Frazzled:
+                vPixelSpeed = Math.floor(NPC_V_PIXEL_SPEED * 1.5);
+                hPixelSpeed = Math.floor(NPC_H_PIXEL_SPEED * 1.5);
+                break;
+        }
         var delta = [0,0]
         switch (this.facing) {
             case Direction.Down:

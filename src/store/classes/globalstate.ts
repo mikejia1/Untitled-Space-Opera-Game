@@ -1,5 +1,5 @@
 import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
-import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH } from '../../entities';
+import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, MentalState } from '../../entities';
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE } from '../../utils';
 
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
@@ -228,11 +228,15 @@ function createShieldButtons(): ShieldButton[] {
 // Create a grid of NPCs with top-left one at given position, and with given spacing.
 function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: number, rows: number): NonPlayer[] {
   let all: NonPlayer[] = [];
+  let mentalState: MentalState;
   for (let col = 0; col < cols; col++) {
     for (let row = 0; row < rows; row++) {
+      if ((col === 0) && (row === 0)) mentalState = MentalState.Frazzled;
+      else mentalState = MentalState.Normal;
       let npc = new NonPlayer({
         colliderId: colliderId + (row * cols) + col,
-        pos: pos.plus(col * spacing, row * spacing), 
+        pos: pos.plus(col * spacing, row * spacing),
+        mentalState: mentalState,
       });
       all = [...all, npc];
     }

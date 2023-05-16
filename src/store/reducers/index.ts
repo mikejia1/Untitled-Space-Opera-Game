@@ -3,7 +3,7 @@
 
 import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Shaker, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE } from "../../utils";
 import { AnimEvent, AnimEventType, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
-import { NonPlayer, Plant, ShieldButton } from '../../entities';
+import { MentalState, NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -422,7 +422,16 @@ function considerNewNPCMovement(npc: NonPlayer, forced: boolean): NonPlayer {
   if (!npc.moving) {
     if (npc.stationeryCountdown === 0) change = true;
   } else {
-    change = (Math.random() < 0.02);
+    switch (npc.mentalState) {
+      // A normal NPC changes direction infrequently.
+      case MentalState.Normal:
+        change = (Math.random() < 0.02);
+        break;
+      // A frazzled NPC changes direction frequently.
+      case MentalState.Frazzled:
+        change = (Math.random() < 0.6);
+        break;
+    }
   }
   change = change || forced;
 
@@ -430,9 +439,30 @@ function considerNewNPCMovement(npc: NonPlayer, forced: boolean): NonPlayer {
   if (!change) return npc;
 
   // New movement is to be adopted. Choose new direction *or* choose to remain stationery for a while.
-  let choice = randomInt(0, 4);
+  let choice: number;
+  switch (npc.mentalState) {
+    // A normal NPC stands still often.
+    case MentalState.Normal:
+      choice = randomInt(0, 4);
+      break;
+    // A frazzled NPC doesn't stand still very often.
+    case MentalState.Frazzled:
+      choice = randomInt(0, 4 + (3 * 5));
+      if (choice > 4) choice = (choice - 5) % 3;
+      break;
+  }
   if (choice === 4) {
-    let countdown = 30 + randomInt(0, 200);
+    let countdown: number;
+    switch (npc.mentalState) {
+      // A normal NPC will stand still for a little while.
+      case MentalState.Normal:
+        countdown = 30 + randomInt(0, 200);
+        break;
+      // A frazzled NPC will not stand still for long.
+      case MentalState.Frazzled:
+        countdown = 1 + randomInt(0, 4);
+        break;
+    }
     return new NonPlayer({
       clone: npc,
       moving: false,
