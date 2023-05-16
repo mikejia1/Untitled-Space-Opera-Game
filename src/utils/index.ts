@@ -208,6 +208,31 @@ export function randomDirection(): Direction {
   return ALL_DIRECTIONS[randomInt(0, ALL_DIRECTIONS.length - 1)];
 }
 
+// Get the direction (Up/Down/Left/Right) of first relative to second.
+export function directionOfFirstRelativeToSecond(first: Paintable, second: Paintable): Direction {
+  let upness    = Math.max(second.pos.y - first.pos.y, 0);
+  let downness  = Math.max(first.pos.y - second.pos.y, 0);
+  let leftness  = Math.max(second.pos.x - first.pos.x, 0);
+  let rightness = Math.max(first.pos.x - second.pos.x, 0);
+  let vertness  = Math.max(upness, downness);
+  let horzness  = Math.max(leftness, rightness);
+  if (vertness > horzness) {
+    if (upness > downness) return Direction.Up;
+    return Direction.Down;
+  }
+  if (leftness > rightness) return Direction.Left;
+  return Direction.Right;
+}
+
+export function directionName(d: Direction): string {
+  switch (d) {
+    case Direction.Up:    return "up";
+    case Direction.Down:  return "down";
+    case Direction.Left:  return "left";
+    case Direction.Right: return "right";
+  }
+}
+
 // Current frame number is just current epoch quarter second.
 export function computeCurrentFrame(): number {
   return  Math.floor(Date.now() * FPS / 1000); 

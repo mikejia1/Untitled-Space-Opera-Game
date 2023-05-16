@@ -16,12 +16,13 @@ export enum MentalState {
 }
 
 export class NonPlayer implements Paintable, Collider {
-    pos: Coord;                     // NPC's current location, in pixels, relative to background image.
-    facing: Direction;              // The direction that the NPC is currently facing.
-    stationeryCountdown: number;    // A countdown (measure in frames) for when the NPC stands still.
-    moving: boolean;                // Whether or not the NPC is currently walking (vs standing still).
-    mentalState: MentalState;       // The current mental state of the NPC.
-    colliderId: number;             // ID to distinguish the collider from all others.
+    pos: Coord;                             // NPC's current location, in pixels, relative to background image.
+    facing: Direction;                      // The direction that the NPC is currently facing.
+    stationeryCountdown: number;            // A countdown (measured in frames) for when the NPC stands still.
+    moving: boolean;                        // Whether or not the NPC is currently walking (vs standing still).
+    mentalState: MentalState;               // The current mental state of the NPC.
+    gardenerAvoidanceCountdown: number;     // NPC is avoiding the gardener when this is non-zero.
+    colliderId: number;                     // ID to distinguish the collider from all others.
     colliderType: ColliderType = ColliderType.NPCCo; // The type of collider that NPCs are.
 
     constructor(params: any) {
@@ -32,6 +33,7 @@ export class NonPlayer implements Paintable, Collider {
         this.stationeryCountdown = 0;           // Start with NPC not standing still.
         this.moving = true;                     // Start with NPC moving.
         this.mentalState = MentalState.Normal;  // Start NPC in normal (~calm) mental state.
+        this.gardenerAvoidanceCountdown = 0;    // NPC *not* initially avoiding gardener.
 
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
         if (params.clone !== undefined) this.cloneFrom(params.clone);
@@ -41,6 +43,7 @@ export class NonPlayer implements Paintable, Collider {
         if (params.stationeryCountdown !== undefined) this.stationeryCountdown = params.stationeryCountdown;
         if (params.moving !== undefined) this.moving = params.moving;
         if (params.mentalState !== undefined) this.mentalState = params.mentalState;
+        if (params.gardenerAvoidanceCountdown !== undefined) this.gardenerAvoidanceCountdown = params.gardenerAvoidanceCountdown;
     }
 
     // An initializer that clones an existing NPC.
@@ -51,6 +54,7 @@ export class NonPlayer implements Paintable, Collider {
         this.stationeryCountdown = other.stationeryCountdown;
         this.moving = other.moving;
         this.mentalState = other.mentalState;
+        this.gardenerAvoidanceCountdown = other.gardenerAvoidanceCountdown;
     }
 
     // Return the invisible rectangle that determines collision behaviour for the NPC.
@@ -108,6 +112,9 @@ export class NonPlayer implements Paintable, Collider {
             dest.x, dest.y,                    // Position of sprite on canvas
             48, 48);                           // Sprite size on canvas
     
+        // For debugging only. To be removed.
+        if (this.gardenerAvoidanceCountdown > 0) outlineRect(canvas, { a: dest, b: dest.plus(18, 20) }, Colour.WATERING_RECT);
+
         // Restore canvas transforms to normal.
         canvas.restore();
 
@@ -143,8 +150,10 @@ export class NonPlayer implements Paintable, Collider {
         switch (this.mentalState) {
             // A normal NPC moves at a slow speed.
             case MentalState.Normal:
-                vPixelSpeed = NPC_V_PIXEL_SPEED;
-                hPixelSpeed = NPC_H_PIXEL_SPEED;
+                // NPCs walk faster when avoiding the gardener.
+                let multiplier = (this.gardenerAvoidanceCountdown > 0) ? 1.5 : 1;
+                vPixelSpeed = NPC_V_PIXEL_SPEED * multiplier;
+                hPixelSpeed = NPC_H_PIXEL_SPEED * multiplier;
                 break;
             // A frazzled NPC moves faster.
             case MentalState.Frazzled:
@@ -155,16 +164,16 @@ export class NonPlayer implements Paintable, Collider {
         var delta = [0,0]
         switch (this.facing) {
             case Direction.Down:
-            delta = [0, NPC_V_PIXEL_SPEED];
+            delta = [0, vPixelSpeed];
             break;
             case Direction.Up:
-            delta = [0, -NPC_V_PIXEL_SPEED];
+            delta = [0, -vPixelSpeed];
             break;
             case Direction.Left:
-            delta = [-NPC_H_PIXEL_SPEED, 0];
+            delta = [-hPixelSpeed, 0];
             break;
             case Direction.Right:
-            delta = [NPC_H_PIXEL_SPEED, 0];
+            delta = [hPixelSpeed, 0];
              break;
         }
         // Add deltas to NPC position and keep it within the background rectangle.

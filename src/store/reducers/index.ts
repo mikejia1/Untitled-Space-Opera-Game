@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE } from "../../utils";
+import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, directionOfFirstRelativeToSecond, directionName } from "../../utils";
 import { AnimEvent, AnimEventType, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
 import { MentalState, NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
@@ -182,12 +182,12 @@ function updateFrame(state: IGlobalState): IGlobalState {
     let newNPC = moveNPC(state, npc);
 
     // Allow the NPC to consider adopting a new movement (forced = false).
-    newNPC = considerNewNPCMovement(newNPC, false);
+    newNPC = considerNewNPCMovement(state, newNPC, false);
 
     // If this new NPC is in collision with anything, revert back to original npc
     // and force it to choose a new movement.
     if (collisionDetected(state, allColliders, newNPC)) {
-      newNPC = considerNewNPCMovement(npc, true);
+      newNPC = considerNewNPCMovement(state, npc, true);
     }
 
     // Update the NPC array. Update the colliders so that subsequent NPCs will
@@ -453,7 +453,7 @@ function toggleGameAudio(state: IGlobalState): IGlobalState {
 
 // Allow an NPC to randomly choose a new movement. If the NPC is not currently moving, wait for
 // its stationaryCountdown to reach zero before adopting a new movement.
-function considerNewNPCMovement(npc: NonPlayer, forced: boolean): NonPlayer {
+function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boolean): NonPlayer {
   // Whether or not the NPC will adopt a new movement.
   let change = false;
 
@@ -465,7 +465,14 @@ function considerNewNPCMovement(npc: NonPlayer, forced: boolean): NonPlayer {
     switch (npc.mentalState) {
       // A normal NPC changes direction infrequently.
       case MentalState.Normal:
-        change = (Math.random() < 0.02);
+        // If an NPC is avoiding the gardener and finds itself facing the gardener, then
+        // it's time to force a direction change.
+        if (npc.gardenerAvoidanceCountdown > 0) {
+          let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
+          //console.log(directionName(badDir));
+          if (badDir === npc.facing) change = true;
+          else change = (Math.random() < 0.02);
+        } else change = (Math.random() < 0.02);
         break;
       // A frazzled NPC changes direction frequently.
       case MentalState.Frazzled:
@@ -483,7 +490,9 @@ function considerNewNPCMovement(npc: NonPlayer, forced: boolean): NonPlayer {
   switch (npc.mentalState) {
     // A normal NPC stands still often.
     case MentalState.Normal:
-      choice = randomInt(0, 4);
+      // If NPC is currently avoiding the gardener, movement choices are somewhat limited.
+      if (npc.gardenerAvoidanceCountdown > 0) choice = gardenerAvoidingDirectionChoice(state, npc);
+      else choice = randomInt(0, 4);
       break;
     // A frazzled NPC doesn't stand still very often.
     case MentalState.Frazzled:
@@ -514,6 +523,22 @@ function considerNewNPCMovement(npc: NonPlayer, forced: boolean): NonPlayer {
     moving: true,
     facing: ALL_DIRECTIONS[choice],
   });
+}
+
+// Choose a direction (an index into ALL_DIRECTIONS) that would move the NPC away from the gardener.
+function gardenerAvoidingDirectionChoice(state: IGlobalState, npc: NonPlayer): number {
+  // Compute the one forbidden direction.
+  let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
+  // Gather up all the indices that don't correspond to that direction.
+  let indices: number[] = [];
+  for (let i = 0; i < 4; i++) {
+    if (ALL_DIRECTIONS[i] !== badDir) {
+      indices = [...indices, i];
+    }
+  }
+  // Return one of those indices.
+  let j = randomInt(0, 2);
+  return indices[j];
 }
 
 // "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
