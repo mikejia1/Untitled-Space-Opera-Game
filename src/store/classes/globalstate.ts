@@ -1,5 +1,5 @@
 import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
-import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, MentalState } from '../../entities';
+import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, MentalState, Airlock } from '../../entities';
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE } from '../../utils';
 
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
@@ -27,6 +27,7 @@ import blackHoleImg       from "../images/drifting_planets/planet_black_hole_256
 import wateringcan        from "../../entities/images/wateringcan/wateringcan.png";
 import spaceframes        from "../images/space_frames.png";
 import shieldButton       from "../../entities/images/button/button_32x32.png";
+import airlockDoors       from "../../entities/images/airlock/airlock_doors_64x64.png";
 
 // Plant image.
 import plantimage from "../../entities/images/plant/plants_16x16.png";
@@ -47,6 +48,7 @@ export interface IGlobalState {
     shieldButtons: ShieldButton[];    // The buttons that activate sections of the blast shield
     airlockButton: ShieldButton;      // The button that opens the airlock
     shieldDoors: ShieldDoor;          // The blast shield that protects the garden
+    airlock: Airlock;                 // The airlock that opens up into the void
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
     gameOverFrame: number;            // The frame number when the game ended
     pendingEvents: AnimEvent[];       // Queue of one-off event animations to draw
@@ -56,6 +58,7 @@ export interface IGlobalState {
     gardenerImages: any;              // Source images for gardener sprites.
     shieldImages: any;                // Source images for the blast shield image.
     shieldButtonImage: any;           // Source image for the shield button animation.
+    airlockDoorImage: any;            // Source image for the airlock doors.
     npcimage: any;                    // The NPC walkcycle sprite source image.
     backgroundImages: any;            // The background image.
     wateringCanImage: any;            // The watering can image.
@@ -113,6 +116,7 @@ export function initialGameState(): IGlobalState {
     shieldButtons: shieldButtons,
     airlockButton: airlockButton,
     shieldDoors: initialShieldDoor(),
+    airlock: new Airlock(),
     currentFrame: 0,
     gameOverFrame: 0,
     pendingEvents: getEvents(),
@@ -137,6 +141,7 @@ export function initialGameState(): IGlobalState {
       bottom:         loadImage("Bottom shield", bottomShield),
     },
     shieldButtonImage: loadImage("Shield button", shieldButton),
+    airlockDoorImage: loadImage("Airlock doors", airlockDoors),
     plantImage:       loadImage("Plant image", plantimage),
     gameOverImage:    loadImage("Game over", gameoverImg),
     replayImage:      loadImage("Replay prompt", replayPrompt),
