@@ -288,7 +288,11 @@ function updateFrame(state: IGlobalState): IGlobalState {
     }
     if (event.event == AnimEventType.BLACK_HOLE_APPEARS) {
       console.log("Handling BLACK_HOLE_APPEARS event");
-      newBlackHole = new BlackHole(new Coord((CANVAS_WIDTH - 512) / 2, -345), computeCurrentFrame());
+      newBlackHole = new BlackHole(
+        new Coord((CANVAS_WIDTH - 512) / 2, -345),  // Position of black hole.
+        computeCurrentFrame(),                      // Time at which it first appears.
+        2.5,                                          // Starting pulse magnitude.
+        0);                                         // Target pulse magnitude.
       event.processed = true;
       event.finished = true;
     }
