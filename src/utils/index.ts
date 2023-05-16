@@ -178,6 +178,8 @@ function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingConte
   drawSpaceObjects(state, canvas);
   // Draw the blast shield.
   state.shieldDoors.paint(canvas, state);
+  // Draw the airlock doors.
+  state.airlock.paint(canvas, state, deterministicShift);
   // Draw the static background of the ship interior.
   canvas.drawImage(state.backgroundImages.default, deterministicShift.x, deterministicShift.y);
 }

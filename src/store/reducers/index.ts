@@ -3,7 +3,7 @@
 
 import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, directionOfFirstRelativeToSecond, directionName } from "../../utils";
 import { AnimEvent, AnimEventType, Collider, ColliderExceptions, IGlobalState, initialGameState } from "../classes";
-import { MentalState, NonPlayer, Plant, ShieldButton } from '../../entities';
+import { Airlock, AirlockState, MentalState, NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -205,6 +205,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   newPlants = growPlants(newPlants, state);
 
   let newShield = state.shieldDoors.updateStates();
+  let newAirlock = state.airlock.updateState(state);
   let newShaker = state.screenShaker;
   let newBlackHole: BlackHole | null = state.blackHole;
   if (newBlackHole !== null) newBlackHole = newBlackHole.adjustPulseMagnitude();
@@ -355,6 +356,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
     gameOverFrame: gameover ? f : state.gameOverFrame,
     shieldButtons: newShieldButtons,
     shieldDoors: newShield,
+    airlock: newAirlock,
     screenShaker: newShaker,
     blackHole: newBlackHole,
   };
@@ -657,6 +659,11 @@ function utiliseItem(state: IGlobalState): IGlobalState {
 }
 
 function utiliseNearbyItem(state: IGlobalState): IGlobalState {
+  // Check for nearby airlock buttons.
+  if (rectanglesOverlap(state.gardener.interactionRect(), state.airlockButton.interactionRect())) {
+    return activateAirlockButton(state);
+  }
+  // Check for nearby shield buttons.
   let sb = getNearbyShieldButton(state);
   if (sb === undefined) {
     console.log("Nothing to interact with");
@@ -685,6 +692,23 @@ function activateShieldButton(sb: ShieldButton, state: IGlobalState): IGlobalSta
     ...state,
     shieldButtons: newButtons,
     shieldDoors: newShield,
+  };
+}
+
+function activateAirlockButton(globalState: IGlobalState): IGlobalState {
+  console.log("Activating airlock button");
+  let airlock: Airlock = globalState.airlock.activate(globalState);
+  let airlockButton: ShieldButton;
+  if(airlock.state == AirlockState.OPENING){
+    airlockButton = globalState.airlockButton.startAlarm(globalState);
+  }
+  else {
+    airlockButton = globalState.airlockButton.activate(globalState);   
+  }
+  return {
+    ...globalState,
+    airlockButton: airlockButton,
+    airlock: airlock,
   };
 }
 
