@@ -212,10 +212,10 @@ export function randomDirection(): Direction {
 
 // Get the direction (Up/Down/Left/Right) of first relative to second.
 export function directionOfFirstRelativeToSecond(first: Paintable, second: Paintable): Direction {
-  let upness    = Math.max(second.pos.y - first.pos.y, 0);
-  let downness  = Math.max(first.pos.y - second.pos.y, 0);
-  let leftness  = Math.max(second.pos.x - first.pos.x, 0);
-  let rightness = Math.max(first.pos.x - second.pos.x, 0);
+  let upness    = second.pos.y - first.pos.y;
+  let downness  = -upness;
+  let leftness  = second.pos.x - first.pos.x;
+  let rightness = -leftness;
   let vertness  = Math.max(upness, downness);
   let horzness  = Math.max(leftness, rightness);
   if (vertness > horzness) {
