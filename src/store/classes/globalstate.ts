@@ -18,7 +18,7 @@ import bottomShield from "../../entities/images/shield/shield_bottom_32x.png";
 // Other images.
 import skeleton             from "../../entities/images/skeleton/skeleton_death.png";
 import npcwalkcycle         from "../../entities/images/nonplayer/npcwalkcycle.png";
-import frazzlednpcwalkcycle from "../../entities/images/nonplayer/frazzlednpcwalkcycle.png";
+import frazzlednpcwalkcycle from "../../entities/images/nonplayer/frazzled_npcwalkcycle.png";
 import catswalkcycle        from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
 import spacegardenimpact    from "../images/space_garden_impact.png";
 import spacegarden          from "../images/space_garden.png";
