@@ -1,9 +1,12 @@
 import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, MentalState, Airlock } from '../../entities';
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE } from '../../utils';
-
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { BlackHole, InvisibleCollider } from "../../scene";
+import { Planet, makePlanet } from '../../scene/planet';
+import { ShieldButton } from '../../entities/shieldbutton';
+import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
+import { Cat } from '../../entities/cat';
 
 // Gardener images.
 import basewalkstrip     from "../../entities/images/gardener/base_walk_strip8.png";
@@ -32,9 +35,16 @@ import airlockDoors         from "../../entities/images/airlock/airlock_doors_64
 
 // Plant image.
 import plantimage from "../../entities/images/plant/plants_16x16.png";
-import { ShieldButton } from '../../entities/shieldbutton';
-import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
-import { Cat } from '../../entities/cat';
+
+// Drifting planet images.
+import crateredPlanetImg from "../images/drifting_planets/planet_cratered_256px_60f.png";
+import dryPlanetImg from      "../images/drifting_planets/planet_dry_256px_60f.png";
+import gasRingPlanetImg from  "../images/drifting_planets/planet_gas_ring_128px_40f.png";
+import icePlanetImg from      "../images/drifting_planets/planet_ice_256px_60f.png";
+import islandPlanetImg from   "../images/drifting_planets/planet_island_256px_60f.png";
+import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.png";
+import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
+import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -71,6 +81,8 @@ export interface IGlobalState {
     muted: boolean;                   // Enable / disable sounds.
     screenShaker: Shaker;             // For causing the screen to shake at key moments.
     blackHole: BlackHole | null;      // The black hole in view, or null if none in view.
+    planet: Planet | null;            // The current planet drifting by. Null if none.
+    planets: Planet[];                // The full list of available drifting planets.
     debugSettings: any;               // For configuring extra debug info and visualizations.
   }
 
@@ -154,6 +166,17 @@ export function initialGameState(): IGlobalState {
     muted: true,
     screenShaker:     SHAKER_NO_SHAKE,  // Initially, the screen is not shaking.
     blackHole:        null,             // Initially, there's no black hole in view.
+    planet:           null,             // Start with no plant drifting by.
+    planets:          [
+      makePlanet(256, 60, loadImage("Cratered planet", crateredPlanetImg)),   // Cratered planet.
+      makePlanet(256, 60, loadImage("Dry planet",      dryPlanetImg)),        // Dry planet.
+      makePlanet(384, 40, loadImage("Gas ring planet", gasRingPlanetImg)),    // Gas ring planet. (actually 384 pixels).
+      makePlanet(256, 60, loadImage("Ice planet",      icePlanetImg)),        // Ice planet.
+      makePlanet(256, 60, loadImage("Island planet",   islandPlanetImg)),     // Island planet.
+      makePlanet(256, 60, loadImage("Lava planet",     lavaPlanetImg)),       // Lava planet.
+      makePlanet(512, 30, loadImage("Star planet",     starPlanetImg)),       // Star planet (yes, a star - actually 512 pixels).
+      makePlanet(256, 60, loadImage("Wet planet",      wetPlanetImg)),        // Wet planet.
+    ],
     debugSettings: {
       showCollisionRects: false,    // Collision rectangles for colliders.
       showPositionRects: false,     // Position rectangles for paintables.

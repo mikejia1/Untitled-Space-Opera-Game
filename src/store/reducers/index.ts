@@ -378,6 +378,14 @@ function updateFrame(state: IGlobalState): IGlobalState {
   // Once the black hole has been around long enough to have passed by, clear it back to null.
   if ((newBlackHole !== null) && ((f - newBlackHole.startFrame) > 1000)) newBlackHole = null;
 
+  // Maybe it's time for a planet to drift by?
+  let newPlanet = state.planet;
+  if (newPlanet === null) {
+    let choice = randomInt(0, state.planets.length-1);
+    console.log("Choice " + choice);
+    newPlanet = state.planets[choice].randomizedClone();
+  }
+
   return  {
     ...state,
     currentFrame: f,
@@ -393,6 +401,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
     airlock: newAirlock,
     screenShaker: newShaker,
     blackHole: newBlackHole,
+    planet: newPlanet,
   };
 }
 

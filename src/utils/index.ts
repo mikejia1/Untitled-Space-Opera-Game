@@ -186,8 +186,8 @@ function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingConte
 
 // Draw objects that are in space, visible through the window.
 function drawSpaceObjects(state: IGlobalState, canvas: CanvasRenderingContext2D) {
-  if (state.blackHole === null) return;
-  state.blackHole.paint(canvas, state);
+  if (state.blackHole !== null) state.blackHole.paint(canvas, state);
+  if (state.planet !== null) state.planet.paint(canvas, state);
 }
 
 // Draw the starfield seen through the window of the ship.
