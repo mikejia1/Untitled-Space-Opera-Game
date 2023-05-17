@@ -246,13 +246,10 @@ function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: numbe
     for (let row = 0; row < rows; row++) {
       if ((col === 0) && (row === 0)) mentalState = MentalState.Frazzled;
       else mentalState = MentalState.Normal;
-      if ((col === 1) && (row === 0)) gardenerAvoidanceCountdown = 5000;
-      else gardenerAvoidanceCountdown = 0;
       let npc = new NonPlayer({
         colliderId: colliderId + (row * cols) + col,
         pos: pos.plus(col * spacing, row * spacing),
         mentalState: mentalState,
-        gardenerAvoidanceCountdown: gardenerAvoidanceCountdown,
       });
       all = [...all, npc];
     }

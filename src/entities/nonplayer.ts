@@ -184,6 +184,16 @@ export class NonPlayer implements Paintable, Collider {
         return new NonPlayer({
             clone: this,
             pos: newPos,
+            gardenerAvoidanceCountdown: Math.max(this.gardenerAvoidanceCountdown-1, 0),
+        });
+    }
+
+    // Make a new version of the NPC that now begins avoiding the gardener.
+    startAvoidingGardener(): NonPlayer {
+        return new NonPlayer({
+            clone: this,
+            gardenerAvoidanceCountdown: 150,
+            stationeryCountdown: 0,
         });
     }
 }
