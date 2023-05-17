@@ -241,7 +241,6 @@ function createShieldButtons(): ShieldButton[] {
 function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: number, rows: number): NonPlayer[] {
   let all: NonPlayer[] = [];
   let mentalState: MentalState;
-  let gardenerAvoidanceCountdown: number;
   for (let col = 0; col < cols; col++) {
     for (let row = 0; row < rows; row++) {
       if ((col === 0) && (row === 0)) mentalState = MentalState.Frazzled;
