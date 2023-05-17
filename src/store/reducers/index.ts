@@ -366,6 +366,9 @@ function updateFrame(state: IGlobalState): IGlobalState {
     event.processed = true;
   }
 
+  // Once the black hole has been around long enough to have passed by, clear it back to null.
+  if ((newBlackHole !== null) && ((f - newBlackHole.startFrame) > 1000)) newBlackHole = null;
+
   return  {
     ...state,
     currentFrame: f,
