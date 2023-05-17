@@ -300,9 +300,9 @@ function createSupernovaEvents(delay: number): AnimEvent[] {
     let shake2: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay - (11 * FPS));
     let pulse3: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (8 * FPS));
     let shake3: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay - (7 * FPS));
-    let pulse4: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_4,     f + delay - (2 * FPS));
+    let pulse4: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_4,     f + delay - (1.15 * FPS));
     let shake4: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_4,        f + delay - (3 * FPS));
-    let pulse5: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (0.5 * FPS));
+    let pulse5: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (0.2 * FPS));
     let shake5: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay);
     let pulse6: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_2,     f + delay + (2 * FPS));
     let shake6: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay + (1 * FPS));

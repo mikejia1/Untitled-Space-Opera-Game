@@ -1,4 +1,4 @@
-import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, computeBackgroundShift, Coord, computeCurrentFrame, drawClippedImage, CANVAS_RECT } from '../utils';
+import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, computeBackgroundShift, Coord, computeCurrentFrame, drawClippedImage, CANVAS_RECT, FPS } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Tile } from '../scene';
@@ -16,7 +16,7 @@ const BASE_RADIUS = 55;
 export const PULSE_SUBTLE  = 0.2;
 export const PULSE_MILD    = 0.5;
 export const PULSE_MEDIUM  = 2.5;
-export const PULSE_INTENSE = 30;
+export const PULSE_INTENSE = 70;
 
 // The big bad black hole.
 export class BlackHole implements Paintable {
@@ -82,7 +82,7 @@ export class BlackHole implements Paintable {
 
     drawPulsatingHeart(canvas: CanvasRenderingContext2D, dest: Coord): void {
         let alpha = 1;
-        let t = Date.now();
+        let t = Date.now() - (this.startFrame * FPS) - 310;
         let radOrange = this.pulseRadius(t);
         let radWhite  = this.pulseRadius(t + 50);
         let radBlack  = this.pulseRadius(t + 100);
