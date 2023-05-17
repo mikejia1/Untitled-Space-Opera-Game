@@ -1,9 +1,9 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, directionOfFirstRelativeToSecond, directionName } from "../../utils";
+import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, directionOfFirstRelativeToSecond, directionName, AIRLOCK_PIXEL_SPEED } from "../../utils";
 import { AnimEvent, AnimEventType, Collider, ColliderExceptions, ColliderType, IGlobalState, initialGameState } from "../classes";
-import { Airlock, AirlockState, MentalState, NonPlayer, Plant, ShieldButton } from '../../entities';
+import { Airlock, AirlockState, Gardener, MentalState, NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -222,6 +222,14 @@ function updateFrame(state: IGlobalState): IGlobalState {
   for(let i = 0; i < state.cats.length; i++){
     cats = [...cats, state.cats[i].move()]
   }
+  state = {...state, cats: cats};
+
+  if(state.airlock.state === AirlockState.OPEN){
+    let s = updateOpenAirlockMovements(state);
+    cats = s.cats;
+    newNPCs = s.npcs;
+    state.gardener = s.gardener;
+  }
 
   let newPlants = dehydratePlants(state.plants, state);
   newPlants = growPlants(newPlants, state);
@@ -386,6 +394,40 @@ function updateFrame(state: IGlobalState): IGlobalState {
     screenShaker: newShaker,
     blackHole: newBlackHole,
   };
+}
+
+function updateOpenAirlockMovements(state: IGlobalState): IGlobalState {
+  // Get all the colliders as they exist now.
+  let allColliders = allCollidersFromState(state);
+  let cats: Cat[] = [];
+  for(let i = 0; i < state.cats.length; i++){
+    let cat = state.cats[i];
+    let move : Coord = state.airlock.getMovementDelta(cat.pos);
+    let oldPos : Coord = cat.pos;
+    cat.pos = oldPos.plus(move.x, move.y);
+    // If there is a collision, negate it.
+    if (collisionDetected(state, allColliders, cat)) {
+      cat.pos = oldPos;
+    }
+    if (!rectanglesOverlap(state.airlock.deathRect(), cat.collisionRect())){
+      cats = [...cats, cat]
+    }
+  }
+  let npcs: NonPlayer[] = [];
+  for(let i = 0; i < state.npcs.length; i++){
+    let npc = state.npcs[i];
+    let move : Coord = state.airlock.getMovementDelta(npc.pos);
+    let oldPos : Coord = npc.pos;
+    npc.pos = oldPos.plus(move.x, move.y);
+    // If there is a collision, negate it.
+    if (collisionDetected(state, allColliders, npc)) {
+      npc.pos = oldPos;
+    }
+    if (!rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect())){
+      npcs = [...npcs, npc]
+    }
+  }
+  return {...state, cats: cats, npcs: npcs};
 }
 
 

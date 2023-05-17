@@ -1,4 +1,4 @@
-import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect, GardenerDirection } from '../utils';
+import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect, GardenerDirection, AIRLOCK_PIXEL_SPEED } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Gardener } from './gardener';
@@ -16,7 +16,7 @@ export class Airlock implements Paintable {
     lastInteraction: number;
   
     constructor() {
-      this.pos = new Coord(156,240);
+      this.pos = new Coord(188,272);
       this.state = AirlockState.CLOSED;
       this.lastInteraction = 0;
     }
@@ -46,6 +46,19 @@ export class Airlock implements Paintable {
         return this;
     }
 
+    getMovementDelta(pos: Coord): Coord {
+        let directVec = this.pos.minus(pos.x, pos.y);
+        let scalar = AIRLOCK_PIXEL_SPEED/directVec.magnitude();
+        return new Coord(directVec.x * scalar, directVec.y * scalar); 
+    }
+
+    deathRect(): Rect {
+        return {
+            a: this.pos.plus(-18, -18),
+            b: this.pos.plus(18, 18),
+        }
+    }
+
     // Paint the plant on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord = this.computeShift(state)): void {
         // Compute base, the bottom-middle point for the watering can.
@@ -67,7 +80,7 @@ export class Airlock implements Paintable {
             state.airlockDoorImage,             // Watering base source image
             64, 0,                              // Top-left corner of frame in source
             64, 64,                             // Size of frame in source
-            base.x - doorOffset, base.y,        // Position of sprite on canvas
+            base.x - doorOffset -32, base.y -32,// Position of sprite on canvas
             64, 64);                            // Sprite size on canvas
             
         //Right door
@@ -75,7 +88,7 @@ export class Airlock implements Paintable {
             state.airlockDoorImage,             // Watering base source image
             128, 0,                             // Top-left corner of frame in source
             64, 64,                             // Size of frame in source
-            base.x + doorOffset, base.y,        // Position of sprite on canvas
+            base.x + doorOffset-32, base.y-32,  // Position of sprite on canvas
             64, 64);                            // Sprite size on canvas
         canvas.restore();
     }

@@ -33,6 +33,9 @@ export const NPC_H_PIXEL_SPEED = 1;
 export const CAT_V_PIXEL_SPEED = 2.5;
 export const CAT_H_PIXEL_SPEED = 2.5;
 
+// Speed at which all things are sucked into the airlock.
+export const AIRLOCK_PIXEL_SPEED = 2;
+
 // An enum for the directions.
 export enum Direction {
     Up, Down, Left, Right,

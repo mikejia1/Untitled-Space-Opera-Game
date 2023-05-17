@@ -7,7 +7,11 @@ export class Coord {
       this.x = x;
       this.y = y;
     }
-  
+    
+    magnitude(): number {
+      return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+
     equals(other: Coord): boolean {
       return this.x === other.x && this.y === other.y;
     }
@@ -21,7 +25,7 @@ export class Coord {
     }
 
     toString(): string {
-      return "( " + this.x + ", " + this.y + " )";
+      return "( " + this.x.toPrecision(4) + ", " + this.y.toPrecision(4) + " )";
     }
 
     toIntegers(): Coord {
