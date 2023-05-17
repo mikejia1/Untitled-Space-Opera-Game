@@ -106,7 +106,7 @@ export class NonPlayer implements Paintable, Collider {
         
         // Paint gardener sprite for current frame.
         canvas.drawImage(
-            state.npcimage,                    // Walking base source image
+            (this.mentalState === MentalState.Normal) ? state.npcImages.normalWalkCycle : state.npcImages.frazzledWalkCycle,
             (frame * 96) + 40, 20,             // Top-left corner of frame in source
             48, 48,                            // Size of frame in source
             dest.x, dest.y,                    // Position of sprite on canvas

@@ -16,18 +16,19 @@ import topShield    from "../../entities/images/shield/shield_top_32x.png";
 import bottomShield from "../../entities/images/shield/shield_bottom_32x.png";
 
 // Other images.
-import skeleton           from "../../entities/images/skeleton/skeleton_death.png";
-import npcwalkcycle       from "../../entities/images/nonplayer/npcwalkcycle.png";
-import catswalkcycle      from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
-import spacegardenimpact  from "../images/space_garden_impact.png";
-import spacegarden        from "../images/space_garden.png";
-import gameoverImg        from "../images/gameover.png";
-import replayPrompt       from "../images/replay_prompt.png";
-import blackHoleImg       from "../images/drifting_planets/planet_black_hole_256px_30f.png";
-import wateringcan        from "../../entities/images/wateringcan/wateringcan.png";
-import spaceframes        from "../images/space_frames.png";
-import shieldButton       from "../../entities/images/button/button_32x32.png";
-import airlockDoors       from "../../entities/images/airlock/airlock_doors_64x64.png";
+import skeleton             from "../../entities/images/skeleton/skeleton_death.png";
+import npcwalkcycle         from "../../entities/images/nonplayer/npcwalkcycle.png";
+import frazzlednpcwalkcycle from "../../entities/images/nonplayer/frazzlednpcwalkcycle.png";
+import catswalkcycle        from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
+import spacegardenimpact    from "../images/space_garden_impact.png";
+import spacegarden          from "../images/space_garden.png";
+import gameoverImg          from "../images/gameover.png";
+import replayPrompt         from "../images/replay_prompt.png";
+import blackHoleImg         from "../images/drifting_planets/planet_black_hole_256px_30f.png";
+import wateringcan          from "../../entities/images/wateringcan/wateringcan.png";
+import spaceframes          from "../images/space_frames.png";
+import shieldButton         from "../../entities/images/button/button_32x32.png";
+import airlockDoors         from "../../entities/images/airlock/airlock_doors_64x64.png";
 
 // Plant image.
 import plantimage from "../../entities/images/plant/plants_16x16.png";
@@ -59,7 +60,7 @@ export interface IGlobalState {
     shieldImages: any;                // Source images for the blast shield image.
     shieldButtonImage: any;           // Source image for the shield button animation.
     airlockDoorImage: any;            // Source image for the airlock doors.
-    npcimage: any;                    // The NPC walkcycle sprite source image.
+    npcImages: any;                   // The NPC walkcycle sprite source images.
     backgroundImages: any;            // The background image.
     wateringCanImage: any;            // The watering can image.
     plantImage: any;                  // The plant image.
@@ -126,9 +127,12 @@ export function initialGameState(): IGlobalState {
       wateringBase: loadImage("Base watering strip", basewateringstrip),
       waterPouring: loadImage("Tool watering strip", toolwateringstrip),
     },
-    skeleton:         loadImage("Skeleton death", skeleton),
-    catImage:      loadImage("Cat walk cycle", catswalkcycle),
-    npcimage:         loadImage("NPC walk cycle", npcwalkcycle),
+    skeleton:       loadImage("Skeleton death", skeleton),
+    catImage:       loadImage("Cat walk cycle", catswalkcycle),
+    npcImages:       {
+      normalWalkCycle:    loadImage("Normal NPC walk cycle", npcwalkcycle),
+      frazzledWalkCycle:  loadImage("Frazzled NPC walk cycle", frazzlednpcwalkcycle),
+    },
     backgroundImages:{
       default:      loadImage("Space garden", spacegarden),
       impact:       loadImage("Space garden impact", spacegardenimpact),
