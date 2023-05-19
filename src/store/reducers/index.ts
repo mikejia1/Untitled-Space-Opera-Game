@@ -378,17 +378,38 @@ function updateFrame(state: IGlobalState): IGlobalState {
   // Once the black hole has been around long enough to have passed by, clear it back to null.
   if ((newBlackHole !== null) && ((f - newBlackHole.startFrame) > 1000)) newBlackHole = null;
 
-  // Maybe it's time for a planet to drift by?
-  let newPlanet = state.planet;
-  if (newPlanet === null) {
+  // Maybe it's time for another planet to drift by.
+  let newPlanet1 = state.planet1;
+  let newPlanet2 = state.planet2;
+  let newPlanet3 = state.planet3;
+  if (newPlanet1 === null) {
     let choice = randomInt(0, state.planets.length-1);
-    console.log("Choice " + choice);
-    newPlanet = state.planets[choice].randomizedClone();
-  } else {
-    if (newPlanet.isFinished()) {
-      newPlanet = null;
-      console.log("Goodbye planet!");
-    }
+    console.log("Welcome planet 1, type " + choice);
+    newPlanet1 = state.planets[choice].randomizedClone();
+  }
+  if ((newPlanet2 === null) && (newPlanet1 !== null) && ((f - newPlanet1.startFrame) > 150)) {
+    let choice = randomInt(0, state.planets.length-1);
+    console.log("Welcome planet 2, type " + choice);
+    newPlanet2 = state.planets[choice].randomizedClone();
+  }
+  if ((newPlanet3 === null) && (newPlanet2 !== null) && ((f - newPlanet2.startFrame) > 150)) {
+    let choice = randomInt(0, state.planets.length-1);
+    console.log("Welcome planet 3, type " + choice);
+    newPlanet3 = state.planets[choice].randomizedClone();
+  }
+
+  // Remove planets that have drifted out of view.
+  if ((newPlanet1 !== null) && newPlanet1.isFinished()) {
+    newPlanet1 = null;
+    console.log("Goodbye planet 1!");
+  }
+  if ((newPlanet2 !== null) && newPlanet2.isFinished()) {
+    newPlanet2 = null;
+    console.log("Goodbye planet 2!");
+  }
+  if ((newPlanet3 !== null) && newPlanet3.isFinished()) {
+    newPlanet3 = null;
+    console.log("Goodbye planet 3!");
   }
 
   return  {
@@ -406,7 +427,9 @@ function updateFrame(state: IGlobalState): IGlobalState {
     airlock: newAirlock,
     screenShaker: newShaker,
     blackHole: newBlackHole,
-    planet: newPlanet,
+    planet1: newPlanet1,
+    planet2: newPlanet2,
+    planet3: newPlanet3,
   };
 }
 

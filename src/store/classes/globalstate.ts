@@ -81,7 +81,9 @@ export interface IGlobalState {
     muted: boolean;                   // Enable / disable sounds.
     screenShaker: Shaker;             // For causing the screen to shake at key moments.
     blackHole: BlackHole | null;      // The black hole in view, or null if none in view.
-    planet: Planet | null;            // The current planet drifting by. Null if none.
+    planet1: Planet | null;           // One of the planets drifting by. Null if none.
+    planet2: Planet | null;           // One of the planets drifting by. Null if none.
+    planet3: Planet | null;           // One of the planets drifting by. Null if none.
     planets: Planet[];                // The full list of available drifting planets.
     debugSettings: any;               // For configuring extra debug info and visualizations.
   }
@@ -166,7 +168,9 @@ export function initialGameState(): IGlobalState {
     muted: true,
     screenShaker:     SHAKER_NO_SHAKE,  // Initially, the screen is not shaking.
     blackHole:        null,             // Initially, there's no black hole in view.
-    planet:           null,             // Start with no plant drifting by.
+    planet1:          null,             // Start with no planets drifting by.
+    planet2:          null,
+    planet3:          null,
     planets:          [
       makePlanet(256, 60, loadImage("Cratered planet", crateredPlanetImg)),   // Cratered planet.
       makePlanet(256, 60, loadImage("Dry planet",      dryPlanetImg)),        // Dry planet.
