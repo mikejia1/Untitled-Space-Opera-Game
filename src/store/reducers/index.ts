@@ -384,6 +384,11 @@ function updateFrame(state: IGlobalState): IGlobalState {
     let choice = randomInt(0, state.planets.length-1);
     console.log("Choice " + choice);
     newPlanet = state.planets[choice].randomizedClone();
+  } else {
+    if (newPlanet.isFinished()) {
+      newPlanet = null;
+      console.log("Goodbye planet!");
+    }
   }
 
   return  {

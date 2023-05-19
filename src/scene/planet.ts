@@ -1,4 +1,4 @@
-import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, computeBackgroundShift, Coord, computeCurrentFrame, drawClippedImage, CANVAS_RECT, FPS, CANVAS_WIDTH, randomInt } from '../utils';
+import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, computeBackgroundShift, Coord, computeCurrentFrame, drawClippedImage, CANVAS_RECT, FPS, CANVAS_WIDTH, randomInt, CANVAS_HEIGHT, BACKGROUND_HEIGHT } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Tile } from '../scene';
@@ -42,8 +42,8 @@ export class Planet implements Paintable {
         // Shift it.
         let dest = this.pos.plus(shift.x, shift.y);
         // Drift it.
-        let parallaxSpeed = Math.min(5.0 * Math.sqrt(this.scale), 2);
-        dest = dest.plus(0, (computeCurrentFrame() - this.startFrame) * parallaxSpeed);
+        let drift = this.driftDistance();
+        dest = dest.plus(0, drift);
         dest = dest.toIntegers();
         // Paint it.
         let frame = this.computeAnimationFrame();
@@ -75,6 +75,17 @@ export class Planet implements Paintable {
         if (state.debugSettings.showPositionRects) {
             outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
         }
+    }
+
+    // Check to see if the planet has drifted far enough that we can stop painting it.
+    isFinished(): boolean {
+        return this.pos.y + this.driftDistance() > BACKGROUND_HEIGHT;
+    }
+
+    // Determine how far the planet should be shifted by now.
+    driftDistance(): number {
+        let parallaxSpeed = Math.min(5.0 * Math.sqrt(this.scale), 2);
+        return (computeCurrentFrame() - this.startFrame) * parallaxSpeed;
     }
 
     // Compute the current animation sprite frame to use for the planet.
