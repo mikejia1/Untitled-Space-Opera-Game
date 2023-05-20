@@ -34,7 +34,7 @@ const SHIELD_DOOR_ADJUST = 10;
 const SHOW_PERCENTAGES = false;
 
 // Values for shield door slat indicator light configuration.
-const LIGHT_COUNT = 8;
+const LIGHT_COUNT = 4;
 const LIGHT_RADIUS = 2;
 
 enum ShieldDoorState {OPENING, CLOSING, OPEN, CLOSED}
@@ -193,7 +193,7 @@ export class ShieldDoor implements Paintable {
         let p = Math.min(slatTime / (SLAT_CLOSING_DUR + SLAT_CLOSED_DUR + (INTER_SLAT_DELAY * 6)), 1);
         for (let i = 0; i < LIGHT_COUNT; i++) {
             let lightOn = (p + 0.1) > ((i + 1) / LIGHT_COUNT);
-            this.paintLight(canvas, slatPos.plus(12, 23 - 4), 1, lightOn, i);
+            this.paintLight(canvas, slatPos.plus(12, 23 + 4), 1, lightOn, i);
         }
     }
 
@@ -202,7 +202,7 @@ export class ShieldDoor implements Paintable {
         let p = Math.min(slatTime / (SLAT_CLOSING_DUR + SLAT_CLOSED_DUR + (INTER_SLAT_DELAY * 6)), 1);
         for (let i = 0; i < LIGHT_COUNT; i++) {
             let lightOn = (p + 0.1) > ((i + 1) / LIGHT_COUNT);
-            this.paintLight(canvas, slatPos.plus(12, 69 + 4), -1, lightOn, i);
+            this.paintLight(canvas, slatPos.plus(12, 69 - 4), -1, lightOn, i);
         }
     }
 
@@ -211,14 +211,14 @@ export class ShieldDoor implements Paintable {
         let p = Math.min(slatTime / (SLAT_CLOSING_DUR + SLAT_CLOSED_DUR + (INTER_SLAT_DELAY * 6)), 1);
         for (let i = 0; i < LIGHT_COUNT; i++) {
             let lightOn = (p + 0.1) > ((i + 1) / LIGHT_COUNT);
-            this.paintLight(canvas, slatPos.plus(12,  18 - 4),  1, lightOn, i);
-            this.paintLight(canvas, slatPos.plus(12, 140 + 4), -1, lightOn, i);
+            this.paintLight(canvas, slatPos.plus(12,  18 + 4),  1, lightOn, i);
+            this.paintLight(canvas, slatPos.plus(12, 140 - 4), -1, lightOn, i);
         }
     }
 
     // Paint a single indicator light on a shield door slat.
     paintLight(canvas: CanvasRenderingContext2D, startPos: Coord, stepFactor: number, lightIsOn: boolean, index: number): void {
-        let loc = startPos.plus(0, (LIGHT_RADIUS + 1) * 2 * stepFactor * index).toIntegers();
+        let loc = startPos.plus(0, (LIGHT_RADIUS + 1) * 2 * stepFactor * 1.75 * index).toIntegers();
         canvas.save();
         canvas.strokeStyle = lightIsOn ? `rgba(195,155,175,1.0)` : `rgba(55,55,105,1.0)`;
         canvas.fillStyle =   lightIsOn ? `rgba(205,85,85,1.0)`   : `rgba(105,55,55,1.0)`;
@@ -226,7 +226,7 @@ export class ShieldDoor implements Paintable {
         canvas.beginPath();
         canvas.arc(                                         // Draw a circle.
             loc.x + LIGHT_RADIUS, loc.y + LIGHT_RADIUS,     // Centre of circle.
-            LIGHT_RADIUS,                                   // Radius of the circle.
+            LIGHT_RADIUS - 1,                                   // Radius of the circle.
             0, 2 * Math.PI);                                // Start and end angles.
         canvas.stroke();                                    // The outline of the circle.
         canvas.fill();                                      // The inside of the circle.
