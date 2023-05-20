@@ -382,9 +382,9 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let newPlanet1 = state.planet1;
   let newPlanet2 = state.planet2;
   let newPlanet3 = state.planet3;
-  let chance1 = (randomInt(0,9999) < 50);
-  let chance2 = (randomInt(0,9999) < 50);
-  let chance3 = (randomInt(0,9999) < 50);
+  let chance1 = (randomInt(0,9999) < 100);
+  let chance2 = (randomInt(0,9999) < 100);
+  let chance3 = (randomInt(0,9999) < 100);
   // If black hole is too far down, don't spawn a new planet at the moment.
   let blackHoleFarAlready = (state.blackHole !== null) && (state.blackHole.driftDistance() > 400);
   if (!blackHoleFarAlready) {
