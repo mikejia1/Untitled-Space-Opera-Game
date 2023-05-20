@@ -97,6 +97,7 @@ export class BlackHole implements Paintable {
         let radWhite  = this.pulseRadius(t + 50);
         let radBlack  = this.pulseRadius(t + 100);
         // An orange ring.
+        canvas.save();
         canvas.strokeStyle = `rgba(242,140,40,${alpha})`;
         canvas.lineWidth = 4;
         canvas.beginPath();
@@ -127,6 +128,7 @@ export class BlackHole implements Paintable {
             0, 2 * Math.PI);                // Start and end angles.
         canvas.fill();                      // The inside of the circle.
         canvas.stroke();                    // The outline of the circle.
+        canvas.restore();
     }
 
     // A pulse radius as a function of time.

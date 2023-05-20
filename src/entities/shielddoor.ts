@@ -33,6 +33,10 @@ const SHIELD_DOOR_ADJUST = 10;
 // For use in debugging.
 const SHOW_PERCENTAGES = false;
 
+// Values for shield door slat indicator light configuration.
+const LIGHT_COUNT = 8;
+const LIGHT_RADIUS = 2;
+
 enum ShieldDoorState {OPENING, CLOSING, OPEN, CLOSED}
 
 export function initialShieldDoor(): ShieldDoor {
@@ -104,7 +108,7 @@ export class ShieldDoor implements Paintable {
             let gap = percent * SLAT_CLOSE_DISTANCE;
             // If a slat is (basically) closed, paint the full closed slat image instead of the 2 parts.
             if (gap < 2) {
-                this.paintClosedSlat(i, j, canvas, state, shift, clipRect);
+                this.paintClosedSlat(i, j, canvas, state, currentFrame, shift, clipRect);
             } else {            
                 let x = this.slatX(i, j);
 
@@ -113,12 +117,14 @@ export class ShieldDoor implements Paintable {
                 let slatPos = new Coord(x + shift.x, y + shift.y);
                 slatPos = slatPos.toIntegers();
                 drawClippedImage(canvas, state.shieldImages.top, 0,0, 32, 96, slatPos.x, slatPos.y, 32, 96, clipRect);
+                this.drawTopLights(canvas, slatPos, clipRect, st);
 
                 // Bottom of slat.
                 y = SLAT_CLOSE_DISTANCE + gap + SLAT_BOTTOM_ADJUST - SHIELD_DOOR_ADJUST;
                 slatPos = new Coord(x + shift.x, y + shift.y);
                 slatPos = slatPos.toIntegers();
                 drawClippedImage(canvas, state.shieldImages.bottom, 0,0, 32, 96, slatPos.x, slatPos.y, 32, 96, clipRect);
+                this.drawBottomLights(canvas, slatPos, clipRect, st);
             }
         }
         if (SHOW_PERCENTAGES) console.log(debug);
@@ -136,7 +142,7 @@ export class ShieldDoor implements Paintable {
             let dist = percent * SLAT_CLOSE_DISTANCE;
             // If a slat is (basically) closed, paint the full closed slat image instead of the 2 parts.
             if (percent > 0.98) {
-                this.paintClosedSlat(i, j, canvas, state, shift, clipRect);
+                this.paintClosedSlat(i, j, canvas, state, currentFrame, shift, clipRect);
             } else {
                 let x = this.slatX(i, j);
 
@@ -145,12 +151,14 @@ export class ShieldDoor implements Paintable {
                 let slatPos = new Coord(x + shift.x, y + shift.y);
                 slatPos = slatPos.toIntegers();
                 drawClippedImage(canvas, state.shieldImages.top, 0,0, 32, 96, slatPos.x, slatPos.y, 32, 96, clipRect);
+                this.drawTopLights(canvas, slatPos, clipRect, st);
 
                 // Bottom of slat.
                 y = SLAT_CLOSE_DISTANCE + (SLAT_CLOSE_DISTANCE - dist) + SLAT_BOTTOM_ADJUST - SHIELD_DOOR_ADJUST;
                 slatPos = new Coord(x + shift.x, y + shift.y);
                 slatPos = slatPos.toIntegers();
                 drawClippedImage(canvas, state.shieldImages.bottom, 0,0, 32, 96, slatPos.x, slatPos.y, 32, 96, clipRect);
+                this.drawBottomLights(canvas, slatPos, clipRect, st);
             }
         }
         if (SHOW_PERCENTAGES) console.log(debug);
@@ -165,17 +173,64 @@ export class ShieldDoor implements Paintable {
             let percent = Math.min(st / SLAT_CLOSED_DUR, 1);
             let prcnt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100);
             debug = debug + " " + prcnt;
-            this.paintClosedSlat(i, j, canvas, state, shift, clipRect);
+            this.paintClosedSlat(i, j, canvas, state, currentFrame, shift, clipRect);
         }
         if (SHOW_PERCENTAGES) console.log(debug);
     }
 
-    paintClosedSlat(door: number, slat: number, canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord, clipRect: Rect): void {
+    paintClosedSlat(door: number, slat: number, canvas: CanvasRenderingContext2D, state: IGlobalState, currentFrame: number, shift: Coord, clipRect: Rect): void {
         let y = 0 - SHIELD_DOOR_ADJUST;
         let x = this.slatX(door, slat);
         let slatPos = new Coord(x + shift.x, y + shift.y);
         slatPos = slatPos.toIntegers();
         drawClippedImage(canvas, state.shieldImages.closed, 0,0, 32, 160, slatPos.x, slatPos.y, 32, 160, clipRect);
+        let st = this.slatTime(door, slat, currentFrame);
+        this.drawAllLights(canvas, slatPos, clipRect, st);
+    }
+
+    // Paint the indicator lights on a shield door top slat.
+    drawTopLights(canvas: CanvasRenderingContext2D, slatPos: Coord, clipRect: Rect, slatTime: number): void {
+        let p = Math.min(slatTime / (SLAT_CLOSING_DUR + SLAT_CLOSED_DUR + (INTER_SLAT_DELAY * 6)), 1);
+        for (let i = 0; i < LIGHT_COUNT; i++) {
+            let lightOn = (p + 0.1) > ((i + 1) / LIGHT_COUNT);
+            this.paintLight(canvas, slatPos.plus(12, 23 - 4), 1, lightOn, i);
+        }
+    }
+
+    // Paint the indicator lights on a shield door bottom slat.
+    drawBottomLights(canvas: CanvasRenderingContext2D, slatPos: Coord, clipRect: Rect, slatTime: number): void {
+        let p = Math.min(slatTime / (SLAT_CLOSING_DUR + SLAT_CLOSED_DUR + (INTER_SLAT_DELAY * 6)), 1);
+        for (let i = 0; i < LIGHT_COUNT; i++) {
+            let lightOn = (p + 0.1) > ((i + 1) / LIGHT_COUNT);
+            this.paintLight(canvas, slatPos.plus(12, 69 + 4), -1, lightOn, i);
+        }
+    }
+
+    // Paint the indicator lights on a shield door closed slat (top and bottom together).
+    drawAllLights(canvas: CanvasRenderingContext2D, slatPos: Coord, clipRect: Rect, slatTime: number): void {
+        let p = Math.min(slatTime / (SLAT_CLOSING_DUR + SLAT_CLOSED_DUR + (INTER_SLAT_DELAY * 6)), 1);
+        for (let i = 0; i < LIGHT_COUNT; i++) {
+            let lightOn = (p + 0.1) > ((i + 1) / LIGHT_COUNT);
+            this.paintLight(canvas, slatPos.plus(12,  18 - 4),  1, lightOn, i);
+            this.paintLight(canvas, slatPos.plus(12, 140 + 4), -1, lightOn, i);
+        }
+    }
+
+    // Paint a single indicator light on a shield door slat.
+    paintLight(canvas: CanvasRenderingContext2D, startPos: Coord, stepFactor: number, lightIsOn: boolean, index: number): void {
+        let loc = startPos.plus(0, (LIGHT_RADIUS + 1) * 2 * stepFactor * index).toIntegers();
+        canvas.save();
+        canvas.strokeStyle = lightIsOn ? `rgba(195,155,175,1.0)` : `rgba(55,55,105,1.0)`;
+        canvas.fillStyle =   lightIsOn ? `rgba(205,85,85,1.0)`   : `rgba(105,55,55,1.0)`;
+        canvas.lineWidth = 1;
+        canvas.beginPath();
+        canvas.arc(                                         // Draw a circle.
+            loc.x + LIGHT_RADIUS, loc.y + LIGHT_RADIUS,     // Centre of circle.
+            LIGHT_RADIUS,                                   // Radius of the circle.
+            0, 2 * Math.PI);                                // Start and end angles.
+        canvas.stroke();                                    // The outline of the circle.
+        canvas.fill();                                      // The inside of the circle.
+        canvas.restore();
     }
 
     // Compute the current animation frame number for a specific slat of a specific door.
