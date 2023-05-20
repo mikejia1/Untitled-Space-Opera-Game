@@ -85,7 +85,7 @@ export class Planet implements Paintable {
     // Determine how far the planet should be shifted by now.
     driftDistance(): number {
         let parallaxSpeed = Math.min(5.0 * Math.sqrt(this.scale), 2);
-        return (computeCurrentFrame() - this.startFrame) * parallaxSpeed;
+        return (computeCurrentFrame() - this.startFrame) * parallaxSpeed * 0.5;
     }
 
     // Compute the current animation sprite frame to use for the planet.
