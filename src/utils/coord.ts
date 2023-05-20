@@ -24,6 +24,10 @@ export class Coord {
       return new Coord(this.x - deltaX, this.y - deltaY);
     }
 
+    times(factor: number): Coord {
+      return new Coord(this.x * factor, this.y * factor);
+    }
+
     toString(): string {
       return "( " + this.x.toPrecision(4) + ", " + this.y.toPrecision(4) + " )";
     }

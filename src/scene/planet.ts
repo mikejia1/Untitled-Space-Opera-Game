@@ -13,8 +13,9 @@ export class Planet implements Paintable {
     spinRate: number;       // Number of animation frames between sprite frames.
     flipped: boolean;       // Whether or not the planet is flipped horizontally.
     image: any;             // The sprite sheet source image.
+    blackHolePull: number;  // How far the fall into the black hole has progressed. Range 0 to 1.
   
-    constructor(pos: Coord, startFrame: number, size: number, frames: number, scale: number, spinRate: number, flipped: boolean, image: any) {
+    constructor(pos: Coord, startFrame: number, size: number, frames: number, scale: number, spinRate: number, flipped: boolean, image: any, blackHolePull: number) {
         this.pos = pos;
         this.startFrame = startFrame;
         this.size = size;
@@ -23,6 +24,7 @@ export class Planet implements Paintable {
         this.spinRate = spinRate;
         this.flipped = flipped;
         this.image = image;
+        this.blackHolePull = blackHolePull;
     }
 
     // Pick some random values for position, scale, and spin rate.
@@ -32,25 +34,30 @@ export class Planet implements Paintable {
         let spinRate = randomInt(1, 10);
         let x = randomInt(0, CANVAS_WIDTH - (this.size * scale));
         let flipped = ((randomInt(0, 99) % 2) === 0);
-        return new Planet(new Coord(x, -1 * this.size * scale), computeCurrentFrame(), this.size, this.frames, scale, spinRate, flipped, this.image);
+        return new Planet(
+            new Coord(x, (-1 * this.size * scale) - 50),
+            computeCurrentFrame(),
+            this.size, this.frames, scale, spinRate, flipped, this.image, 0);
     }
 
     // Paint the planet on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         // Determine where, on the canvas, the planet should be painted.
         let shift = this.computeShift(state);
-        // Shift it.
-        let dest = this.pos.plus(shift.x, shift.y);
-        // Drift it.
-        let drift = this.driftDistance();
-        dest = dest.plus(0, drift);
+        let dest = this.paintPosition(shift);
+
+        // Drop it into the black hole.
+        let tweak = this.blackHoleTweak(dest, state);
+        dest = dest.plus(tweak.fall.x, tweak.fall.y);
         dest = dest.toIntegers();
+
         // Paint it.
+        let sc = this.scale * tweak.shrink;
         let frame = this.computeAnimationFrame();
         let shake = state.screenShaker.shakeDeterministic(state.currentFrame);
-        let paintSize = this.size * this.scale;
+        let paintSize = this.size * sc;
         let flipScale = this.flipped ? -1 : 1;
-        let flipShift = this.flipped ? (this.size * this.scale) : 0;
+        let flipShift = this.flipped ? (this.size * sc) : 0;
         canvas.save();
         canvas.scale(flipScale, 1);
         let clipRect = {
@@ -64,11 +71,11 @@ export class Planet implements Paintable {
         drawClippedImage(
             canvas,
             this.image,
-            frame * this.size, 0,               // Top-left corner of frame in source
-            this.size, this.size,               // Size of frame in source
-            (dest.x * flipScale) - flipShift, dest.y,         // Position of sprite on canvas
-            paintSize, paintSize,               // Sprite size on canvas
-            clipRect);
+            frame * this.size, 0,                       // Top-left corner of frame in source
+            this.size, this.size,                       // Size of frame in source
+            (dest.x * flipScale) - flipShift, dest.y,   // Position of sprite on canvas
+            paintSize, paintSize,                       // Sprite size on canvas
+            clipRect);                                  // Paint only what's inside this rectangle
         canvas.restore();
 
         // Extra debug displays.
@@ -77,9 +84,41 @@ export class Planet implements Paintable {
         }
     }
 
+    // Get the position where the planet should be painted on the canvas (before black hole adjustment).
+    paintPosition(shift: Coord): Coord {
+        // Shift it.
+        let dest = this.pos.plus(shift.x, shift.y);
+        // Drift it.
+        dest = dest.plus(0, this.driftDistance());
+        return dest.toIntegers();
+    }
+
+    // Return a position and scale adjustment, allowing the planet to "fall" into the black hole.
+    blackHoleTweak(paintPos: Coord, state: IGlobalState): any {
+        if (state.blackHole !== null) {
+            let bhPos = state.blackHole.paintPosition(state.blackHole.computeShift(state));
+            let sz = this.size * this.scale;
+            let dst = state.blackHole.driftDistance();
+            let travel = Math.min(Math.max(dst - 20, 0) / 150, 1);
+            let shrink = 1.0 - travel;
+            shrink *= shrink;
+            let finalDest = bhPos.plus(256, 256).minus(sz * 0.5 * shrink, sz * 0.5 * shrink);
+            //console.log("Shrink " + shrink + " drift " + dst);
+            return {
+                fall: finalDest.minus(paintPos.x, paintPos.y).times(travel),
+                shrink: shrink,
+            };
+        }
+        // No black hole => a zero-effecct tweak.
+        return {
+            fall: new Coord(0, 0),
+            shrink: 1.0,
+        };
+    }
+
     // Check to see if the planet has drifted far enough that we can stop painting it.
     isFinished(): boolean {
-        return this.pos.y + this.driftDistance() > BACKGROUND_HEIGHT;
+        return this.pos.y + this.driftDistance() > (BACKGROUND_HEIGHT * 1.5); // Times 1.5 to give time to complete fall into black hole.
     }
 
     // Determine how far the planet should be shifted by now.
@@ -109,5 +148,5 @@ export class Planet implements Paintable {
 
 // Make a new planet. Takes all constructor arguments that don't have a default.
 export function makePlanet(size: number, frames: number, image: any): Planet {
-    return new Planet(new Coord(0,0), 0, size, frames, 1, 1, false, image);
+    return new Planet(new Coord(0,0), 0, size, frames, 1, 1, false, image, 0);
 }

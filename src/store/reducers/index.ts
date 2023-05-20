@@ -385,20 +385,24 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let chance1 = (randomInt(0,9999) < 50);
   let chance2 = (randomInt(0,9999) < 50);
   let chance3 = (randomInt(0,9999) < 50);
-  if ((newPlanet1 === null) && chance1) {
-    let choice = randomInt(0, state.planets.length-1);
-    console.log("Welcome planet 1, type " + choice);
-    newPlanet1 = state.planets[choice].randomizedClone();
-  }
-  if ((newPlanet2 === null) && chance2 && (newPlanet1 !== null) && ((f - newPlanet1.startFrame) > 150)) {
-    let choice = randomInt(0, state.planets.length-1);
-    console.log("Welcome planet 2, type " + choice);
-    newPlanet2 = state.planets[choice].randomizedClone();
-  }
-  if ((newPlanet3 === null) && chance3 && (newPlanet2 !== null) && ((f - newPlanet2.startFrame) > 150)) {
-    let choice = randomInt(0, state.planets.length-1);
-    console.log("Welcome planet 3, type " + choice);
-    newPlanet3 = state.planets[choice].randomizedClone();
+  // If black hole is too far down, don't spawn a new planet at the moment.
+  let blackHoleFarAlready = (state.blackHole !== null) && (state.blackHole.driftDistance() > 400);
+  if (!blackHoleFarAlready) {
+    if ((newPlanet1 === null) && chance1) {
+      let choice = randomInt(0, state.planets.length-1);
+      console.log("Welcome planet 1, type " + choice);
+      newPlanet1 = state.planets[choice].randomizedClone();
+    }
+    if ((newPlanet2 === null) && chance2 && (newPlanet1 !== null) && ((f - newPlanet1.startFrame) > 150)) {
+      let choice = randomInt(0, state.planets.length-1);
+      console.log("Welcome planet 2, type " + choice);
+      newPlanet2 = state.planets[choice].randomizedClone();
+    }
+    if ((newPlanet3 === null) && chance3 && (newPlanet2 !== null) && ((f - newPlanet2.startFrame) > 150)) {
+      let choice = randomInt(0, state.planets.length-1);
+      console.log("Welcome planet 3, type " + choice);
+      newPlanet3 = state.planets[choice].randomizedClone();
+    }
   }
 
   // Remove planets that have drifted out of view.

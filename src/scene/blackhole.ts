@@ -36,13 +36,8 @@ export class BlackHole implements Paintable {
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         // Determine where, on the canvas, the black hole should be painted.
         let shift = this.computeShift(state);
-        // Shift it.
-        let dest = this.pos.plus(shift.x, shift.y);
-        // Drift it.
-        dest = dest.plus(0, (computeCurrentFrame() - this.startFrame) * 0.5);
-        dest = dest.toIntegers();
+        let dest = this.paintPosition(shift);
         let frame = this.computeAnimationFrame();
-        let shake = state.screenShaker.shakeDeterministic(state.currentFrame);
 
         // A lambda to draw the black hole.
         let bh = (): void => {
@@ -51,6 +46,7 @@ export class BlackHole implements Paintable {
 
         // A lambda to draw the disc of material around the black hole.
         let disc = (): void => {
+            let shake = state.screenShaker.shakeDeterministic(state.currentFrame);
             drawClippedImage(
                 canvas,
                 state.blackHoleImage,
@@ -78,6 +74,20 @@ export class BlackHole implements Paintable {
         if (state.debugSettings.showPositionRects) {
             outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
         }
+    }
+
+    // Get the position on the canvas where the black hole should be painted.
+    paintPosition(shift: Coord): Coord {
+        // Shift it.
+        let dest = this.pos.plus(shift.x, shift.y);
+        // Drift it.
+        dest = dest.plus(0, this.driftDistance());
+        return dest.toIntegers();
+    }
+
+    // Compute the vertical drift distance for the black hole.
+    driftDistance(): number {
+        return (computeCurrentFrame() - this.startFrame) * 0.5;
     }
 
     drawPulsatingHeart(canvas: CanvasRenderingContext2D, dest: Coord): void {
