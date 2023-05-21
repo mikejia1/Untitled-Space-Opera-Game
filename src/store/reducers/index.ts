@@ -471,7 +471,15 @@ function updateOpenAirlockMovements(state: IGlobalState): IGlobalState {
       npcs = [...npcs, npc]
     }
   }
-  return {...state, cats: cats, npcs: npcs};
+  let gardener = state.gardener;
+  let move : Coord = state.airlock.getMovementDelta(gardener.pos);
+    let oldPos : Coord = gardener.pos;
+    gardener.pos = oldPos.plus(move.x, move.y);
+    // If there is a collision, negate it.
+    if (collisionDetected(state, allColliders, gardener)) {
+      gardener.pos = oldPos;
+    }
+  return {...state, cats: cats, npcs: npcs, gardener: gardener};
 }
 
 
