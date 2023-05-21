@@ -196,7 +196,6 @@ function updateFrame(state: IGlobalState): IGlobalState {
   return  {
     ...state,
     currentFrame: f,
-    npcs: newNPCs,
     cats: cats,
     plants: newPlants,
     airlock: newAirlock,
