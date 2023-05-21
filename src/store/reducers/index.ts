@@ -2,7 +2,7 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, directionOfFirstRelativeToSecond, directionName, AIRLOCK_PIXEL_SPEED } from "../../utils";
-import { AnimEvent, AnimEventType, Collider, ColliderExceptions, ColliderType, IGlobalState, initialGameState } from "../classes";
+import { AnimEvent, AnimEventType, Collider, ColliderExceptions, ColliderType, IGlobalState, initialGameState, updateAnimEventState } from "../classes";
 import { Airlock, AirlockState, Gardener, MentalState, NonPlayer, Plant, ShieldButton } from '../../entities';
 import {
   DOWN,
@@ -170,14 +170,11 @@ function playBumpSound(): void {
 
 // TODO: See if we can animate from within a saga instead of the way we're doing it now.
 function updateFrame(state: IGlobalState): IGlobalState {
-
   let f = computeCurrentFrame();
   if (f === state.currentFrame) {
     return state;
   }
-
   if (state.gameover) {
-    console.log("GAME OVER");
     return {
       ...state,
       currentFrame: f,
@@ -245,135 +242,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let triggeredEvents: AnimEvent[] = [];
   let gameover: boolean = false;
   let newShieldButtons: ShieldButton[] = state.shieldButtons;
-  // Process active events
-  for (let i = 0; i < state.activeEvents.length; i++){
-    const event = state.activeEvents[i];
-    if (event.processed) continue;
-    if (event.event == AnimEventType.IMPACT){
-      // If IMPACT occurs without all shield doors being closed, trigger GAMEOVER event.
-      if (!state.shieldDoors.allDoorsClosed()){
-        triggeredEvents = [...triggeredEvents, new AnimEvent(AnimEventType.GAMEOVER, event.startTime + 24)];
-      } else {
-        // Otherwise, go ahead and tell all three shield doors to open early - the danger has passed.
-        triggeredEvents = [
-          ...triggeredEvents,
-          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_1, event.startTime + 30),
-          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_2, event.startTime + 30 + (INTER_SLAT_DELAY * 4)),
-          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_3, event.startTime + 30 + (INTER_SLAT_DELAY * 8)),
-        ];
-      }
-    }
-    if(event.event == AnimEventType.ALARM_1){
-      newShieldButtons[0] = newShieldButtons[0].startAlarm(state);
-      event.processed = true;
-      event.finished = true;
-    }
-    if(event.event == AnimEventType.ALARM_2){
-      newShieldButtons[1] = newShieldButtons[1].startAlarm(state);
-      event.processed = true;
-      event.finished = true;
-    }
-    if(event.event == AnimEventType.ALARM_3){
-      newShieldButtons[2] = newShieldButtons[2].startAlarm(state);
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.EARLY_OPEN_SHIELD_1) {
-      newShield = newShield.openDoorEarly(0);
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.EARLY_OPEN_SHIELD_2) {
-      newShield = newShield.openDoorEarly(1);
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.EARLY_OPEN_SHIELD_3) {
-      newShield = newShield.openDoorEarly(2);
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_STOP) {
-      newShaker = SHAKER_NO_SHAKE; // new Shaker(0, 0);
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_LEVEL_1) {
-      newShaker = SHAKER_SUBTLE; // new Shaker(0.005, 0.008);
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_LEVEL_2) {
-      newShaker = SHAKER_MILD; // new Shaker(0.05, 0.04);
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_LEVEL_3) {
-      newShaker = SHAKER_MEDIUM; // new Shaker(0.5, 0.2);
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_LEVEL_4) {
-      newShaker = SHAKER_INTENSE; // new Shaker(5, 1);
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.BLACK_HOLE_APPEARS) {
-      console.log("Handling BLACK_HOLE_APPEARS event");
-      let offCentre = randomInt(-75, 75);
-      newBlackHole = new BlackHole(
-        new Coord(((CANVAS_WIDTH - 512) / 2) + offCentre, -345),  // Position of black hole.
-        computeCurrentFrame(),                      // Time at which it first appears.
-        0,                                          // Starting pulse magnitude.
-        0);                                         // Target pulse magnitude.
-      event.processed = true;
-      event.finished = true;
-    }
-    if (event.event === AnimEventType.BH_PULSE_LEVEL_1) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_SUBTLE);
-        event.processed = true;
-        event.finished = true;
-      }
-    }
-    if (event.event === AnimEventType.BH_PULSE_LEVEL_2) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_MILD);
-        event.processed = true;
-        event.finished = true;
-      }
-    }
-    if (event.event === AnimEventType.BH_PULSE_LEVEL_3) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_MEDIUM);
-        event.processed = true;
-        event.finished = true;
-      }
-    }
-    if (event.event === AnimEventType.BH_PULSE_LEVEL_4) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_INTENSE);
-        event.processed = true;
-        event.finished = true;
-      }
-    }
-    if (event.event === AnimEventType.BH_PULSE_STOP) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(0);
-        event.processed = true;
-        event.finished = true;
-      }
-    }
-    if(event.event == AnimEventType.GAMEOVER){
-        console.log("GAME OVER");
-        //Kill all plants
-        for(let i = 0; i < newPlants.length; i++){
-          newPlants[i].health = 0;
-        }
-        gameover = true;
-    }
-    event.processed = true;
-  }
+
+  state = updateAnimEventState(state);
 
   // Once the black hole has been around long enough to have passed by, clear it back to null.
   if ((newBlackHole !== null) && ((f - newBlackHole.startFrame) > 1000)) newBlackHole = null;
@@ -418,6 +288,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
     newPlanet3 = null;
     console.log("Goodbye planet 3!");
   }
+  state = {...state, blackHole: newBlackHole, planet1: newPlanet1, planet2: newPlanet2, planet3: newPlanet3};
 
   return  {
     ...state,
@@ -425,18 +296,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
     npcs: newNPCs,
     cats: cats,
     plants: newPlants,
-    activeEvents: activeEvents,
-    pendingEvents: [...pendingEvents, ...triggeredEvents], 
-    gameover: gameover,
-    gameOverFrame: gameover ? f : state.gameOverFrame,
-    shieldButtons: newShieldButtons,
-    shieldDoors: newShield,
     airlock: newAirlock,
-    screenShaker: newShaker,
-    blackHole: newBlackHole,
-    planet1: newPlanet1,
-    planet2: newPlanet2,
-    planet3: newPlanet3,
   };
 }
 
@@ -481,12 +341,6 @@ function updateOpenAirlockMovements(state: IGlobalState): IGlobalState {
     }
   return {...state, cats: cats, npcs: npcs, gardener: gardener};
 }
-
-
-function updateActiveEvents(state: IGlobalState): AnimEvent[] {
-  return  [...state.activeEvents.filter(animEvent => !animEvent.finished), ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
-}
-
 
 // Toggle debug control showCollisionRects from False to True or vice versa.
 function toggleDebugControlCollisionRects(state: IGlobalState): IGlobalState {
