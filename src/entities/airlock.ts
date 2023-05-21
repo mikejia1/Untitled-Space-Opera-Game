@@ -1,10 +1,12 @@
-import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect, GardenerDirection, AIRLOCK_PIXEL_SPEED } from '../utils';
+import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect, GardenerDirection, AIRLOCK_PIXEL_SPEED, rectanglesOverlap } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
-import { Paintable, IGlobalState } from '../store/classes';
+import { Paintable, IGlobalState, collisionDetected, allCollidersFromState } from '../store/classes';
 import { Gardener } from './gardener';
 import { Tile } from '../scene';
+import { Cat } from './cat';
+import { NonPlayer } from './nonplayer';
 
-export enum AirlockState {OPENING, CLOSING, OPEN, CLOSED}
+export enum AirlockState { OPENING, CLOSING, OPEN, CLOSED }
 const MAX_DOOR_OFFSET = 32;
 const DOOR_DELAY = 12;
 
@@ -14,32 +16,37 @@ export class Airlock implements Paintable {
     state: AirlockState;
     // Time of last interaction in frame number
     lastInteraction: number;
-  
+
     constructor() {
-      this.pos = new Coord(188,272);
-      this.state = AirlockState.CLOSED;
-      this.lastInteraction = 0;
+        this.pos = new Coord(188, 272);
+        this.state = AirlockState.CLOSED;
+        this.lastInteraction = 0;
     }
 
-    updateState(state: IGlobalState): Airlock{
+    // Is the airlock airtight or sucking everything into the void?
+    isAirtight(state : IGlobalState): boolean {
+        return this.state == AirlockState.CLOSED || this.state == AirlockState.OPENING && state.currentFrame - this.lastInteraction < DOOR_DELAY;
+    }
+
+    updateDoorState(state: IGlobalState): Airlock {
         // Assume door transition takes MAX_DOOR_OFFSET frames
-        let stateTransition : boolean = state.currentFrame - this.lastInteraction > MAX_DOOR_OFFSET + DOOR_DELAY;
-        if(this.state == AirlockState.OPENING){
+        let stateTransition: boolean = state.currentFrame - this.lastInteraction > MAX_DOOR_OFFSET + DOOR_DELAY;
+        if (this.state == AirlockState.OPENING) {
             this.state = stateTransition ? AirlockState.OPEN : this.state;
         }
-        if(this.state == AirlockState.CLOSING){
+        if (this.state == AirlockState.CLOSING) {
             this.state = stateTransition ? AirlockState.CLOSED : this.state;
         }
         return this;
     }
 
     // Activate the airlock
-    activate(state: IGlobalState): Airlock{
-        if(this.state == AirlockState.CLOSED){
+    activate(state: IGlobalState): Airlock {
+        if (this.state == AirlockState.CLOSED) {
             this.state = AirlockState.OPENING;
             this.lastInteraction = state.currentFrame;
         }
-        else if(this.state == AirlockState.OPEN){
+        else if (this.state == AirlockState.OPEN) {
             this.state = AirlockState.CLOSING;
             this.lastInteraction = state.currentFrame;
         }
@@ -48,8 +55,8 @@ export class Airlock implements Paintable {
 
     getMovementDelta(pos: Coord): Coord {
         let directVec = this.pos.minus(pos.x, pos.y);
-        let scalar = AIRLOCK_PIXEL_SPEED/directVec.magnitude();
-        return new Coord(directVec.x * scalar, directVec.y * scalar); 
+        let scalar = AIRLOCK_PIXEL_SPEED / directVec.magnitude();
+        return new Coord(directVec.x * scalar, directVec.y * scalar);
     }
 
     deathRect(): Rect {
@@ -66,13 +73,13 @@ export class Airlock implements Paintable {
         base = base.plus(shift.x, shift.y).toIntegers();
         canvas.save();
         let doorOffset = 0;
-        if(this.state == AirlockState.OPENING){
-            doorOffset = Math.max(0, state.currentFrame - this.lastInteraction -DOOR_DELAY);
+        if (this.state == AirlockState.OPENING) {
+            doorOffset = Math.max(0, state.currentFrame - this.lastInteraction - DOOR_DELAY);
         }
-        else if(this.state == AirlockState.CLOSING){
+        else if (this.state == AirlockState.CLOSING) {
             doorOffset = MAX_DOOR_OFFSET - Math.max(0, state.currentFrame - this.lastInteraction - DOOR_DELAY);
         }
-        else if(this.state == AirlockState.OPEN){
+        else if (this.state == AirlockState.OPEN) {
             doorOffset = MAX_DOOR_OFFSET;
         }
         //Left door
@@ -80,15 +87,15 @@ export class Airlock implements Paintable {
             state.airlockDoorImage,             // Watering base source image
             64, 0,                              // Top-left corner of frame in source
             64, 64,                             // Size of frame in source
-            base.x - doorOffset -32, base.y -32,// Position of sprite on canvas
+            base.x - doorOffset - 32, base.y - 32,// Position of sprite on canvas
             64, 64);                            // Sprite size on canvas
-            
+
         //Right door
         canvas.drawImage(
             state.airlockDoorImage,             // Watering base source image
             128, 0,                             // Top-left corner of frame in source
             64, 64,                             // Size of frame in source
-            base.x + doorOffset-32, base.y-32,  // Position of sprite on canvas
+            base.x + doorOffset - 32, base.y - 32,  // Position of sprite on canvas
             64, 64);                            // Sprite size on canvas
         canvas.restore();
     }
@@ -105,4 +112,38 @@ export class Airlock implements Paintable {
             Math.floor(this.pos.y / MAP_TILE_SIZE));
     }
 }
- 
+
+function getAirlockShiftedEntity(state: IGlobalState, actor: any) : any {
+    let move: Coord = state.airlock.getMovementDelta(actor.pos);
+    let oldPos: Coord = actor.pos;
+    actor.pos = oldPos.plus(move.x, move.y);
+    // If there is a collision, negate it.
+    if (collisionDetected(state, state.colliderMap, actor)) {
+        actor.pos = oldPos;
+    }
+    return actor;
+}
+
+export function updateAirlockState(state: IGlobalState): IGlobalState {
+    if (state.airlock.isAirtight(state)) {
+        return state;
+    }
+    // Get all the colliders as they exist now.
+    let allColliders = state.colliderMap;
+    let cats: Cat[] = [];
+    for (let i = 0; i < state.cats.length; i++) {
+        let cat : Cat = getAirlockShiftedEntity(state, state.cats[i]) as Cat;
+        if (!rectanglesOverlap(state.airlock.deathRect(), cat.collisionRect())) {
+            cats = [...cats, cat]
+        }
+    }
+    let npcs: NonPlayer[] = [];
+    for (let i = 0; i < state.npcs.length; i++) {
+        let npc : NonPlayer = getAirlockShiftedEntity(state, state.npcs[i]) as NonPlayer;
+        if (!rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect())) {
+            npcs = [...npcs, npc]
+        }
+    }
+    let gardener = getAirlockShiftedEntity(state, state.gardener);
+    return { ...state, cats: cats, npcs: npcs, gardener: gardener, airlock: state.airlock.updateDoorState(state) };
+}

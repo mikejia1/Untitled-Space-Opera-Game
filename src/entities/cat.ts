@@ -82,3 +82,11 @@ export class Cat extends NonPlayer {
     }
 
 }
+
+export function updateCatState(state: IGlobalState): IGlobalState {
+    let cats : Cat[] = [];
+    for(let i = 0; i < state.cats.length; i++){
+      cats = [...cats, state.cats[i].move()]
+    }
+    return {...state, cats: cats};
+}

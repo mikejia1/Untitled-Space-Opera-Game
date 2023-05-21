@@ -2,8 +2,8 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, directionOfFirstRelativeToSecond, directionName, AIRLOCK_PIXEL_SPEED } from "../../utils";
-import { AnimEvent, AnimEventType, Collider, ColliderExceptions, ColliderType, IGlobalState, collisionDetected, initialGameState, updateAnimEventState } from "../classes";
-import { Airlock, AirlockState, Gardener, MentalState, NonPlayer, Plant, ShieldButton, updateGardenerMoveState, updateNPCState } from '../../entities';
+import { AnimEvent, AnimEventType, Collider, ColliderExceptions, ColliderType, IGlobalState, allCollidersFromState, collisionDetected, initialGameState, updateAnimEventState } from "../classes";
+import { Airlock, AirlockState, Gardener, MentalState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState } from '../../entities';
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -31,7 +31,7 @@ import {
   TOGGLE_GAME_AUDIO,
 } from "../actions";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
-import { Cat } from "../../entities/cat";
+import { Cat, updateCatState } from "../../entities/cat";
 import { BlackHole, PULSE_SUBTLE, PULSE_MILD, PULSE_MEDIUM, PULSE_INTENSE } from "../../scene";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
@@ -120,29 +120,19 @@ function updateFrame(state: IGlobalState): IGlobalState {
 
   // Get all the colliders as they exist now.
   state = {...state, colliderMap: allCollidersFromState(state)};
-  let allColliders = state.colliderMap;
   
-  // Allow gardener to move.
   state = updateGardenerMoveState(state);
  
-  // Allow gardener to (keep) watering.
   if (state.gardener.watering) state = utiliseItem(state);
 
-  // Allow NPCs to move.
   state = updateNPCState(state);
 
-  let cats : Cat[] = [];
-  for(let i = 0; i < state.cats.length; i++){
-    cats = [...cats, state.cats[i].move()]
-  }
-  state = {...state, cats: cats};
-
-  if(state.airlock.state === AirlockState.OPEN) state = updateOpenAirlockMovements(state);
+  state = updateCatState(state);
+  
+  state = updateAirlockState(state);
 
   let newPlants = dehydratePlants(state.plants, state);
   newPlants = growPlants(newPlants, state);
-
-  let newAirlock = state.airlock.updateState(state);
 
   state = updateAnimEventState(state);
 
@@ -196,9 +186,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   return  {
     ...state,
     currentFrame: f,
-    cats: cats,
     plants: newPlants,
-    airlock: newAirlock,
   };
 }
 
@@ -343,16 +331,6 @@ function growPlants(plants: Plant[], state: IGlobalState): Plant[] {
     newPlants = [...newPlants, plant.growPlant(state)];
   });
   return newPlants;
-}
-
-// Get all the colliders from a state.
-function allCollidersFromState(state: IGlobalState): Map<number, Collider> {
-  let map = new Map<number, Collider>();
-  state.plants.forEach(plant => map.set(plant.colliderId, plant));
-  state.invisibleColliders.forEach(ic => map.set(ic.colliderId, ic));
-  state.npcs.forEach(npc => map.set(npc.colliderId, npc));
-  map.set(state.gardener.colliderId, state.gardener);
-  return map;
 }
 
 // Attempt to equip item or drop current item.

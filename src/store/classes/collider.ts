@@ -39,6 +39,17 @@ export interface Collider {
     collisionRect: () => Rect
 }
 
+// Get all the colliders from a state.
+export function allCollidersFromState(state: IGlobalState): Map<number, Collider> {
+    let map = new Map<number, Collider>();
+    state.plants.forEach(plant => map.set(plant.colliderId, plant));
+    state.invisibleColliders.forEach(ic => map.set(ic.colliderId, ic));
+    state.npcs.forEach(npc => map.set(npc.colliderId, npc));
+    map.set(state.gardener.colliderId, state.gardener);
+    return map;
+}
+  
+
 // Check whether the given collider overlaps (collides) with any other collider (excluding itself).
 export function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>, collider: Collider): boolean {
     if (state.debugSettings.collisionsDisabled) return false;
