@@ -86,6 +86,7 @@ export interface IGlobalState {
     planet3: Planet | null;           // One of the planets drifting by. Null if none.
     planets: Planet[];                // The full list of available drifting planets.
     debugSettings: any;               // For configuring extra debug info and visualizations.
+    colliderMap: Map<number, Collider>// Map of collider IDs to colliders.
   }
 
  // Generate the game starting state.
@@ -191,6 +192,7 @@ export function initialGameState(): IGlobalState {
       collisionsDisabled: false,    // Disable collision checks - Gardener can walk through anything.
       freeze: false,                // When true, drawState becomes a no-opp.
     },
+    colliderMap: new Map<number, Collider>(),
   }
 }
 
@@ -345,4 +347,14 @@ function createSupernovaEvents(delay: number): AnimEvent[] {
       shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop,
       pulse1, pulse2, pulse3, pulse4, pulse5, pulse6, pulse7, pulseStop,
     ];
+}
+
+// Get all the colliders from a state.
+function allCollidersFromState(state: IGlobalState): Map<number, Collider> {
+  let map = new Map<number, Collider>();
+  state.plants.forEach(plant => map.set(plant.colliderId, plant));
+  state.invisibleColliders.forEach(ic => map.set(ic.colliderId, ic));
+  state.npcs.forEach(npc => map.set(npc.colliderId, npc));
+  map.set(state.gardener.colliderId, state.gardener);
+  return map;
 }

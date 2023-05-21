@@ -107,9 +107,13 @@ function ignoreKeyPress(newDirection: Direction, keysPressed: Direction[]): bool
 
 // Move the gardener according to keys pressed.
 // This will be aborted if the would-be new position overlaps with a plant.
-function moveGardenerOnFrame(state: IGlobalState, allColliders: Map<number, Collider>): IGlobalState {
+function moveGardenerOnFrame(state: IGlobalState): IGlobalState {
+  if(!state.gardener.moving) {
+    return state;
+  }
   // Would-be new post-move gardener.
   const newGar = state.gardener.move(state.keysPressed);
+  let allColliders: Map<number, Collider> = state.colliderMap;
 
   // Get all colliders currently in collision with the gardener.
   let colliders: Collider[] = detectCollisions(state, allColliders, newGar);
@@ -136,12 +140,14 @@ function moveGardenerOnFrame(state: IGlobalState, allColliders: Map<number, Coll
     }
   }
   // All clear. Commit the move to the global state.
+  allColliders.set(state.gardener.colliderId, state.gardener);
   return {
     ...state,
     gardener: newGar,
     // Watering can moves with gardener if the item is equipped.
     wateringCan: state.wateringCan.isEquipped ? state.wateringCan.moveWithGardener(newGar) : state.wateringCan,
     currentFrame: computeCurrentFrame(),
+    colliderMap: allColliders,
   }
 }
 
@@ -182,15 +188,12 @@ function updateFrame(state: IGlobalState): IGlobalState {
   }
 
   // Get all the colliders as they exist now.
-  let allColliders = allCollidersFromState(state);
-
+  state = {...state, colliderMap: allCollidersFromState(state)};
+  let allColliders = state.colliderMap;
+  
   // Allow gardener to move.
-  let gardenerMoving = state.gardener.moving;
-  if (gardenerMoving) {
-    state = moveGardenerOnFrame(state, allColliders);
-    allColliders.set(state.gardener.colliderId, state.gardener);
-  }
-
+  state = moveGardenerOnFrame(state);
+ 
   // Allow gardener to (keep) watering.
   if (state.gardener.watering) state = utiliseItem(state);
 
@@ -231,20 +234,12 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let newPlants = dehydratePlants(state.plants, state);
   newPlants = growPlants(newPlants, state);
 
-  let newShield = state.shieldDoors.updateStates();
   let newAirlock = state.airlock.updateState(state);
-  let newShaker = state.screenShaker;
-  let newBlackHole: BlackHole | null = state.blackHole;
-  if (newBlackHole !== null) newBlackHole = newBlackHole.adjustPulseMagnitude();
-
-  let activeEvents: AnimEvent[] = [...state.activeEvents.filter(animEvent => !animEvent.finished), ...state.pendingEvents.filter(animEvent => animEvent.startTime <= state.currentFrame)];
-  let pendingEvents: AnimEvent[] = state.pendingEvents.filter(animEvent => animEvent.startTime > state.currentFrame);
-  let triggeredEvents: AnimEvent[] = [];
-  let gameover: boolean = false;
-  let newShieldButtons: ShieldButton[] = state.shieldButtons;
 
   state = updateAnimEventState(state);
 
+  let newBlackHole: BlackHole | null = state.blackHole;
+  if (newBlackHole !== null) newBlackHole = newBlackHole.adjustPulseMagnitude();
   // Once the black hole has been around long enough to have passed by, clear it back to null.
   if ((newBlackHole !== null) && ((f - newBlackHole.startFrame) > 1000)) newBlackHole = null;
 
