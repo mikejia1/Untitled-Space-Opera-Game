@@ -39,6 +39,29 @@ export interface Collider {
     collisionRect: () => Rect
 }
 
+// Check whether the given collider overlaps (collides) with any other collider (excluding itself).
+export function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>, collider: Collider): boolean {
+    if (state.debugSettings.collisionsDisabled) return false;
+    let cRect = collider.collisionRect();
+  
+    // Check all colliders and stop if and when any collision is found.
+    let ids = Array.from(colliders.keys());
+    for (let i = 0; i < ids.length; i++) {
+      let colliderId = ids[i];
+      // Don't check collisions with self.
+      if (colliderId === collider.colliderId) continue;
+      let co = colliders.get(colliderId);
+      if (co === undefined) continue; // Will never happen.
+      // Ignore collisions if there's an explicit exception for this pair of collider types.
+      let exceptions = ColliderExceptions(collider);
+      let expt = exceptions[co.colliderType.toString()];
+      if (expt === true) continue;
+      if (rectanglesOverlap(cRect, co.collisionRect())) return true;
+    };
+  
+    // No collisions detected.
+    return false;
+}
 
 // Check whether the given collider overlaps (collides) with any other colliders (excluding itself), but
 // return all such colliders.

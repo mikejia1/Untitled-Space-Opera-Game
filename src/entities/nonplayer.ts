@@ -1,9 +1,9 @@
-import { Collider, ColliderType, IGlobalState, Paintable } from '../store/classes';
+import { Collider, ColliderType, IGlobalState, Paintable, collisionDetected } from '../store/classes';
 import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
-    Coord, Rect, randomInt,
+    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -198,3 +198,133 @@ export class NonPlayer implements Paintable, Collider {
     }
 }
 
+export function updateNPCState(state: IGlobalState) : IGlobalState {
+    let allColliders : Map<number, Collider> = state.colliderMap;
+  // Allow NPCs to move.
+  let newNPCs: NonPlayer[] = [];
+  state.npcs.forEach(npc => {
+    // Get a new version of the npc - one that has taken its next step.
+    let newNPC = moveNPC(state, npc);
+
+    // Allow the NPC to consider adopting a new movement (forced = false).
+    newNPC = considerNewNPCMovement(state, newNPC, false);
+
+    // If this new NPC is in collision with anything, revert back to original npc
+    // and force it to choose a new movement.
+    if (collisionDetected(state, allColliders, newNPC)) {
+      newNPC = considerNewNPCMovement(state, npc, true);
+    }
+
+    // Update the NPC array. Update the colliders so that subsequent NPCs will
+    // check collisions against up-to-date locations of their peers.
+    newNPCs = [...newNPCs, newNPC];
+    allColliders.set(newNPC.colliderId, newNPC);
+  });
+
+  return {
+    ...state,
+    npcs: newNPCs,
+    colliderMap: allColliders,
+    };
+}
+
+// Allow an NPC to randomly choose a new movement. If the NPC is not currently moving, wait for
+// its stationaryCountdown to reach zero before adopting a new movement.
+function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boolean): NonPlayer {
+    // Whether or not the NPC will adopt a new movement.
+    let change = false;
+  
+    // If NPC is currently stationery, adopt new movement when the countdown reaches zero,
+    // otherwise adopt new movement with some small probability.
+    if (!npc.moving) {
+      if (npc.stationeryCountdown === 0) change = true;
+    } else {
+      switch (npc.mentalState) {
+        // A normal NPC changes direction infrequently.
+        case MentalState.Normal:
+          // If an NPC is avoiding the gardener and finds itself facing the gardener, then
+          // it's time to force a direction change.
+          if (npc.gardenerAvoidanceCountdown > 0) {
+            let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
+            //console.log(directionName(badDir));
+            if (badDir === npc.facing) change = true;
+            else change = (Math.random() < 0.02);
+          } else change = (Math.random() < 0.02);
+          break;
+        // A frazzled NPC changes direction frequently.
+        case MentalState.Frazzled:
+          change = (Math.random() < 0.6);
+          break;
+      }
+    }
+    change = change || forced;
+  
+    // If no new movement is being adopted, return NPC unchanged.
+    if (!change) return npc;
+  
+    // New movement is to be adopted. Choose new direction *or* choose to remain stationery for a while.
+    let choice: number;
+    switch (npc.mentalState) {
+      // A normal NPC stands still often.
+      case MentalState.Normal:
+        // If NPC is currently avoiding the gardener, movement choices are somewhat limited.
+        if (npc.gardenerAvoidanceCountdown > 0) choice = gardenerAvoidingDirectionChoice(state, npc);
+        else choice = randomInt(0, 4);
+        break;
+      // A frazzled NPC doesn't stand still very often.
+      case MentalState.Frazzled:
+        choice = randomInt(0, 4 + (3 * 5));
+        if (choice > 4) choice = (choice - 5) % 3;
+        break;
+    }
+    if (choice === 4) {
+      let countdown: number;
+      switch (npc.mentalState) {
+        // A normal NPC will stand still for a little while.
+        case MentalState.Normal:
+          countdown = 30 + randomInt(0, 200);
+          break;
+        // A frazzled NPC will not stand still for long.
+        case MentalState.Frazzled:
+          countdown = 1 + randomInt(0, 4);
+          break;
+      }
+      return new NonPlayer({
+        clone: npc,
+        moving: false,
+        stationeryCountdown: countdown,
+      });
+    }
+    return new NonPlayer({
+      clone: npc,
+      moving: true,
+      facing: ALL_DIRECTIONS[choice],
+    });
+  }
+  
+  // Choose a direction (an index into ALL_DIRECTIONS) that would move the NPC away from the gardener.
+  function gardenerAvoidingDirectionChoice(state: IGlobalState, npc: NonPlayer): number {
+    // Compute the one forbidden direction.
+    let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
+    // Gather up all the indices that don't correspond to that direction.
+    let indices: number[] = [];
+    for (let i = 0; i < 4; i++) {
+      if (ALL_DIRECTIONS[i] !== badDir) {
+        indices = [...indices, i];
+      }
+    }
+    // Return one of those indices.
+    let j = randomInt(0, 2);
+    return indices[j];
+  }
+  
+  // "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
+  function moveNPC(state: IGlobalState, npc: NonPlayer): NonPlayer {
+    if (!npc.moving) {
+      return new NonPlayer({
+        clone: npc,
+        stationeryCountdown: Math.max(0, npc.stationeryCountdown - 1),
+      });
+    }
+    return npc.move();
+  }

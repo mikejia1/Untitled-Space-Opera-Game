@@ -2,8 +2,8 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, directionOfFirstRelativeToSecond, directionName, AIRLOCK_PIXEL_SPEED } from "../../utils";
-import { AnimEvent, AnimEventType, Collider, ColliderExceptions, ColliderType, IGlobalState, initialGameState, updateAnimEventState } from "../classes";
-import { Airlock, AirlockState, Gardener, MentalState, NonPlayer, Plant, ShieldButton, updateGardenerMoveState } from '../../entities';
+import { AnimEvent, AnimEventType, Collider, ColliderExceptions, ColliderType, IGlobalState, collisionDetected, initialGameState, updateAnimEventState } from "../classes";
+import { Airlock, AirlockState, Gardener, MentalState, NonPlayer, Plant, ShieldButton, updateGardenerMoveState, updateNPCState } from '../../entities';
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -129,25 +129,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   if (state.gardener.watering) state = utiliseItem(state);
 
   // Allow NPCs to move.
-  let newNPCs: NonPlayer[] = [];
-  state.npcs.forEach(npc => {
-    // Get a new version of the npc - one that has taken its next step.
-    let newNPC = moveNPC(state, npc);
-
-    // Allow the NPC to consider adopting a new movement (forced = false).
-    newNPC = considerNewNPCMovement(state, newNPC, false);
-
-    // If this new NPC is in collision with anything, revert back to original npc
-    // and force it to choose a new movement.
-    if (collisionDetected(state, allColliders, newNPC)) {
-      newNPC = considerNewNPCMovement(state, npc, true);
-    }
-
-    // Update the NPC array. Update the colliders so that subsequent NPCs will
-    // check collisions against up-to-date locations of their peers.
-    newNPCs = [...newNPCs, newNPC];
-    allColliders.set(newNPC.colliderId, newNPC);
-  });
+  state = updateNPCState(state);
 
   let cats : Cat[] = [];
   for(let i = 0; i < state.cats.length; i++){
@@ -155,12 +137,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   }
   state = {...state, cats: cats};
 
-  if(state.airlock.state === AirlockState.OPEN){
-    let s = updateOpenAirlockMovements(state);
-    cats = s.cats;
-    newNPCs = s.npcs;
-    state.gardener = s.gardener;
-  }
+  if(state.airlock.state === AirlockState.OPEN) state = updateOpenAirlockMovements(state);
 
   let newPlants = dehydratePlants(state.plants, state);
   newPlants = growPlants(newPlants, state);
@@ -353,107 +330,6 @@ function toggleGameAudio(state: IGlobalState): IGlobalState {
   };
 }
 
-// Allow an NPC to randomly choose a new movement. If the NPC is not currently moving, wait for
-// its stationaryCountdown to reach zero before adopting a new movement.
-function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boolean): NonPlayer {
-  // Whether or not the NPC will adopt a new movement.
-  let change = false;
-
-  // If NPC is currently stationery, adopt new movement when the countdown reaches zero,
-  // otherwise adopt new movement with some small probability.
-  if (!npc.moving) {
-    if (npc.stationeryCountdown === 0) change = true;
-  } else {
-    switch (npc.mentalState) {
-      // A normal NPC changes direction infrequently.
-      case MentalState.Normal:
-        // If an NPC is avoiding the gardener and finds itself facing the gardener, then
-        // it's time to force a direction change.
-        if (npc.gardenerAvoidanceCountdown > 0) {
-          let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
-          //console.log(directionName(badDir));
-          if (badDir === npc.facing) change = true;
-          else change = (Math.random() < 0.02);
-        } else change = (Math.random() < 0.02);
-        break;
-      // A frazzled NPC changes direction frequently.
-      case MentalState.Frazzled:
-        change = (Math.random() < 0.6);
-        break;
-    }
-  }
-  change = change || forced;
-
-  // If no new movement is being adopted, return NPC unchanged.
-  if (!change) return npc;
-
-  // New movement is to be adopted. Choose new direction *or* choose to remain stationery for a while.
-  let choice: number;
-  switch (npc.mentalState) {
-    // A normal NPC stands still often.
-    case MentalState.Normal:
-      // If NPC is currently avoiding the gardener, movement choices are somewhat limited.
-      if (npc.gardenerAvoidanceCountdown > 0) choice = gardenerAvoidingDirectionChoice(state, npc);
-      else choice = randomInt(0, 4);
-      break;
-    // A frazzled NPC doesn't stand still very often.
-    case MentalState.Frazzled:
-      choice = randomInt(0, 4 + (3 * 5));
-      if (choice > 4) choice = (choice - 5) % 3;
-      break;
-  }
-  if (choice === 4) {
-    let countdown: number;
-    switch (npc.mentalState) {
-      // A normal NPC will stand still for a little while.
-      case MentalState.Normal:
-        countdown = 30 + randomInt(0, 200);
-        break;
-      // A frazzled NPC will not stand still for long.
-      case MentalState.Frazzled:
-        countdown = 1 + randomInt(0, 4);
-        break;
-    }
-    return new NonPlayer({
-      clone: npc,
-      moving: false,
-      stationeryCountdown: countdown,
-    });
-  }
-  return new NonPlayer({
-    clone: npc,
-    moving: true,
-    facing: ALL_DIRECTIONS[choice],
-  });
-}
-
-// Choose a direction (an index into ALL_DIRECTIONS) that would move the NPC away from the gardener.
-function gardenerAvoidingDirectionChoice(state: IGlobalState, npc: NonPlayer): number {
-  // Compute the one forbidden direction.
-  let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
-  // Gather up all the indices that don't correspond to that direction.
-  let indices: number[] = [];
-  for (let i = 0; i < 4; i++) {
-    if (ALL_DIRECTIONS[i] !== badDir) {
-      indices = [...indices, i];
-    }
-  }
-  // Return one of those indices.
-  let j = randomInt(0, 2);
-  return indices[j];
-}
-
-// "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
-function moveNPC(state: IGlobalState, npc: NonPlayer): NonPlayer {
-  if (!npc.moving) {
-    return new NonPlayer({
-      clone: npc,
-      stationeryCountdown: Math.max(0, npc.stationeryCountdown - 1),
-    });
-  }
-  return npc.move();
-}
-
 function dehydratePlants(plants: Plant[], state: IGlobalState): Plant[] {
   let newPlants: Plant[] = [];
   plants.forEach(plant => {
@@ -468,30 +344,6 @@ function growPlants(plants: Plant[], state: IGlobalState): Plant[] {
     newPlants = [...newPlants, plant.growPlant(state)];
   });
   return newPlants;
-}
-
-// Check whether the given collider overlaps (collides) with any other collider (excluding itself).
-function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>, collider: Collider): boolean {
-  if (state.debugSettings.collisionsDisabled) return false;
-  let cRect = collider.collisionRect();
-
-  // Check all colliders and stop if and when any collision is found.
-  let ids = Array.from(colliders.keys());
-  for (let i = 0; i < ids.length; i++) {
-    let colliderId = ids[i];
-    // Don't check collisions with self.
-    if (colliderId === collider.colliderId) continue;
-    let co = colliders.get(colliderId);
-    if (co === undefined) continue; // Will never happen.
-    // Ignore collisions if there's an explicit exception for this pair of collider types.
-    let exceptions = ColliderExceptions(collider);
-    let expt = exceptions[co.colliderType.toString()];
-    if (expt === true) continue;
-    if (rectanglesOverlap(cRect, co.collisionRect())) return true;
-  };
-
-  // No collisions detected.
-  return false;
 }
 
 // Get all the colliders from a state.
