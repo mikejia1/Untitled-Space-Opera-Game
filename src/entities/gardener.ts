@@ -1,4 +1,4 @@
-import { IGlobalState, Collider, Paintable, Interactable, ColliderType } from '../store/classes';
+import { IGlobalState, Collider, Paintable, Interactable, ColliderType, playBumpSound, getBumpedNPCs, detectCollisions } from '../store/classes';
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
@@ -8,6 +8,7 @@ import {
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 import { paintGameOver } from './skeleton';
+import { NonPlayer } from './nonplayer';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
@@ -225,4 +226,49 @@ export class Gardener implements Paintable, Collider, Interactable {
         case GardenerDirection.Right: return shiftRect(rect, ENTITY_RECT_WIDTH, 0);
        }
     }
-  }
+}
+
+
+export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
+    if(!state.gardener.moving) {
+      return state;
+    }
+    // Move the gardener according to keys pressed.
+    // This will be aborted if the would-be new position overlaps with a plant.
+    // Would-be new post-move gardener.
+    const newGar = state.gardener.move(state.keysPressed);
+    let allColliders: Map<number, Collider> = state.colliderMap;
+  
+    // Get all colliders currently in collision with the gardener.
+    let colliders: Collider[] = detectCollisions(state, allColliders, newGar);
+  
+    // Filter those colliders down to just those that are NPCs, keyed by collider ID.
+    let bumpedNPCs: Set<number> = getBumpedNPCs(colliders);
+  
+    // Get a new list of NPCs where the bumped ones have begun avoiding the gardener.
+    let newNPCs: NonPlayer[] = [];
+    for (let i = 0; i < state.npcs.length; i++) {
+      let npc = state.npcs[i];
+      if (bumpedNPCs.has(npc.colliderId)) newNPCs = [...newNPCs, npc.startAvoidingGardener()];
+      else newNPCs = [...newNPCs, npc]; 
+    }
+  
+    // If new gardener is in collision with anything, we abort the move.
+    if (colliders.length > 0) {
+      console.log("Bump!");
+      if (!state.muted) playBumpSound();
+      return {
+        ...state,
+        npcs: newNPCs,
+      }
+    }
+    // All clear. Update new version of garden to colliderMap and commit the move to global state.
+    allColliders.set(state.gardener.colliderId, newGar);
+    return {
+      ...state,
+      gardener: newGar,
+      // Watering can moves with gardener if the item is equipped.
+      wateringCan: state.wateringCan.isEquipped ? state.wateringCan.moveWithGardener(newGar) : state.wateringCan,
+      colliderMap: allColliders,
+    }
+}

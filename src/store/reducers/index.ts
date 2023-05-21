@@ -3,7 +3,7 @@
 
 import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, directionOfFirstRelativeToSecond, directionName, AIRLOCK_PIXEL_SPEED } from "../../utils";
 import { AnimEvent, AnimEventType, Collider, ColliderExceptions, ColliderType, IGlobalState, initialGameState, updateAnimEventState } from "../classes";
-import { Airlock, AirlockState, Gardener, MentalState, NonPlayer, Plant, ShieldButton } from '../../entities';
+import { Airlock, AirlockState, Gardener, MentalState, NonPlayer, Plant, ShieldButton, updateGardenerMoveState } from '../../entities';
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -105,75 +105,6 @@ function ignoreKeyPress(newDirection: Direction, keysPressed: Direction[]): bool
   return false;
 }
 
-// Move the gardener according to keys pressed.
-// This will be aborted if the would-be new position overlaps with a plant.
-function moveGardenerOnFrame(state: IGlobalState): IGlobalState {
-  if(!state.gardener.moving) {
-    return state;
-  }
-  // Would-be new post-move gardener.
-  const newGar = state.gardener.move(state.keysPressed);
-  let allColliders: Map<number, Collider> = state.colliderMap;
-
-  // Get all colliders currently in collision with the gardener.
-  let colliders: Collider[] = detectCollisions(state, allColliders, newGar);
-
-  // Filter those colliders down to just those that are NPCs, keyed by collider ID.
-  let bumpedNPCs: Set<number> = getBumpedNPCs(colliders);
-
-  // Get a new list of NPCs where the bumped ones have begun avoiding the gardener.
-  let newNPCs: NonPlayer[] = [];
-  for (let i = 0; i < state.npcs.length; i++) {
-    let npc = state.npcs[i];
-    if (bumpedNPCs.has(npc.colliderId)) newNPCs = [...newNPCs, npc.startAvoidingGardener()];
-    else newNPCs = [...newNPCs, npc]; 
-  }
-
-  // If new gardener is in collision with anything, we abort the move.
-  if (colliders.length > 0) {
-    console.log("Bump!");
-    if (!state.muted) playBumpSound();
-    return {
-      ...state,
-      currentFrame: computeCurrentFrame(),
-      npcs: newNPCs,
-    }
-  }
-  // All clear. Commit the move to the global state.
-  allColliders.set(state.gardener.colliderId, state.gardener);
-  return {
-    ...state,
-    gardener: newGar,
-    // Watering can moves with gardener if the item is equipped.
-    wateringCan: state.wateringCan.isEquipped ? state.wateringCan.moveWithGardener(newGar) : state.wateringCan,
-    currentFrame: computeCurrentFrame(),
-    colliderMap: allColliders,
-  }
-}
-
-// From a list of Colliders, get the collider IDs of those that are NPCs, as a set.
-function getBumpedNPCs(colliders: Collider[]): Set<number> {
-  let npcs = new Set<number>();
-  colliders.forEach(c => { if (c.colliderType === ColliderType.NPCCo) npcs.add(c.colliderId); });
-  return npcs;
-}
-
-// Play the sound corresponding to the gardener bumping into a collider.
-function playBumpSound(): void {
-  try {
-    let boing = new Audio(require('../sounds/boing.mp3'));
-    let playPromise = boing.play();
-    // In browsers that don’t yet support this functionality, playPromise won’t be defined.
-    if (playPromise !== undefined) {
-      playPromise.then(function() {}).catch(function(error) {
-        console.log("Bump sound failure: ", error);
-      });
-    }
-  } catch (error) {
-    console.log("Audio error: ", error);
-  }
-}
-
 // TODO: See if we can animate from within a saga instead of the way we're doing it now.
 function updateFrame(state: IGlobalState): IGlobalState {
   let f = computeCurrentFrame();
@@ -192,7 +123,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let allColliders = state.colliderMap;
   
   // Allow gardener to move.
-  state = moveGardenerOnFrame(state);
+  state = updateGardenerMoveState(state);
  
   // Allow gardener to (keep) watering.
   if (state.gardener.watering) state = utiliseItem(state);
@@ -561,30 +492,6 @@ function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>
 
   // No collisions detected.
   return false;
-}
-
-// Check whether the given collider overlaps (collides) with any other colliders (excluding itself), but
-// return all such colliders.
-function detectCollisions(state: IGlobalState, colliders: Map<number, Collider>, collider: Collider): Collider[] {
-  let allFound: Collider[] = [];
-  if (state.debugSettings.collisionsDisabled) return allFound;
-  let cRect = collider.collisionRect();
-
-  // Check all colliders.
-  let ids = Array.from(colliders.keys());
-  for (let i = 0; i < ids.length; i++) {
-    let colliderId = ids[i];
-    // Don't check collisions with self.
-    if (colliderId === collider.colliderId) continue;
-    let co = colliders.get(colliderId);
-    if (co === undefined) continue; // Will never happen.
-    // Ignore collisions if there's an explicit exception for this pair of collider types.
-    let exceptions = ColliderExceptions(collider);
-    let expt = exceptions[co.colliderType.toString()];
-    if (expt === true) continue;
-    if (rectanglesOverlap(cRect, co.collisionRect())) allFound = [...allFound, co];
-  }
-  return allFound;
 }
 
 // Get all the colliders from a state.
