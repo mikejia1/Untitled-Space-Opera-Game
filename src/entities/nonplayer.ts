@@ -13,6 +13,7 @@ import { paintGameOver } from './skeleton';
 export enum MentalState {
     Normal,     // NPC acting "normal" wandering randomly around the ship
     Frazzled,   // NPC has cabin fever, acting erratic
+    Scared,     // NPC is scared of some impending danger
 }
 
 export class NonPlayer implements Paintable, Collider {
@@ -79,6 +80,7 @@ export class NonPlayer implements Paintable, Collider {
                 jitter = 0;
                 break;
             case MentalState.Frazzled:
+            case MentalState.Scared:
                 jitter = randomInt(-1, 1);
                 break;
         }
@@ -88,6 +90,7 @@ export class NonPlayer implements Paintable, Collider {
         switch (this.mentalState) {
             // A normal NPC moves at a normal walking pace.
             case MentalState.Normal:
+            case MentalState.Scared:
                 frame = this.moving ? Math.floor(state.currentFrame % (6 * frameCount) / 6) : 0;
                 break;
             // A frazzled NPC moves at a frantic pace.
@@ -111,11 +114,11 @@ export class NonPlayer implements Paintable, Collider {
         
         // Paint gardener sprite for current frame.
         canvas.drawImage(
-            (this.mentalState === MentalState.Normal) ? state.npcImages.normalWalkCycle : state.npcImages.frazzledWalkCycle,
-            (frame * 96) + 40, 20,             // Top-left corner of frame in source
-            48, 48,                            // Size of frame in source
-            dest.x, dest.y,                    // Position of sprite on canvas
-            48, 48);                           // Sprite size on canvas
+            this.currentWalkCycleImage(state),  // The sprite sheet image
+            (frame * 96) + 40, 20,              // Top-left corner of frame in source
+            48, 48,                             // Size of frame in source
+            dest.x, dest.y,                     // Position of sprite on canvas
+            48, 48);                            // Sprite size on canvas
     
         // For debugging only. To be removed.
         if (this.gardenerAvoidanceCountdown > 0) outlineRect(canvas, { a: dest, b: dest.plus(18, 20) }, Colour.WATERING_RECT);
@@ -134,6 +137,15 @@ export class NonPlayer implements Paintable, Collider {
         // if (state.debugSettings.showFacingRects) {
         //     outlineRect(canvas, shiftRect(this.facingDetectionRect(), shift.x, shift.y), Colour.FACING_RECT);
         // }
+    }
+
+    // Get the walk cycle sprite sheet that currently applies for the NPC (depends on mental state).
+    currentWalkCycleImage(state: IGlobalState): any {
+        switch (this.mentalState) {
+            case MentalState.Normal:    return state.npcImages.normalWalkCycle;
+            case MentalState.Frazzled:  return state.npcImages.frazzledWalkCycle;
+            case MentalState.Scared:    return state.npcImages.scaredWalkCycle;
+        }
     }
 
     // Compute a displacement that will place the NPC at the correct place on the canvas.
@@ -155,6 +167,7 @@ export class NonPlayer implements Paintable, Collider {
         switch (this.mentalState) {
             // A normal NPC moves at a slow speed.
             case MentalState.Normal:
+            case MentalState.Scared:
                 // NPCs walk faster when avoiding the gardener.
                 let multiplier = (this.gardenerAvoidanceCountdown > 0) ? 1.5 : 1;
                 vPixelSpeed = NPC_V_PIXEL_SPEED * multiplier;
@@ -251,7 +264,6 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
           // it's time to force a direction change.
           if (npc.gardenerAvoidanceCountdown > 0) {
             let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
-            //console.log(directionName(badDir));
             if (badDir === npc.facing) change = true;
             else change = (Math.random() < 0.02);
           } else change = (Math.random() < 0.02);
@@ -259,6 +271,16 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         // A frazzled NPC changes direction frequently.
         case MentalState.Frazzled:
           change = (Math.random() < 0.6);
+          break;
+        // A scared NPC's behaviour is between the two above.
+        case MentalState.Scared:
+          // If an NPC is avoiding the gardener and finds itself facing the gardener, then
+          // it's time to force a direction change.
+          if (npc.gardenerAvoidanceCountdown > 0) {
+            let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
+            if (badDir === npc.facing) change = true;
+            else change = (Math.random() < 0.2);
+          } else change = (Math.random() < 0.2);
           break;
       }
     }
@@ -281,6 +303,13 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         choice = randomInt(0, 4 + (4 * 5));
         if (choice > 4) choice = (choice - 5) % 4;
         break;
+      // A scared NPC is in between the two above.
+      case MentalState.Scared:
+        // If NPC is currently avoiding the gardener, movement choices are somewhat limited.
+        if (npc.gardenerAvoidanceCountdown > 0) choice = gardenerAvoidingDirectionChoice(state, npc);
+        else choice = randomInt(0, 4 + (2 * 5));
+        if (choice > 4) choice = (choice - 5) % 4;
+        break;
     }
     if (choice === 4) {
       let countdown: number;
@@ -293,6 +322,10 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         case MentalState.Frazzled:
           countdown = 1 + randomInt(0, 4);
           break;
+        // A scared NPC will be in between the two above.
+        case MentalState.Scared:
+            countdown = 15 + randomInt(0, 100);
+            break;
       }
       return new NonPlayer({
         clone: npc,

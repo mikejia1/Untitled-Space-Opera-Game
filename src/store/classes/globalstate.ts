@@ -22,6 +22,7 @@ import bottomShield from "../../entities/images/shield/shield_bottom_32x.png";
 import skeleton             from "../../entities/images/skeleton/skeleton_death.png";
 import npcwalkcycle         from "../../entities/images/nonplayer/npcwalkcycle.png";
 import frazzlednpcwalkcycle from "../../entities/images/nonplayer/frazzled_npcwalkcycle.png";
+import scarednpcwalkcycle   from "../../entities/images/nonplayer/scared_npcwalkcycle.png";
 import catswalkcycle        from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
 import spacegardenimpact    from "../images/space_garden_impact.png";
 import spacegarden          from "../images/space_garden.png";
@@ -147,6 +148,7 @@ export function initialGameState(): IGlobalState {
     npcImages:       {
       normalWalkCycle:    loadImage("Normal NPC walk cycle", npcwalkcycle),
       frazzledWalkCycle:  loadImage("Frazzled NPC walk cycle", frazzlednpcwalkcycle),
+      scaredWalkCycle:    loadImage("Scared NPC walk cycle", scarednpcwalkcycle),
     },
     backgroundImages:{
       default:      loadImage("Space garden", spacegarden),
@@ -273,6 +275,7 @@ function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: numbe
   for (let col = 0; col < cols; col++) {
     for (let row = 0; row < rows; row++) {
       if ((col === 0) && (row === 0)) mentalState = MentalState.Frazzled;
+      else if ((col === 0) && (row === 1)) mentalState = MentalState.Scared;
       else mentalState = MentalState.Normal;
       let npc = new NonPlayer({
         colliderId: colliderId + (row * cols) + col,
