@@ -32,6 +32,7 @@ import {
   TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS,
   TOGGLE_GAME_AUDIO,
 } from "../actions";
+import { updateOxygenState } from "../../entities/oxygen";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -140,6 +141,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
   state = updateAnimEventState(state);
 
   state = updateHeavenlyBodyState(state);
+
+  state = updateOxygenState(state);
 
   return state;
 }
