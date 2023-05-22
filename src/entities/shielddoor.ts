@@ -226,9 +226,9 @@ export class ShieldDoor implements Paintable {
         canvas.beginPath();
         canvas.arc(                                         // Draw a circle.
             loc.x + LIGHT_RADIUS, loc.y + LIGHT_RADIUS,     // Centre of circle.
-            LIGHT_RADIUS - 1,                                   // Radius of the circle.
+            LIGHT_RADIUS - 1,                               // Radius of the circle.
             0, 2 * Math.PI);                                // Start and end angles.
-        canvas.stroke();                                    // The outline of the circle.
+        for (let i = 0; i < 5; i++) canvas.stroke()         // The outline of the circle.
         canvas.fill();                                      // The inside of the circle.
         canvas.restore();
     }

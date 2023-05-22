@@ -105,7 +105,7 @@ export class BlackHole implements Paintable {
             dest.x + 256, dest.y + 256,     // Centre of circle.
             radOrange,                      // Radius of the circle.
             0, 2 * Math.PI);                // Start and end angles.
-        canvas.stroke();                    // The outline of the circle.
+        for (let i = 0; i < 5; i++) canvas.stroke();  // The outline of the circle.
         // A white disc.
         canvas.strokeStyle = `rgba(255,255,255,${alpha * 0.5})`;
         canvas.fillStyle = `rgba(255,255,255,${alpha})`;
@@ -116,7 +116,7 @@ export class BlackHole implements Paintable {
             radWhite - 3,                   // Radius of the circle.
             0, 2 * Math.PI);                // Start and end angles.
         canvas.fill();                      // The inside of the circle.
-        canvas.stroke();                    // The outline of the circle.
+        for (let i = 0; i < 5; i++) canvas.stroke();  // The outline of the circle.
         // A black disc.
         canvas.strokeStyle = `rgba(20,20,20,${alpha * 0.5})`;
         canvas.fillStyle = `rgba(0,0,0,${alpha})`;
@@ -127,7 +127,7 @@ export class BlackHole implements Paintable {
             radBlack - 6,                   // Radius of the circle.
             0, 2 * Math.PI);                // Start and end angles.
         canvas.fill();                      // The inside of the circle.
-        canvas.stroke();                    // The outline of the circle.
+        for (let i = 0; i < 5; i++) canvas.stroke();  // The outline of the circle.
         canvas.restore();
     }
 
