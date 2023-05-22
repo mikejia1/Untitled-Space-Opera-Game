@@ -216,6 +216,16 @@ export class NonPlayer implements Paintable, Collider {
         });
     }
 
+    oxygenConsumption(): number {
+        if(this.mentalState == MentalState.Frazzled){
+            return 0.5;
+        }
+        if(this.mentalState == MentalState.Scared){
+            return 2;
+        }
+        return 1;
+    }
+
     // Make a new version of the NPC that now begins avoiding the gardener.
     startAvoidingGardener(): NonPlayer {
         return new NonPlayer({

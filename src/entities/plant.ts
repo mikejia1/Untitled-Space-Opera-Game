@@ -68,6 +68,10 @@ export class Plant {
     return this;
   }
 
+  oxygenOutput(): number {
+    return this.growthStage * this.growthStage * this.health * 0.01;
+  }
+
   // Paint the plant on the canvas.
   paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
     // Determine where, on the canvas, the plant should be painted.
@@ -130,6 +134,7 @@ export class Plant {
 
 export function updatePlantState(state: IGlobalState): IGlobalState{
   let newPlants: Plant[] = [];
+  let newOxygen = state.oxygen;
   state.plants.forEach(plant => {
     newPlants = [...newPlants, plant.dehydratePlant(state).growPlant(state)];
   });

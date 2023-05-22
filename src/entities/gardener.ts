@@ -9,6 +9,7 @@ import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 import { paintGameOver } from './skeleton';
 import { NonPlayer } from './nonplayer';
+import { drawTextDialog } from '../utils/drawtext';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
@@ -117,6 +118,9 @@ export class Gardener implements Paintable, Collider, Interactable {
         if (state.gameover) paintGameOver(canvas, state, newPos, flip);
         else if (this.watering) this.paintWatering(canvas, state, shift, newPos, flip);
         else this.paintWalking(canvas, state, shift, newPos, flip);
+
+        // Paint debugging oxygen level.
+        drawTextDialog(canvas, newPos.plus(0, -30), String(Math.floor(state.oxygen)));
 
         // Extra debug displays.
         if (state.debugSettings.showCollisionRects) {
