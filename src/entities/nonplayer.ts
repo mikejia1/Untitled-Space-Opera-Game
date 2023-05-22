@@ -3,14 +3,17 @@ import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
-    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond, computeCurrentFrame, FPS,
+    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond, computeCurrentFrame, FPS, oppositeDirection,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 import { paintGameOver } from './skeleton';
 
 // Probability of cabin fever, per NPC, per frame. 5 in 10,000.
-export const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0005;
+const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0005;
+
+// Number of frames until a frazzled NPC becomes suicidal.
+const SUICIDAL_DELAY = 400;
 
 // Complete set of possible NPC mental states.
 export enum MentalState {
@@ -26,6 +29,7 @@ export class NonPlayer implements Paintable, Collider {
     moving: boolean;                        // Whether or not the NPC is currently walking (vs standing still).
     mentalState: MentalState;               // The current mental state of the NPC.
     gardenerAvoidanceCountdown: number;     // NPC is avoiding the gardener when this is non-zero.
+    suicideCountdown: number;               // Countdown until frazzled NPC becomes suicidal.
     colliderId: number;                     // ID to distinguish the collider from all others.
     colliderType: ColliderType;             // The type of collider that the NPC currently is (depends on mental state).
 
@@ -38,6 +42,7 @@ export class NonPlayer implements Paintable, Collider {
         this.moving = true;                             // Start with NPC moving.
         this.mentalState = MentalState.Normal;          // Start NPC in normal (~calm) mental state.
         this.gardenerAvoidanceCountdown = 0;            // NPC *not* initially avoiding gardener.
+        this.suicideCountdown = 0;                      // Dummy value that is ignored unless NPC is frazzled.
         this.colliderType = ColliderType.NPCNormalCo;   // NPC default mental state is "normal".
 
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
@@ -46,6 +51,7 @@ export class NonPlayer implements Paintable, Collider {
         if (params.pos !== undefined) this.pos = params.pos;
         if (params.facing !== undefined) this.facing = params.facing;
         if (params.stationeryCountdown !== undefined) this.stationeryCountdown = params.stationeryCountdown;
+        if (params.suicideCountdown !== undefined) this.suicideCountdown = params.suicideCountdown;
         if (params.moving !== undefined) this.moving = params.moving;
         if (params.mentalState !== undefined) this.mentalState = params.mentalState;
         if (params.gardenerAvoidanceCountdown !== undefined) this.gardenerAvoidanceCountdown = params.gardenerAvoidanceCountdown;
@@ -60,6 +66,7 @@ export class NonPlayer implements Paintable, Collider {
         this.pos = other.pos;
         this.facing = other.facing;
         this.stationeryCountdown = other.stationeryCountdown;
+        this.suicideCountdown = other.suicideCountdown;
         this.moving = other.moving;
         this.mentalState = other.mentalState;
         this.gardenerAvoidanceCountdown = other.gardenerAvoidanceCountdown;
@@ -231,12 +238,17 @@ export class NonPlayer implements Paintable, Collider {
     // Allow the NPC to change its mental state.
     maybeChangeMentalState(state: IGlobalState): NonPlayer {
         let newMentalState: MentalState;
+        let newSuicideCountdown: number = this.suicideCountdown;
         switch (this.mentalState) {
             // An NPC in normal mental state becomes scared by impending danger, or
             // randomly gets frazzled (cabin fever).
             case MentalState.Normal:
                 if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
-                else if ((randomInt(0, 9999) / 10000) < PER_FRAME_CABIN_FEVER_PROBABILITY) newMentalState = MentalState.Frazzled;
+                else if ((randomInt(0, 9999) / 10000) < PER_FRAME_CABIN_FEVER_PROBABILITY) {
+                    // When an NPC first develops cabin fever, that's when the suicide countdown starts.
+                    newMentalState = MentalState.Frazzled;
+                    newSuicideCountdown = SUICIDAL_DELAY;
+                }
                 else newMentalState = MentalState.Normal;
                 break;
             // A frazzled NPC is unaffected by impending danger.
@@ -252,6 +264,15 @@ export class NonPlayer implements Paintable, Collider {
         return new NonPlayer({
             clone: this,
             mentalState: newMentalState,
+        });
+    }
+
+    // Let frazzled NPC decrement suicide countdown.
+    decrementSuicideCountdown(): NonPlayer {
+        if (this.mentalState !== MentalState.Frazzled) return this;
+        return new NonPlayer({
+            clone: this,
+            suicideCountdown: Math.max(this.suicideCountdown - 1, 0),
         });
     }
 }
@@ -284,6 +305,9 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
 
         // Allow the NPC to change its mental state.
         newNPC = newNPC.maybeChangeMentalState(state);
+
+        // Decrement the suicide countdown (only frazzled NPCs will do this).
+        newNPC = newNPC.decrementSuicideCountdown();
 
         // Update the NPC array. Update the colliders so that subsequent NPCs will
         // check collisions against up-to-date locations of their peers.
@@ -352,8 +376,13 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         break;
       // A frazzled NPC doesn't stand still very often.
       case MentalState.Frazzled:
-        choice = randomInt(0, 4 + (4 * 5));
-        if (choice > 4) choice = (choice - 5) % 4;
+        // If suicidal, head toward the air lock button.
+        if (npc.suicideCountdown === 0) choice = suicidalDirectionChoice(state, npc);
+        else {
+            // If non (yet) suicidal, just moved in frazzled manner.
+            choice = randomInt(0, 4 + (4 * 5));
+            if (choice > 4) choice = (choice - 5) % 4;
+        }
         break;
       // A scared NPC is in between the two above.
       case MentalState.Scared:
@@ -406,6 +435,24 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
     // Return one of those indices.
     let j = randomInt(0, 2);
     return indices[j];
+  }
+
+  // Choose a direction (an index into ALL_DIRECTIONS) that would move the NPC closer to the air lock button.
+  function suicidalDirectionChoice(state: IGlobalState, npc: NonPlayer): number {
+    // Compute the desired direction.
+    let buttonDir = directionOfFirstRelativeToSecond(state.airlockButton, npc);
+    // All directions, but with the desired one replacing its opposite (i.e. it's present twice).
+    let indices: number[] = [];
+    let oppositeDir = oppositeDirection(buttonDir);
+    let buttonDirIndex: number = 0;
+    let oppositeDirIndex: number = 0;
+    for (let i = 0; i < 4; i++) {
+        indices = [...indices, i];
+        if (ALL_DIRECTIONS[i] === buttonDir) buttonDirIndex = i;
+        else if (ALL_DIRECTIONS[i] === oppositeDir) oppositeDirIndex = i;
+    }
+    indices[oppositeDirIndex] = buttonDirIndex;
+    return indices[randomInt(0, 3)];
   }
   
   // "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
