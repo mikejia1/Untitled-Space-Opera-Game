@@ -3,11 +3,14 @@ import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
-    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond,
+    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond, computeCurrentFrame, FPS,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 import { paintGameOver } from './skeleton';
+
+// Probability of cabin fever, per NPC, per frame. 5 in 10,000.
+export const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0005;
 
 // Complete set of possible NPC mental states.
 export enum MentalState {
@@ -214,35 +217,74 @@ export class NonPlayer implements Paintable, Collider {
             stationeryCountdown: 0,
         });
     }
+
+    // Allow the NPC to change its mental state.
+    maybeChangeMentalState(state: IGlobalState): NonPlayer {
+        let newMentalState: MentalState;
+        switch (this.mentalState) {
+            // An NPC in normal mental state becomes scared by impending danger, or
+            // randomly gets frazzled (cabin fever).
+            case MentalState.Normal:
+                if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
+                else if ((randomInt(0, 9999) / 10000) < PER_FRAME_CABIN_FEVER_PROBABILITY) newMentalState = MentalState.Frazzled;
+                else newMentalState = MentalState.Normal;
+                break;
+            // A frazzled NPC is unaffected by impending danger.
+            case MentalState.Frazzled:
+                newMentalState = MentalState.Frazzled;
+                break;
+            // A scared NPC stops being scared when the danger is gone.
+            case MentalState.Scared:
+                if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
+                else newMentalState = MentalState.Normal;
+                break;
+        }
+        return new NonPlayer({
+            clone: this,
+            mentalState: newMentalState,
+        });
+    }
+}
+
+// Check global state to see if there's currently an impending danger that would scare NPCs.
+function dangerIsImpending(state: IGlobalState): boolean {
+    return (
+        // A present black hole is an impending danger, unless it has already blasted the ship.
+        ((state.blackHole !== null) && ((computeCurrentFrame() - state.blackHole.startFrame) < (30 * FPS))) || 
+        // A non-airtight air lock is an impending danger.
+        (!state.airlock.isAirtight(state)));
 }
 
 export function updateNPCState(state: IGlobalState) : IGlobalState {
     let allColliders : Map<number, Collider> = state.colliderMap;
-  // Allow NPCs to move.
-  let newNPCs: NonPlayer[] = [];
-  state.npcs.forEach(npc => {
-    // Get a new version of the npc - one that has taken its next step.
-    let newNPC = moveNPC(state, npc);
+    // Allow NPCs to move and adjust their mental state.
+    let newNPCs: NonPlayer[] = [];
+    state.npcs.forEach(npc => {
+        // Get a new version of the npc - one that has taken its next step.
+        let newNPC = moveNPC(state, npc);
 
-    // Allow the NPC to consider adopting a new movement (forced = false).
-    newNPC = considerNewNPCMovement(state, newNPC, false);
+        // Allow the NPC to consider adopting a new movement (forced = false).
+        newNPC = considerNewNPCMovement(state, newNPC, false);
 
-    // If this new NPC is in collision with anything, revert back to original npc
-    // and force it to choose a new movement.
-    if (collisionDetected(state, allColliders, newNPC)) {
-      newNPC = considerNewNPCMovement(state, npc, true);
-    }
+        // If this new NPC is in collision with anything, revert back to original npc
+        // and force it to choose a new movement.
+        if (collisionDetected(state, allColliders, newNPC)) {
+            newNPC = considerNewNPCMovement(state, npc, true);
+        }
 
-    // Update the NPC array. Update the colliders so that subsequent NPCs will
-    // check collisions against up-to-date locations of their peers.
-    newNPCs = [...newNPCs, newNPC];
-    allColliders.set(newNPC.colliderId, newNPC);
-  });
+        // Allow the NPC to change its mental state.
+        newNPC = newNPC.maybeChangeMentalState(state);
 
-  return {
-    ...state,
-    npcs: newNPCs,
-    colliderMap: allColliders,
+        // Update the NPC array. Update the colliders so that subsequent NPCs will
+        // check collisions against up-to-date locations of their peers.
+        newNPCs = [...newNPCs, newNPC];
+        allColliders.set(newNPC.colliderId, newNPC);
+    });
+
+    return {
+        ...state,
+        npcs: newNPCs,
+        colliderMap: allColliders,
     };
 }
 

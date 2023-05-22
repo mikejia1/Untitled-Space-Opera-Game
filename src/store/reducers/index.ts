@@ -1,10 +1,10 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, rectanglesOverlap, Coord } from "../../utils";
-import { GAMEOVER_RESTART_TIME, IGlobalState, allCollidersFromState, collisionDetected, initialGameState, updateAnimEventState } from "../classes";
-import { Airlock, AirlockState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
-import { Cat, updateCatState } from "../../entities/cat";
+import { Direction, computeCurrentFrame, rectanglesOverlap } from "../../utils";
+import { GAMEOVER_RESTART_TIME, IGlobalState, allCollidersFromState, initialGameState, updateAnimEventState } from "../classes";
+import { Airlock, AirlockState, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
+import { updateCatState } from "../../entities/cat";
 import { updateHeavenlyBodyState } from "../../entities/heavenlybody";
 import {
   DOWN,
