@@ -5,12 +5,13 @@ import { IGlobalState } from './globalstate';
 // By default, all types collide.
 // Exceptions must be listed explicitly in ColliderExceptions.
 export enum ColliderType {
-    GardenerCo  = "Gardener", // A gardener
-    NPCCo       = "NPC",      // An NPC
-    WallCo      = "Wall",     // A wall or other solid obstacle
-    PlantCo     = "Plant",    // A plant
-    LadderCo    = "Ladder",   // A ladder
-    CatCo       = "Cat",      // A murderous feline
+    GardenerCo    = "Gardener",     // A gardener
+    NPCNormalCo   = "NPCNormal",    // An NPC in normal mental state
+    NPCFrazzledCo = "NPCFrazzled",  // An NPC in frazzled mental state
+    WallCo        = "Wall",         // A wall or other solid obstacle
+    PlantCo       = "Plant",        // A plant
+    LadderCo      = "Ladder",       // A ladder
+    CatCo         = "Cat",          // A murderous feline
 };
 
 export interface StrSet {
@@ -21,12 +22,13 @@ export interface StrSet {
 // All exceptions should appear twice here.
 export function ColliderExceptions(col: Collider): StrSet {
     switch (col.colliderType) {
-        case ColliderType.GardenerCo:   return { Ladder: true };
-        case ColliderType.NPCCo:        return { };
-        case ColliderType.WallCo:       return { };
-        case ColliderType.PlantCo:      return { };
-        case ColliderType.LadderCo:     return { Gardener: true };
-        case ColliderType.CatCo:        return { };
+        case ColliderType.GardenerCo:    return { Ladder: true };
+        case ColliderType.NPCNormalCo:   return { };
+        case ColliderType.NPCFrazzledCo: return { Plant: true };
+        case ColliderType.WallCo:        return { };
+        case ColliderType.PlantCo:       return { NPCFrazzled: true };
+        case ColliderType.LadderCo:      return { Gardener: true };
+        case ColliderType.CatCo:         return { };
     }
 };
 
@@ -102,7 +104,9 @@ export function detectCollisions(state: IGlobalState, colliders: Map<number, Col
 // From a list of Colliders, get the collider IDs of those that are NPCs, as a set.
 export function getBumpedNPCs(colliders: Collider[]): Set<number> {
     let npcs = new Set<number>();
-    colliders.forEach(c => { if (c.colliderType === ColliderType.NPCCo) npcs.add(c.colliderId); });
+    colliders.forEach(c => {
+      if ((c.colliderType === ColliderType.NPCNormalCo) || (c.colliderType === ColliderType.NPCFrazzledCo)) npcs.add(c.colliderId);
+    });
     return npcs;
   }
   

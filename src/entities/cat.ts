@@ -1,5 +1,5 @@
 import { ColliderType, IGlobalState } from "../store/classes";
-import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, NPC_V_PIXEL_SPEED, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, NPC_H_PIXEL_SPEED } from "../utils";
+import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED } from "../utils";
 import { NonPlayer } from "./nonplayer";
 
 // Murderous space cat

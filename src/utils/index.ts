@@ -1,4 +1,4 @@
-import { ColliderType, AnimEvent, AnimEventType, IGlobalState, Paintable } from "../store/classes";
+import { ColliderType, IGlobalState, Paintable } from "../store/classes";
 import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/positions";
 import { TypedPriorityQueue } from "./priorityqueue";
 import {

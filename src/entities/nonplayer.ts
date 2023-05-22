@@ -23,17 +23,18 @@ export class NonPlayer implements Paintable, Collider {
     mentalState: MentalState;               // The current mental state of the NPC.
     gardenerAvoidanceCountdown: number;     // NPC is avoiding the gardener when this is non-zero.
     colliderId: number;                     // ID to distinguish the collider from all others.
-    colliderType: ColliderType = ColliderType.NPCCo; // The type of collider that NPCs are.
+    colliderType: ColliderType;             // The type of collider that the NPC currently is (depends on mental state).
 
     constructor(params: any) {
         // Some default values to satisfy the requirement that everything be initialized in the constructor.
-        this.colliderId = 8675309;              // A dummy collider ID, meant to be overwritten.
-        this.pos = new Coord(50, 50);           // A dummy position, meant to be overwritten.
-        this.facing = randomDirection();        // Choose a random facing direction.
-        this.stationeryCountdown = 0;           // Start with NPC not standing still.
-        this.moving = true;                     // Start with NPC moving.
-        this.mentalState = MentalState.Normal;  // Start NPC in normal (~calm) mental state.
-        this.gardenerAvoidanceCountdown = 0;    // NPC *not* initially avoiding gardener.
+        this.colliderId = 8675309;                      // A dummy collider ID, meant to be overwritten.
+        this.pos = new Coord(50, 50);                   // A dummy position, meant to be overwritten.
+        this.facing = randomDirection();                // Choose a random facing direction.
+        this.stationeryCountdown = 0;                   // Start with NPC not standing still.
+        this.moving = true;                             // Start with NPC moving.
+        this.mentalState = MentalState.Normal;          // Start NPC in normal (~calm) mental state.
+        this.gardenerAvoidanceCountdown = 0;            // NPC *not* initially avoiding gardener.
+        this.colliderType = ColliderType.NPCNormalCo;   // NPC default mental state is "normal".
 
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
         if (params.clone !== undefined) this.cloneFrom(params.clone);
@@ -44,6 +45,9 @@ export class NonPlayer implements Paintable, Collider {
         if (params.moving !== undefined) this.moving = params.moving;
         if (params.mentalState !== undefined) this.mentalState = params.mentalState;
         if (params.gardenerAvoidanceCountdown !== undefined) this.gardenerAvoidanceCountdown = params.gardenerAvoidanceCountdown;
+
+        // Mental state determines collider type.
+        if (this.mentalState === MentalState.Frazzled) this.colliderType = ColliderType.NPCFrazzledCo;
     }
 
     // An initializer that clones an existing NPC.
@@ -55,6 +59,7 @@ export class NonPlayer implements Paintable, Collider {
         this.moving = other.moving;
         this.mentalState = other.mentalState;
         this.gardenerAvoidanceCountdown = other.gardenerAvoidanceCountdown;
+        this.colliderType = other.colliderType;
     }
 
     // Return the invisible rectangle that determines collision behaviour for the NPC.
@@ -157,8 +162,8 @@ export class NonPlayer implements Paintable, Collider {
                 break;
             // A frazzled NPC moves faster.
             case MentalState.Frazzled:
-                vPixelSpeed = Math.floor(NPC_V_PIXEL_SPEED * 1.5);
-                hPixelSpeed = Math.floor(NPC_H_PIXEL_SPEED * 1.5);
+                vPixelSpeed = Math.floor(NPC_V_PIXEL_SPEED * 2.5);
+                hPixelSpeed = Math.floor(NPC_H_PIXEL_SPEED * 2.5);
                 break;
         }
         var delta = [0,0]
@@ -273,8 +278,8 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         break;
       // A frazzled NPC doesn't stand still very often.
       case MentalState.Frazzled:
-        choice = randomInt(0, 4 + (3 * 5));
-        if (choice > 4) choice = (choice - 5) % 3;
+        choice = randomInt(0, 4 + (4 * 5));
+        if (choice > 4) choice = (choice - 5) % 4;
         break;
     }
     if (choice === 4) {
