@@ -2,7 +2,7 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, rectanglesOverlap } from "../../utils";
-import { GAMEOVER_RESTART_TIME, IGlobalState, allCollidersFromState, initialGameState, updateAnimEventState } from "../classes";
+import { GAMEOVER_RESTART_TIME, IGlobalState, activateAirlockButton, allCollidersFromState, initialGameState, updateAnimEventState } from "../classes";
 import { Airlock, AirlockState, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
 import { updateCatState } from "../../entities/cat";
 import { updateHeavenlyBodyState } from "../../entities/heavenlybody";
@@ -321,23 +321,6 @@ function activateShieldButton(sb: ShieldButton, state: IGlobalState): IGlobalSta
     ...state,
     shieldButtons: newButtons,
     shieldDoors: newShield,
-  };
-}
-
-function activateAirlockButton(globalState: IGlobalState): IGlobalState {
-  console.log("Activating airlock button");
-  let airlock: Airlock = globalState.airlock.activate(globalState);
-  let airlockButton: ShieldButton;
-  if(airlock.state == AirlockState.OPENING){
-    airlockButton = globalState.airlockButton.startAlarm(globalState);
-  }
-  else {
-    airlockButton = globalState.airlockButton.activate(globalState);   
-  }
-  return {
-    ...globalState,
-    airlockButton: airlockButton,
-    airlock: airlock,
   };
 }
 

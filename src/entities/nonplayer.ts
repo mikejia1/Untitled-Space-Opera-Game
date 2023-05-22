@@ -1,9 +1,9 @@
-import { Collider, ColliderType, IGlobalState, Paintable, collisionDetected } from '../store/classes';
+import { Collider, ColliderType, IGlobalState, Paintable, activateAirlockButton, collisionDetected } from '../store/classes';
 import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
-    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond, computeCurrentFrame, FPS, oppositeDirection,
+    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond, computeCurrentFrame, FPS, oppositeDirection, rectanglesOverlap,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -13,7 +13,9 @@ import { paintGameOver } from './skeleton';
 const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0005;
 
 // Number of frames until a frazzled NPC becomes suicidal.
-const SUICIDAL_DELAY = 450;
+const SUICIDAL_DELAY = 200;
+// Number of frames a suicidal NPC will contemplate death while hanging around the air lock button.
+const CONTEMPLATE_DEATH_DELAY = 200;
 
 // Complete set of possible NPC mental states.
 export enum MentalState {
@@ -29,7 +31,10 @@ export class NonPlayer implements Paintable, Collider {
     moving: boolean;                        // Whether or not the NPC is currently walking (vs standing still).
     mentalState: MentalState;               // The current mental state of the NPC.
     gardenerAvoidanceCountdown: number;     // NPC is avoiding the gardener when this is non-zero.
-    suicideCountdown: number;               // Countdown until frazzled NPC becomes suicidal.
+    suicideCountdown: number;               // Countdown until frazzled NPC becomes suicidal and heads to the air lock button.
+    hasReachedAirLockButton: boolean;       // Whether or not the NPC, when headed to the air lock button, has reached it.
+    contemplateDeathCountdown: number;      // Countdown until frazzled NPC near the air lock decides to push the button.
+    readyToPushAirLockButton: boolean;      // Whether or not the NPC is trying to push the air lock button.
     colliderId: number;                     // ID to distinguish the collider from all others.
     colliderType: ColliderType;             // The type of collider that the NPC currently is (depends on mental state).
 
@@ -43,6 +48,9 @@ export class NonPlayer implements Paintable, Collider {
         this.mentalState = MentalState.Normal;          // Start NPC in normal (~calm) mental state.
         this.gardenerAvoidanceCountdown = 0;            // NPC *not* initially avoiding gardener.
         this.suicideCountdown = 0;                      // Dummy value that is ignored unless NPC is frazzled.
+        this.hasReachedAirLockButton = false;           // NPC has not yet reached the air lock button in suicidal mode.
+        this.contemplateDeathCountdown = 0;             // Dummy value this is ignored unless NPC is frazzled and has approached the air lock button.
+        this.readyToPushAirLockButton = false;          // NPC is not currently trying to kill itself with the air lock.
         this.colliderType = ColliderType.NPCNormalCo;   // NPC default mental state is "normal".
 
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
@@ -52,6 +60,9 @@ export class NonPlayer implements Paintable, Collider {
         if (params.facing !== undefined) this.facing = params.facing;
         if (params.stationeryCountdown !== undefined) this.stationeryCountdown = params.stationeryCountdown;
         if (params.suicideCountdown !== undefined) this.suicideCountdown = params.suicideCountdown;
+        if (params.hasReachedAirLockButton !== undefined) this.hasReachedAirLockButton = params.hasReachedAirLockButton;
+        if (params.contemplateDeathCountdown !== undefined) this.contemplateDeathCountdown = params.contemplateDeathCountdown;
+        if (params.readyToPushAirLockButton !== undefined) this.readyToPushAirLockButton = params.readyToPushAirLockButton;
         if (params.moving !== undefined) this.moving = params.moving;
         if (params.mentalState !== undefined) this.mentalState = params.mentalState;
         if (params.gardenerAvoidanceCountdown !== undefined) this.gardenerAvoidanceCountdown = params.gardenerAvoidanceCountdown;
@@ -67,6 +78,9 @@ export class NonPlayer implements Paintable, Collider {
         this.facing = other.facing;
         this.stationeryCountdown = other.stationeryCountdown;
         this.suicideCountdown = other.suicideCountdown;
+        this.hasReachedAirLockButton = other.hasReachedAirLockButton;
+        this.contemplateDeathCountdown = other.contemplateDeathCountdown;
+        this.readyToPushAirLockButton = other.readyToPushAirLockButton;
         this.moving = other.moving;
         this.mentalState = other.mentalState;
         this.gardenerAvoidanceCountdown = other.gardenerAvoidanceCountdown;
@@ -143,10 +157,6 @@ export class NonPlayer implements Paintable, Collider {
         if (state.debugSettings.showPositionRects) {
             outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
         }
-        // No need to show facing rectangle for NPCs since they don't interact with anything (yet).
-        // if (state.debugSettings.showFacingRects) {
-        //     outlineRect(canvas, shiftRect(this.facingDetectionRect(), shift.x, shift.y), Colour.FACING_RECT);
-        // }
     }
 
     // Get the walk cycle sprite sheet that currently applies for the NPC (depends on mental state).
@@ -239,6 +249,9 @@ export class NonPlayer implements Paintable, Collider {
     maybeChangeMentalState(state: IGlobalState): NonPlayer {
         let newMentalState: MentalState;
         let newSuicideCountdown: number = this.suicideCountdown;
+        let newContemplateDeathCountdown: number = this.contemplateDeathCountdown;
+        let newHasReachedAirLockButton: boolean = this.hasReachedAirLockButton;
+        let newReadyToPushAirLockButton: boolean = this.readyToPushAirLockButton;
         switch (this.mentalState) {
             // An NPC in normal mental state becomes scared by impending danger, or
             // randomly gets frazzled (cabin fever).
@@ -254,6 +267,14 @@ export class NonPlayer implements Paintable, Collider {
             // A frazzled NPC is unaffected by impending danger.
             case MentalState.Frazzled:
                 newMentalState = MentalState.Frazzled;
+                if ((this.suicideCountdown === 0) && (!this.hasReachedAirLockButton) && this.isCloseToAirLockButton(state)) {
+                    newContemplateDeathCountdown = CONTEMPLATE_DEATH_DELAY;
+                    newHasReachedAirLockButton = true;
+                    console.log("Suicidal NPC has reached the air lock button");
+                } else if ((this.hasReachedAirLockButton) && (this.contemplateDeathCountdown === 0) && (!this.readyToPushAirLockButton)) {
+                    newReadyToPushAirLockButton = true;
+                    console.log("NPC is ready to push the button");
+                }
                 break;
             // A scared NPC stops being scared when the danger is gone.
             case MentalState.Scared:
@@ -264,16 +285,26 @@ export class NonPlayer implements Paintable, Collider {
         return new NonPlayer({
             clone: this,
             mentalState: newMentalState,
+            suicideCountdown: newSuicideCountdown,
+            contemplateDeathCountdown: newContemplateDeathCountdown,
+            hasReachedAirLockButton: newHasReachedAirLockButton,
+            readyToPushAirLockButton: newReadyToPushAirLockButton,
         });
     }
 
-    // Let frazzled NPC decrement suicide countdown.
-    decrementSuicideCountdown(): NonPlayer {
+    // Let frazzled NPC decrement suicide-related countdowns.
+    decrementSuicideCountdowns(): NonPlayer {
         if (this.mentalState !== MentalState.Frazzled) return this;
         return new NonPlayer({
             clone: this,
             suicideCountdown: Math.max(this.suicideCountdown - 1, 0),
+            contemplateDeathCountdown: Math.max(this.contemplateDeathCountdown - 1, 0),
         });
+    }
+
+    // Check whether suicidal NPC, when headed toward the air lock button, has reached it.
+    isCloseToAirLockButton(state: IGlobalState): boolean {
+        return rectanglesOverlap(this.collisionRect(), state.airlockButton.interactionRect());
     }
 }
 
@@ -290,6 +321,7 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
     let allColliders : Map<number, Collider> = state.colliderMap;
     // Allow NPCs to move and adjust their mental state.
     let newNPCs: NonPlayer[] = [];
+    let atLeastOneNPCPushingAirLockButton: boolean = false;
     state.npcs.forEach(npc => {
         // Get a new version of the npc - one that has taken its next step.
         let newNPC = moveNPC(state, npc);
@@ -306,20 +338,24 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
         // Allow the NPC to change its mental state.
         newNPC = newNPC.maybeChangeMentalState(state);
 
-        // Decrement the suicide countdown (only frazzled NPCs will do this).
-        newNPC = newNPC.decrementSuicideCountdown();
+        // Decrement the suicide countdowns (only frazzled NPCs will do this).
+        newNPC = newNPC.decrementSuicideCountdowns();
 
+        if (newNPC.readyToPushAirLockButton && rectanglesOverlap(newNPC.collisionRect(), state.airlockButton.interactionRect())) atLeastOneNPCPushingAirLockButton = true;
+    
         // Update the NPC array. Update the colliders so that subsequent NPCs will
         // check collisions against up-to-date locations of their peers.
         newNPCs = [...newNPCs, newNPC];
         allColliders.set(newNPC.colliderId, newNPC);
     });
 
-    return {
+    let newState = {
         ...state,
         npcs: newNPCs,
         colliderMap: allColliders,
     };
+    if (atLeastOneNPCPushingAirLockButton) return activateAirlockButton(newState);
+    return newState;
 }
 
 // Allow an NPC to randomly choose a new movement. If the NPC is not currently moving, wait for

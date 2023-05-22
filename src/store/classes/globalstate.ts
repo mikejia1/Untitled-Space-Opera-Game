@@ -1,5 +1,5 @@
 import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
-import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, MentalState, Airlock } from '../../entities';
+import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState } from '../../entities';
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { BlackHole, InvisibleCollider } from "../../scene";
@@ -357,4 +357,21 @@ function allCollidersFromState(state: IGlobalState): Map<number, Collider> {
   state.npcs.forEach(npc => map.set(npc.colliderId, npc));
   map.set(state.gardener.colliderId, state.gardener);
   return map;
+}
+
+export function activateAirlockButton(globalState: IGlobalState): IGlobalState {
+  console.log("Activating airlock button");
+  let airlock: Airlock = globalState.airlock.activate(globalState);
+  let airlockButton: ShieldButton;
+  if(airlock.state == AirlockState.OPENING){
+    airlockButton = globalState.airlockButton.startAlarm(globalState);
+  }
+  else {
+    airlockButton = globalState.airlockButton.activate(globalState);   
+  }
+  return {
+    ...globalState,
+    airlockButton: airlockButton,
+    airlock: airlock,
+  };
 }
