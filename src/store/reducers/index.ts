@@ -1,9 +1,11 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, rectanglesOverlap, randomInt, ALL_DIRECTIONS, Coord, CANVAS_WIDTH, SHAKER_SUBTLE, SHAKER_NO_SHAKE, SHAKER_MILD, SHAKER_MEDIUM, SHAKER_INTENSE, directionOfFirstRelativeToSecond, directionName, AIRLOCK_PIXEL_SPEED } from "../../utils";
-import { AnimEvent, AnimEventType, Collider, ColliderExceptions, ColliderType, IGlobalState, allCollidersFromState, collisionDetected, initialGameState, updateAnimEventState } from "../classes";
-import { Airlock, AirlockState, Gardener, MentalState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState } from '../../entities';
+import { Direction, computeCurrentFrame, rectanglesOverlap, Coord } from "../../utils";
+import { GAMEOVER_RESTART_TIME, IGlobalState, allCollidersFromState, collisionDetected, initialGameState, updateAnimEventState } from "../classes";
+import { Airlock, AirlockState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
+import { Cat, updateCatState } from "../../entities/cat";
+import { updateHeavenlyBodyState } from "../../entities/heavenlybody";
 import {
   DOWN,
   INCREMENT_SCORE,
@@ -30,9 +32,6 @@ import {
   TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS,
   TOGGLE_GAME_AUDIO,
 } from "../actions";
-import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
-import { Cat, updateCatState } from "../../entities/cat";
-import { BlackHole, PULSE_SUBTLE, PULSE_MILD, PULSE_MEDIUM, PULSE_INTENSE } from "../../scene";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -84,6 +83,9 @@ function newKeyUp(state: IGlobalState, direction: Direction): IGlobalState {
 
 // Only move the gardener if the keypress changes the gardener direction.
 function newKeyDown(state: IGlobalState, direction: Direction): IGlobalState {
+  if (state.gameover && state.currentFrame - state.gameOverFrame > GAMEOVER_RESTART_TIME ) {
+    return initialGameState();
+  }
   // This is a spurious keypress. Ignore it.
   if (ignoreKeyPress(direction, state.keysPressed)) {
     return state;
@@ -119,7 +121,7 @@ function updateFrame(state: IGlobalState): IGlobalState {
   }
 
   // Get all the colliders as they exist now.
-  state = {...state, colliderMap: allCollidersFromState(state)};
+  state = {...state, currentFrame: f, colliderMap: allCollidersFromState(state)};
   
   state = updateGardenerMoveState(state);
  
@@ -131,106 +133,17 @@ function updateFrame(state: IGlobalState): IGlobalState {
   
   state = updateAirlockState(state);
 
-  let newPlants = dehydratePlants(state.plants, state);
-  newPlants = growPlants(newPlants, state);
+  state = state.shieldDoors.updateState(state);
+
+  state = updatePlantState(state);
 
   state = updateAnimEventState(state);
 
-  let newBlackHole: BlackHole | null = state.blackHole;
-  if (newBlackHole !== null) newBlackHole = newBlackHole.adjustPulseMagnitude();
-  // Once the black hole has been around long enough to have passed by, clear it back to null.
-  if ((newBlackHole !== null) && ((f - newBlackHole.startFrame) > 1000)) newBlackHole = null;
+  state = updateHeavenlyBodyState(state);
 
-  // Maybe it's time for another planet to drift by.
-  let newPlanet1 = state.planet1;
-  let newPlanet2 = state.planet2;
-  let newPlanet3 = state.planet3;
-  let chance1 = (randomInt(0,9999) < 100);
-  let chance2 = (randomInt(0,9999) < 100);
-  let chance3 = (randomInt(0,9999) < 100);
-  // If black hole is too far down, don't spawn a new planet at the moment.
-  let blackHoleFarAlready = (state.blackHole !== null) && (state.blackHole.driftDistance() > 400);
-  if (!blackHoleFarAlready) {
-    if ((newPlanet1 === null) && chance1) {
-      let choice = randomInt(0, state.planets.length-1);
-      console.log("Welcome planet 1, type " + choice);
-      newPlanet1 = state.planets[choice].randomizedClone();
-    }
-    if ((newPlanet2 === null) && chance2 && (newPlanet1 !== null) && ((f - newPlanet1.startFrame) > 150)) {
-      let choice = randomInt(0, state.planets.length-1);
-      console.log("Welcome planet 2, type " + choice);
-      newPlanet2 = state.planets[choice].randomizedClone();
-    }
-    if ((newPlanet3 === null) && chance3 && (newPlanet2 !== null) && ((f - newPlanet2.startFrame) > 150)) {
-      let choice = randomInt(0, state.planets.length-1);
-      console.log("Welcome planet 3, type " + choice);
-      newPlanet3 = state.planets[choice].randomizedClone();
-    }
-  }
-
-  // Remove planets that have drifted out of view.
-  if ((newPlanet1 !== null) && newPlanet1.isFinished()) {
-    newPlanet1 = null;
-    console.log("Goodbye planet 1!");
-  }
-  if ((newPlanet2 !== null) && newPlanet2.isFinished()) {
-    newPlanet2 = null;
-    console.log("Goodbye planet 2!");
-  }
-  if ((newPlanet3 !== null) && newPlanet3.isFinished()) {
-    newPlanet3 = null;
-    console.log("Goodbye planet 3!");
-  }
-  state = {...state, blackHole: newBlackHole, planet1: newPlanet1, planet2: newPlanet2, planet3: newPlanet3};
-
-  return  {
-    ...state,
-    currentFrame: f,
-    plants: newPlants,
-  };
+  return state;
 }
 
-function updateOpenAirlockMovements(state: IGlobalState): IGlobalState {
-  // Get all the colliders as they exist now.
-  let allColliders = allCollidersFromState(state);
-  let cats: Cat[] = [];
-  for(let i = 0; i < state.cats.length; i++){
-    let cat = state.cats[i];
-    let move : Coord = state.airlock.getMovementDelta(cat.pos);
-    let oldPos : Coord = cat.pos;
-    cat.pos = oldPos.plus(move.x, move.y);
-    // If there is a collision, negate it.
-    if (collisionDetected(state, allColliders, cat)) {
-      cat.pos = oldPos;
-    }
-    if (!rectanglesOverlap(state.airlock.deathRect(), cat.collisionRect())){
-      cats = [...cats, cat]
-    }
-  }
-  let npcs: NonPlayer[] = [];
-  for(let i = 0; i < state.npcs.length; i++){
-    let npc = state.npcs[i];
-    let move : Coord = state.airlock.getMovementDelta(npc.pos);
-    let oldPos : Coord = npc.pos;
-    npc.pos = oldPos.plus(move.x, move.y);
-    // If there is a collision, negate it.
-    if (collisionDetected(state, allColliders, npc)) {
-      npc.pos = oldPos;
-    }
-    if (!rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect())){
-      npcs = [...npcs, npc]
-    }
-  }
-  let gardener = state.gardener;
-  let move : Coord = state.airlock.getMovementDelta(gardener.pos);
-    let oldPos : Coord = gardener.pos;
-    gardener.pos = oldPos.plus(move.x, move.y);
-    // If there is a collision, negate it.
-    if (collisionDetected(state, allColliders, gardener)) {
-      gardener.pos = oldPos;
-    }
-  return {...state, cats: cats, npcs: npcs, gardener: gardener};
-}
 
 // Toggle debug control showCollisionRects from False to True or vice versa.
 function toggleDebugControlCollisionRects(state: IGlobalState): IGlobalState {
@@ -315,22 +228,6 @@ function toggleGameAudio(state: IGlobalState): IGlobalState {
     ...state,
     muted: !state.muted,
   };
-}
-
-function dehydratePlants(plants: Plant[], state: IGlobalState): Plant[] {
-  let newPlants: Plant[] = [];
-  plants.forEach(plant => {
-    newPlants = [...newPlants, plant.dehydratePlant(state)];
-  });
-  return newPlants;
-}
-
-function growPlants(plants: Plant[], state: IGlobalState): Plant[] {
-  let newPlants: Plant[] = [];
-  plants.forEach(plant => {
-    newPlants = [...newPlants, plant.growPlant(state)];
-  });
-  return newPlants;
 }
 
 // Attempt to equip item or drop current item.

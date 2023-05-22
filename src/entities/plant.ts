@@ -127,3 +127,11 @@ export class Plant {
     }
   }
 }
+
+export function updatePlantState(state: IGlobalState): IGlobalState{
+  let newPlants: Plant[] = [];
+  state.plants.forEach(plant => {
+    newPlants = [...newPlants, plant.dehydratePlant(state).growPlant(state)];
+  });
+  return {...state, plants: newPlants};
+}

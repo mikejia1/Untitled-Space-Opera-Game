@@ -188,3 +188,5 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     shieldButtons: newShieldButtons,
     };
 }
+
+export const GAMEOVER_RESTART_TIME = 5*FPS;

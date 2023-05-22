@@ -294,8 +294,8 @@ export class ShieldDoor implements Paintable {
     }
 
     // Update the door states to what they should be, based on the current frame number.
-    updateStates(): ShieldDoor {
-        let f = computeCurrentFrame();
+    updateState(state: IGlobalState): IGlobalState {
+        let f = state.currentFrame;
         let newStates: ShieldDoorState[] = [];
         let newTimes: number[] = [];
         let newEarlyOpenFlags: boolean[] = [];
@@ -342,6 +342,6 @@ export class ShieldDoor implements Paintable {
             debug = debug + " " + ds;
         }
         //console.log(debug);   // When this was uncommented, I could see states transitioning properly.
-        return new ShieldDoor(newStates, newTimes, newEarlyOpenFlags);
+        return {...state, shieldDoors: new ShieldDoor(newStates, newTimes, newEarlyOpenFlags)};
     }
 }
