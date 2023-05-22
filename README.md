@@ -1,5 +1,5 @@
 <h1 align="center">
-  <h1 align="center">snake-game</h1>
+  <h1 align="center">Untitled Space Opera Game</h1>
 </h1>
 
 <img src="https://media.giphy.com/media/rLPAVJiBc6tqYRTqen/giphy.gif" style="display: block;
