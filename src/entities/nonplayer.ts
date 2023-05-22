@@ -13,7 +13,7 @@ import { paintGameOver } from './skeleton';
 const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0005;
 
 // Number of frames until a frazzled NPC becomes suicidal.
-const SUICIDAL_DELAY = 400;
+const SUICIDAL_DELAY = 450;
 
 // Complete set of possible NPC mental states.
 export enum MentalState {
@@ -431,18 +431,24 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
   function suicidalDirectionChoice(state: IGlobalState, npc: NonPlayer): number {
     // Compute the desired direction.
     let buttonDir = directionOfFirstRelativeToSecond(state.airlockButton, npc);
-    // All directions, but with the desired one replacing its opposite (i.e. it's present twice).
+    // All directions, but with the desired one replacing its opposite (i.e. it's present twice), and
+    // the other two directions represented twice times each. 
     let indices: number[] = [];
     let oppositeDir = oppositeDirection(buttonDir);
     let buttonDirIndex: number = 0;
     let oppositeDirIndex: number = 0;
+    let otherDirIndex1: number = -1;
+    let otherDirIndex2: number = -1;
     for (let i = 0; i < 4; i++) {
         indices = [...indices, i];
         if (ALL_DIRECTIONS[i] === buttonDir) buttonDirIndex = i;
         else if (ALL_DIRECTIONS[i] === oppositeDir) oppositeDirIndex = i;
+        else if (otherDirIndex1 === -1) otherDirIndex1 = i;
+        else otherDirIndex2 = i;
     }
     indices[oppositeDirIndex] = buttonDirIndex;
-    return indices[randomInt(0, 3)];
+    indices = [...indices, otherDirIndex1, otherDirIndex2];
+    return indices[randomInt(0, 5)];
   }
   
   // "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
