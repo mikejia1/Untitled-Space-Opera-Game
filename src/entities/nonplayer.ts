@@ -144,9 +144,6 @@ export class NonPlayer implements Paintable, Collider {
             dest.x, dest.y,                     // Position of sprite on canvas
             48, 48);                            // Sprite size on canvas
     
-        // For debugging only. To be removed.
-        if (this.gardenerAvoidanceCountdown > 0) outlineRect(canvas, { a: dest, b: dest.plus(18, 20) }, Colour.WATERING_RECT);
-
         // Restore canvas transforms to normal.
         canvas.restore();
 
