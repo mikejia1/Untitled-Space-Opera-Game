@@ -26,11 +26,18 @@ export const CANVAS_RECT = {
 };
 
 // The clipping rectangle for the starfield. Used to clip the shield doors,
-// preventing them from being draw so far down that they're visible through
+// preventing them from being drawn so far down that they're visible through
 // the air lock.
 export const STARFIELD_RECT = {
   a: new Coord(0,0),
   b: new Coord(CANVAS_WIDTH-1, 145),  // Y coord here is the key value.
+};
+
+// The clipping rectangle for the ship interior. Used to clip the shield shadows,
+// preventing them from being drawn on anything outside the ship interior.
+export const SHIP_INTERIOR_RECT = {
+  a: new Coord(0, 145),
+  b: new Coord(CANVAS_WIDTH-1, BACKGROUND_HEIGHT-1),
 };
 
 export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
@@ -69,8 +76,13 @@ export const drawState = (
     if (ptbl === undefined) continue;
     ptbl.paint(canvas, state);
   }
+
+  // Shield shadows and shade.
+  state.shieldDoors.paintShadows(canvas, state);
   drawAmbientShade(state, canvas);
+
   drawAnimationEvent(state, shift, canvas);
+
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
@@ -79,7 +91,7 @@ export const drawState = (
 
 // Draw a semi-transparent black rectangle over the canvas to convey global ambient shade from the shield doors.
 function drawAmbientShade(state: IGlobalState, canvas: CanvasRenderingContext2D): void {
-  let alpha: number = state.shieldDoors.ambientShadeFactor * 0.4;
+  let alpha: number = state.shieldDoors.ambientShadeFactor * 0.5;
   canvas.save();
   canvas.fillStyle = `rgba(0,0,0,${alpha})`;
   canvas.rect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);
