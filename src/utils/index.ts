@@ -82,7 +82,7 @@ export const drawState = (
   state.shieldDoors.paintShadows(canvas, state);
   drawAmbientShade(state, canvas);
 
-  //draw dialog
+  // Draw dialog.
   if(state.dialogs.length > 0) {
     state.dialogs[0].paint(canvas, state);
   }
