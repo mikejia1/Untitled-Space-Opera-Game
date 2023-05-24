@@ -9,6 +9,7 @@ import {
  import { Rect } from './rect';
  import { Tile, WrapSector, InvisibleCollider } from '../scene';
 import { drawAnimationEvent } from "./drawevent";
+import { Dialog } from "../scene/dialog";
 
 export * from './coord';
 export * from './constants';
@@ -69,7 +70,15 @@ export const drawState = (
     if (ptbl === undefined) continue;
     ptbl.paint(canvas, state);
   }
+  
+  //draw dialog
+  if(state.dialogs.length > 0) {
+    state.dialogs[0].paint(canvas, state);
+  }
+  
   drawAnimationEvent(state, shift, canvas);
+
+
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
