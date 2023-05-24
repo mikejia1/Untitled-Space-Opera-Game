@@ -31,6 +31,7 @@ export class NonPlayer implements Paintable, Collider {
     moving: boolean;                        // Whether or not the NPC is currently walking (vs standing still).
     mentalState: MentalState;               // The current mental state of the NPC.
     gardenerAvoidanceCountdown: number;     // NPC is avoiding the gardener when this is non-zero.
+    hasCabinFever: boolean;                 // To record that an NPC has cabin fever.
     suicideCountdown: number;               // Countdown until frazzled NPC becomes suicidal and heads to the air lock button.
     hasReachedAirLockButton: boolean;       // Whether or not the NPC, when headed to the air lock button, has reached it.
     contemplateDeathCountdown: number;      // Countdown until frazzled NPC near the air lock decides to push the button.
@@ -47,6 +48,7 @@ export class NonPlayer implements Paintable, Collider {
         this.moving = true;                             // Start with NPC moving.
         this.mentalState = MentalState.Normal;          // Start NPC in normal (~calm) mental state.
         this.gardenerAvoidanceCountdown = 0;            // NPC *not* initially avoiding gardener.
+        this.hasCabinFever = false;                     // NPC does *not* initially have cabin fever.
         this.suicideCountdown = 0;                      // Dummy value that is ignored unless NPC is frazzled.
         this.hasReachedAirLockButton = false;           // NPC has not yet reached the air lock button in suicidal mode.
         this.contemplateDeathCountdown = 0;             // Dummy value this is ignored unless NPC is frazzled and has approached the air lock button.
@@ -66,6 +68,7 @@ export class NonPlayer implements Paintable, Collider {
         if (params.moving !== undefined) this.moving = params.moving;
         if (params.mentalState !== undefined) this.mentalState = params.mentalState;
         if (params.gardenerAvoidanceCountdown !== undefined) this.gardenerAvoidanceCountdown = params.gardenerAvoidanceCountdown;
+        if (params.hasCabinFever !== undefined) this.hasCabinFever = params.hasCabinFever;
 
         // Mental state determines collider type.
         if (this.mentalState === MentalState.Frazzled) this.colliderType = ColliderType.NPCFrazzledCo;
@@ -84,6 +87,7 @@ export class NonPlayer implements Paintable, Collider {
         this.moving = other.moving;
         this.mentalState = other.mentalState;
         this.gardenerAvoidanceCountdown = other.gardenerAvoidanceCountdown;
+        this.hasCabinFever = other.hasCabinFever;
         this.colliderType = other.colliderType;
     }
 
@@ -245,10 +249,11 @@ export class NonPlayer implements Paintable, Collider {
     // Allow the NPC to change its mental state.
     maybeChangeMentalState(state: IGlobalState): NonPlayer {
         let newMentalState: MentalState;
-        let newSuicideCountdown: number = this.suicideCountdown;
-        let newContemplateDeathCountdown: number = this.contemplateDeathCountdown;
-        let newHasReachedAirLockButton: boolean = this.hasReachedAirLockButton;
-        let newReadyToPushAirLockButton: boolean = this.readyToPushAirLockButton;
+        let newSuicideCountdown: number             = this.suicideCountdown;
+        let newContemplateDeathCountdown: number    = this.contemplateDeathCountdown;
+        let newHasReachedAirLockButton: boolean     = this.hasReachedAirLockButton;
+        let newReadyToPushAirLockButton: boolean    = this.readyToPushAirLockButton;
+        let newHasCabinFever: boolean               = this.hasCabinFever;
         switch (this.mentalState) {
             // An NPC in normal mental state becomes scared by impending danger, or
             // randomly gets frazzled (cabin fever).
@@ -256,26 +261,34 @@ export class NonPlayer implements Paintable, Collider {
                 if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
                 else if ((randomInt(0, 9999) / 10000) < PER_FRAME_CABIN_FEVER_PROBABILITY) {
                     // When an NPC first develops cabin fever, that's when the suicide countdown starts.
+                    newHasCabinFever = true;
                     newMentalState = MentalState.Frazzled;
                     newSuicideCountdown = SUICIDAL_DELAY;
                 }
                 else newMentalState = MentalState.Normal;
                 break;
-            // A frazzled NPC is unaffected by impending danger.
+            // A frazzled NPC will becomes scared by impending danger but reverts to frazzled afterwards.
             case MentalState.Frazzled:
-                newMentalState = MentalState.Frazzled;
-                if ((this.suicideCountdown === 0) && (!this.hasReachedAirLockButton) && this.isCloseToAirLockButton(state)) {
-                    newContemplateDeathCountdown = CONTEMPLATE_DEATH_DELAY;
-                    newHasReachedAirLockButton = true;
-                    console.log("Suicidal NPC has reached the air lock button");
-                } else if ((this.hasReachedAirLockButton) && (this.contemplateDeathCountdown === 0) && (!this.readyToPushAirLockButton)) {
-                    newReadyToPushAirLockButton = true;
-                    console.log("NPC is ready to push the button");
+                if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
+                else {
+                    newMentalState = MentalState.Frazzled;
+                    // If suicidal and just now reaching the air lock button, switch to death contemplation.
+                    if ((this.suicideCountdown === 0) && (!this.hasReachedAirLockButton) && this.isCloseToAirLockButton(state)) {
+                        newContemplateDeathCountdown = CONTEMPLATE_DEATH_DELAY;
+                        newHasReachedAirLockButton = true;
+                        console.log("Suicidal NPC has reached the air lock button");
+                    // If death contemplation is done, the NPC is ready to push the air lock button.
+                    } else if ((this.hasReachedAirLockButton) && (this.contemplateDeathCountdown === 0) && (!this.readyToPushAirLockButton)) {
+                        newReadyToPushAirLockButton = true;
+                        console.log("NPC is ready to push the button");
+                    }
                 }
                 break;
             // A scared NPC stops being scared when the danger is gone.
             case MentalState.Scared:
+                // Either remain scared, revert back to frazzled, or revert back to normal.
                 if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
+                else if (this.hasCabinFever) newMentalState = MentalState.Frazzled; 
                 else newMentalState = MentalState.Normal;
                 break;
         }
@@ -286,6 +299,7 @@ export class NonPlayer implements Paintable, Collider {
             contemplateDeathCountdown: newContemplateDeathCountdown,
             hasReachedAirLockButton: newHasReachedAirLockButton,
             readyToPushAirLockButton: newReadyToPushAirLockButton,
+            hasCabinFever: newHasCabinFever,
         });
     }
 
