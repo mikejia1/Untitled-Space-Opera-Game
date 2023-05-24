@@ -69,12 +69,23 @@ export const drawState = (
     if (ptbl === undefined) continue;
     ptbl.paint(canvas, state);
   }
+  drawAmbientShade(state, canvas);
   drawAnimationEvent(state, shift, canvas);
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
   }
 };
+
+// Draw a semi-transparent black rectangle over the canvas to convey global ambient shade from the shield doors.
+function drawAmbientShade(state: IGlobalState, canvas: CanvasRenderingContext2D): void {
+  let alpha: number = state.shieldDoors.ambientShadeFactor * 0.4;
+  canvas.save();
+  canvas.fillStyle = `rgba(0,0,0,${alpha})`;
+  canvas.rect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  canvas.fill();
+  canvas.restore();
+}
 
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle. This includes any screen shake.
