@@ -48,6 +48,9 @@ const LIGHT_RADIUS = 2;
 // Alpha value determining how dark slat shadows are.
 const SLAT_SHADOW_ALPHA = 0.3;
 
+// A small adjustment to make slat shadows travel a bit faster.
+const SHADOW_GAP_ADJUSTMENT = 1.08;
+
 enum ShieldDoorState {OPENING, CLOSING, OPEN, CLOSED}
 
 export function initialShieldDoor(): ShieldDoor {
@@ -182,7 +185,7 @@ export class ShieldDoor implements Paintable {
             let percent = Math.min(st / SLAT_OPENING_DUR, 1);
             let prcnt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100);
             debug = debug + " " + prcnt;
-            let gap = percent * SHADOW_CLOSE_DISTANCE;
+            let gap = percent * SHADOW_CLOSE_DISTANCE * SHADOW_GAP_ADJUSTMENT;
             // If a slat is (basically) closed, paint the full closed slat shadow instead of the 2 parts.
             if (gap < 2) {
                 this.paintClosedSlatShadow(i, j, canvas, state, currentFrame, shift, clipRect);
@@ -263,7 +266,7 @@ export class ShieldDoor implements Paintable {
             let percent = Math.min(st / SLAT_CLOSING_DUR, 1);
             let prcnt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(percent * 100);
             debug = debug + " " + prcnt;
-            let dist = percent * SHADOW_CLOSE_DISTANCE;
+            let dist = 1 - ((1 - (percent * SHADOW_CLOSE_DISTANCE)) * SHADOW_GAP_ADJUSTMENT);
             // If a slat is (basically) closed, paint the full closed slat shadow instead of the 2 parts.
             if (percent > 0.98) {
                 this.paintClosedSlatShadow(i, j, canvas, state, currentFrame, shift, clipRect);
