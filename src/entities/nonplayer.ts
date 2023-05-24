@@ -36,6 +36,7 @@ export class NonPlayer implements Paintable, Collider {
     hasReachedAirLockButton: boolean;       // Whether or not the NPC, when headed to the air lock button, has reached it.
     contemplateDeathCountdown: number;      // Countdown until frazzled NPC near the air lock decides to push the button.
     readyToPushAirLockButton: boolean;      // Whether or not the NPC is trying to push the air lock button.
+    isHeadingTowardAirLockDoom: boolean;    // Whether or not the NPC with cabin fever is now headed toward the air lock.
     colliderId: number;                     // ID to distinguish the collider from all others.
     colliderType: ColliderType;             // The type of collider that the NPC currently is (depends on mental state).
 
@@ -53,6 +54,7 @@ export class NonPlayer implements Paintable, Collider {
         this.hasReachedAirLockButton = false;           // NPC has not yet reached the air lock button in suicidal mode.
         this.contemplateDeathCountdown = 0;             // Dummy value this is ignored unless NPC is frazzled and has approached the air lock button.
         this.readyToPushAirLockButton = false;          // NPC is not currently trying to kill itself with the air lock.
+        this.isHeadingTowardAirLockDoom = false;        // NPC is not initially heading toward the air lock to die.
         this.colliderType = ColliderType.NPCNormalCo;   // NPC default mental state is "normal".
 
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
@@ -65,6 +67,7 @@ export class NonPlayer implements Paintable, Collider {
         if (params.hasReachedAirLockButton !== undefined) this.hasReachedAirLockButton = params.hasReachedAirLockButton;
         if (params.contemplateDeathCountdown !== undefined) this.contemplateDeathCountdown = params.contemplateDeathCountdown;
         if (params.readyToPushAirLockButton !== undefined) this.readyToPushAirLockButton = params.readyToPushAirLockButton;
+        if (params.isHeadingTowardAirLockDoom !== undefined) this.isHeadingTowardAirLockDoom = params.isHeadingTowardAirLockDoom;
         if (params.moving !== undefined) this.moving = params.moving;
         if (params.mentalState !== undefined) this.mentalState = params.mentalState;
         if (params.gardenerAvoidanceCountdown !== undefined) this.gardenerAvoidanceCountdown = params.gardenerAvoidanceCountdown;
@@ -84,6 +87,7 @@ export class NonPlayer implements Paintable, Collider {
         this.hasReachedAirLockButton = other.hasReachedAirLockButton;
         this.contemplateDeathCountdown = other.contemplateDeathCountdown;
         this.readyToPushAirLockButton = other.readyToPushAirLockButton;
+        this.isHeadingTowardAirLockDoom = other.isHeadingTowardAirLockDoom;
         this.moving = other.moving;
         this.mentalState = other.mentalState;
         this.gardenerAvoidanceCountdown = other.gardenerAvoidanceCountdown;
@@ -317,6 +321,14 @@ export class NonPlayer implements Paintable, Collider {
     isCloseToAirLockButton(state: IGlobalState): boolean {
         return rectanglesOverlap(this.collisionRect(), state.airlockButton.interactionRect());
     }
+
+    // Begin the final phase of cabin fever where the NPC has opened the air lock and is headed towards it.
+    headTowardAirLockDoom(): NonPlayer {
+        return new NonPlayer({
+            clone: this,
+            isHeadingTowardAirLockDoom: true,
+        });
+    }
 }
 
 // Check global state to see if there's currently an impending danger that would scare NPCs.
@@ -352,7 +364,13 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
         // Decrement the suicide countdowns (only frazzled NPCs will do this).
         newNPC = newNPC.decrementSuicideCountdowns();
 
-        if (newNPC.readyToPushAirLockButton && rectanglesOverlap(newNPC.collisionRect(), state.airlockButton.interactionRect())) atLeastOneNPCPushingAirLockButton = true;
+        // If NPC is trying to push air lock button, and is close enough to do so, push it and head toward the air lock.
+        if (newNPC.readyToPushAirLockButton
+            && rectanglesOverlap(newNPC.collisionRect(), state.airlockButton.interactionRect())
+            && state.airlock.isAirtight(state)) {
+            newNPC = newNPC.headTowardAirLockDoom();
+            atLeastOneNPCPushingAirLockButton = true;
+        }
     
         // Update the NPC array. Update the colliders so that subsequent NPCs will
         // check collisions against up-to-date locations of their peers.
@@ -393,7 +411,11 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
           break;
         // A frazzled NPC changes direction frequently.
         case MentalState.Frazzled:
-          change = (Math.random() < 0.6);
+          if (npc.isHeadingTowardAirLockDoom) {
+            let deathDir = directionOfFirstRelativeToSecond(state.airlock.centre(), npc);
+            if (deathDir === npc.facing) change = false;
+            else change = true;
+          } else change = (Math.random() < 0.6);
           break;
         // A scared NPC's behaviour is between the two above.
         case MentalState.Scared:

@@ -1,7 +1,6 @@
-import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect, GardenerDirection, AIRLOCK_PIXEL_SPEED, rectanglesOverlap } from '../utils';
+import { shiftForTile, computeBackgroundShift, Coord, Rect, AIRLOCK_PIXEL_SPEED, rectanglesOverlap, outlineRect, Colour } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
-import { Paintable, IGlobalState, collisionDetected, allCollidersFromState } from '../store/classes';
-import { Gardener } from './gardener';
+import { Paintable, IGlobalState, collisionDetected } from '../store/classes';
 import { Tile } from '../scene';
 import { Cat } from './cat';
 import { NonPlayer } from './nonplayer';
@@ -21,6 +20,11 @@ export class Airlock implements Paintable {
         this.pos = new Coord(188, 272);
         this.state = AirlockState.CLOSED;
         this.lastInteraction = 0;
+    }
+
+    // Return the position of the centre of the air lock.
+    centre(): Coord {
+        return this.pos.plus(MAP_TILE_SIZE / 2, 0);
     }
 
     // Is the airlock airtight or sucking everything into the void?
@@ -68,7 +72,6 @@ export class Airlock implements Paintable {
 
     // Paint the plant on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord = this.computeShift(state)): void {
-        // Compute base, the bottom-middle point for the watering can.
         let base: Coord = this.pos.plus(MAP_TILE_SIZE / 2, 0);
         base = base.plus(shift.x, shift.y).toIntegers();
         canvas.save();
