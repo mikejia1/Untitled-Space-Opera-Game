@@ -76,6 +76,7 @@ export const drawState = (
     state.dialogs[0].paint(canvas, state);
   }
   
+  drawAmbientShade(state, canvas);
   drawAnimationEvent(state, shift, canvas);
 
 
@@ -84,6 +85,16 @@ export const drawState = (
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
   }
 };
+
+// Draw a semi-transparent black rectangle over the canvas to convey global ambient shade from the shield doors.
+function drawAmbientShade(state: IGlobalState, canvas: CanvasRenderingContext2D): void {
+  let alpha: number = state.shieldDoors.ambientShadeFactor * 0.4;
+  canvas.save();
+  canvas.fillStyle = `rgba(0,0,0,${alpha})`;
+  canvas.rect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  canvas.fill();
+  canvas.restore();
+}
 
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle. This includes any screen shake.
@@ -222,10 +233,12 @@ export function randomDirection(): Direction {
 }
 
 // Get the direction (Up/Down/Left/Right) of first relative to second.
-export function directionOfFirstRelativeToSecond(first: Paintable, second: Paintable): Direction {
-  let upness    = second.pos.y - first.pos.y;
+export function directionOfFirstRelativeToSecond(first: Paintable | Coord, second: Paintable | Coord): Direction {
+  let pos1: Coord = (first instanceof Coord) ? first : first.pos;
+  let pos2: Coord = (second instanceof Coord) ? second : second.pos;
+  let upness    = pos2.y - pos1.y;
   let downness  = -upness;
-  let leftness  = second.pos.x - first.pos.x;
+  let leftness  = pos2.x - pos1.x;
   let rightness = -leftness;
   let vertness  = Math.max(upness, downness);
   let horzness  = Math.max(leftness, rightness);

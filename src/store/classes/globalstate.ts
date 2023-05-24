@@ -14,9 +14,11 @@ import basewateringstrip from "../../entities/images/gardener/base_watering_stri
 import toolwateringstrip from "../../entities/images/gardener/tools_watering_strip5.png";
 
 // Blast shield images.
-import closedShield from "../../entities/images/shield/shield_32x160.png";
-import topShield    from "../../entities/images/shield/shield_top_32x.png";
-import bottomShield from "../../entities/images/shield/shield_bottom_32x.png";
+import closedShield      from "../../entities/images/shield/shield_32x160.png";
+import topShield         from "../../entities/images/shield/shield_top_32x.png";
+import bottomShield      from "../../entities/images/shield/shield_bottom_32x.png";
+import blackTopShield    from "../../entities/images/shield/black_shield_top_32x.png";
+import blackBottomShield from "../../entities/images/shield/black_shield_bottom_32x.png";
 
 // Other images.
 import skeleton             from "../../entities/images/skeleton/skeleton_death.png";
@@ -167,6 +169,8 @@ export function initialGameState(): IGlobalState {
       closed:         loadImage("Closed shield", closedShield),
       top:            loadImage("Top shield", topShield),
       bottom:         loadImage("Bottom shield", bottomShield),
+      blackTop:       loadImage("Black top shield", blackTopShield),
+      blackBottom:    loadImage("Black bottom shield", blackBottomShield),
     },
     dialogImage:      loadImage("Dialog box", dialogBox),
     shieldButtonImage: loadImage("Shield button", shieldButton),

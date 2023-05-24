@@ -35,5 +35,4 @@ export class Coord {
     toIntegers(): Coord {
       return new Coord(Math.floor(this.x), Math.floor(this.y));
     }
-  }
-  
+}

@@ -43,7 +43,8 @@ export function initialShieldDoor(): ShieldDoor {
     return new ShieldDoor(
         [ShieldDoorState.OPEN, ShieldDoorState.OPEN, ShieldDoorState.OPEN], // Doors start in OPEN state.
         [0, 0, 0],  // Dummy values for door activation times.
-        [false, false, false]  // Flags that prompt doors to open early (false == not currently prompted).
+        [false, false, false],  // Flags that prompt doors to open early (false == not currently prompted).
+        0   // Initial ambient shade from the shields is zero.
     );
 }
 
@@ -58,8 +59,10 @@ export class ShieldDoor implements Paintable {
     shieldDoorActivationTimes: number[];
     // Whether or not the doors are being opened early.
     openingEarly: boolean[];
+    // Total ambient shade from the shield doors. Range 0 to 1 where 0 is all slats fully open and 1 is fully closed.
+    ambientShadeFactor: number;
     
-    constructor(states: ShieldDoorState[], activationTimes: number[], openingEarly: boolean[]) {
+    constructor(states: ShieldDoorState[], activationTimes: number[], openingEarly: boolean[], ambientShadeFactor: number) {
         this.pos = new Coord(0,0);
         // The state of each door.
         this.shieldDoorStates = states;
@@ -67,6 +70,8 @@ export class ShieldDoor implements Paintable {
         this.shieldDoorActivationTimes = activationTimes;
         // Whether or not the doors are being opened early.
         this.openingEarly = openingEarly;
+        // Total ambient shade (0.0 to 1.0) from the all the slats combined.
+        this.ambientShadeFactor = ambientShadeFactor;
     }
 
     // Paint the blast shield.
@@ -268,7 +273,7 @@ export class ShieldDoor implements Paintable {
                 newTimes = [...newTimes, this.shieldDoorActivationTimes[i]];
             }
         }
-        return new ShieldDoor(newStates, newTimes, this.openingEarly);
+        return new ShieldDoor(newStates, newTimes, this.openingEarly, this.ambientShadeFactor);
     }
 
     // Tell a door to begin opening early.
@@ -290,7 +295,17 @@ export class ShieldDoor implements Paintable {
                 newEarlyOpenFlags = [...newEarlyOpenFlags, this.openingEarly[i]];
             }
         }
-        return new ShieldDoor(newStates, newTimes, newEarlyOpenFlags);
+        return new ShieldDoor(newStates, newTimes, newEarlyOpenFlags, this.ambientShadeFactor);
+    }
+
+    // Compute shade factor for a single slat, based on how closed it is. 0.0 to 1.0. Fully open is 0 and fully closed is 1.
+    slatShadeFactor(door: number, slat: number): number {
+        switch (this.shieldDoorStates[door]) {
+            case ShieldDoorState.CLOSED:    return 1.0;
+            case ShieldDoorState.OPEN:      return 0.0;
+            case ShieldDoorState.CLOSING:   return Math.min(Math.max(this.slatTime(door, slat, computeCurrentFrame()), 0) / SLAT_CLOSING_DUR, 1);
+            case ShieldDoorState.OPENING:   return Math.min(Math.max(this.slatTime(door, slat, computeCurrentFrame()) - (this.openingEarly[door] ? 0 : (SLAT_CLOSING_DUR + SLAT_CLOSED_DUR + (INTER_SLAT_DELAY * 6))), 0) / SLAT_OPENING_DUR, 1);
+        }
     }
 
     // Update the door states to what they should be, based on the current frame number.
@@ -300,7 +315,9 @@ export class ShieldDoor implements Paintable {
         let newTimes: number[] = [];
         let newEarlyOpenFlags: boolean[] = [];
         let debug = "";
+        let shadeFactorSum: number = 0;
         for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 4; j++) shadeFactorSum += this.slatShadeFactor(i, j);
             let ds: string = "";
             let s: ShieldDoorState = ShieldDoorState.OPEN;
             let acTime: number = this.shieldDoorActivationTimes[i];
@@ -342,6 +359,6 @@ export class ShieldDoor implements Paintable {
             debug = debug + " " + ds;
         }
         //console.log(debug);   // When this was uncommented, I could see states transitioning properly.
-        return {...state, shieldDoors: new ShieldDoor(newStates, newTimes, newEarlyOpenFlags)};
+        return {...state, shieldDoors: new ShieldDoor(newStates, newTimes, newEarlyOpenFlags, shadeFactorSum / 12)};
     }
 }
