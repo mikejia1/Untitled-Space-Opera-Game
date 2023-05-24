@@ -29,6 +29,7 @@ export class NonPlayer implements Paintable, Collider {
     facing: Direction;                      // The direction that the NPC is currently facing.
     stationeryCountdown: number;            // A countdown (measured in frames) for when the NPC stands still.
     moving: boolean;                        // Whether or not the NPC is currently walking (vs standing still).
+    invisible: boolean;                     // Whether or not the NPC is currently invisible.
     mentalState: MentalState;               // The current mental state of the NPC.
     gardenerAvoidanceCountdown: number;     // NPC is avoiding the gardener when this is non-zero.
     hasCabinFever: boolean;                 // To record that an NPC has cabin fever.
@@ -39,6 +40,7 @@ export class NonPlayer implements Paintable, Collider {
     isHeadingTowardAirLockDoom: boolean;    // Whether or not the NPC with cabin fever is now headed toward the air lock.
     colliderId: number;                     // ID to distinguish the collider from all others.
     colliderType: ColliderType;             // The type of collider that the NPC currently is (depends on mental state).
+    id: number;                          // Index of the npc in the globalstate npc list. 
 
     constructor(params: any) {
         // Some default values to satisfy the requirement that everything be initialized in the constructor.
@@ -56,10 +58,13 @@ export class NonPlayer implements Paintable, Collider {
         this.readyToPushAirLockButton = false;          // NPC is not currently trying to kill itself with the air lock.
         this.isHeadingTowardAirLockDoom = false;        // NPC is not initially heading toward the air lock to die.
         this.colliderType = ColliderType.NPCNormalCo;   // NPC default mental state is "normal".
+        this.id = 123;                                  // Dummy npcId meant to be overriden. 
+        this.invisible = false;
 
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
         if (params.clone !== undefined) this.cloneFrom(params.clone);
         if (params.colliderId !== undefined) this.colliderId = params.colliderId;
+        if (params.id !== undefined) this.id = params.id;
         if (params.pos !== undefined) this.pos = params.pos;
         if (params.facing !== undefined) this.facing = params.facing;
         if (params.stationeryCountdown !== undefined) this.stationeryCountdown = params.stationeryCountdown;
@@ -93,6 +98,8 @@ export class NonPlayer implements Paintable, Collider {
         this.gardenerAvoidanceCountdown = other.gardenerAvoidanceCountdown;
         this.hasCabinFever = other.hasCabinFever;
         this.colliderType = other.colliderType;
+        this.id = other.id;
+        this.invisible = other.invisible;
     }
 
     // Return the invisible rectangle that determines collision behaviour for the NPC.
@@ -103,8 +110,13 @@ export class NonPlayer implements Paintable, Collider {
         }
     }
 
-    // Paint the NPC on the canvas.
+    // Override the paintable paint function
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
+      return this.paintAtPos(canvas, state, null);
+    }
+
+    // Paint the NPC on the canvas.
+    paintAtPos(canvas: CanvasRenderingContext2D, state: IGlobalState, dialog: Coord | null): void {
         // Additional vertical displacement caused by mental state.
         let jitter: number;
         switch (this.mentalState) {
@@ -135,6 +147,7 @@ export class NonPlayer implements Paintable, Collider {
         newPos = newPos.plus(0, jitter);
         let flip = (this.facing === Direction.Left);
         if (state.gameover) return paintGameOver(canvas, state, newPos, flip);
+        newPos = (dialog != null) ? dialog : newPos;
 
         // Determine where, on the canvas, the gardener should be painted.
         let dest = flip

@@ -33,6 +33,7 @@ import {
   TOGGLE_GAME_AUDIO,
 } from "../actions";
 import { updateOxygenState } from "../../entities/oxygen";
+import { Dialog } from "../../scene/dialog";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -263,6 +264,11 @@ function canEquip(state: IGlobalState): boolean {
 // Use currently equipped item, if equipped, other use item that is nearby (like a button).
 // Note: Named "utilise" instead of "use" because "useItem" exists elsewhere.
 function utiliseItem(state: IGlobalState): IGlobalState {
+  if (state.dialogs.length > 0) {
+    let dialogs : Dialog[] = state.dialogs;
+    dialogs.shift();
+    return {...state, dialogs:dialogs};
+  }
   if (!state.gardener.itemEquipped) {
     return utiliseNearbyItem(state);
   }

@@ -35,6 +35,7 @@ import wateringcan          from "../../entities/images/wateringcan/wateringcan.
 import spaceframes          from "../images/space_frames.png";
 import shieldButton         from "../../entities/images/button/button_32x32.png";
 import airlockDoors         from "../../entities/images/airlock/airlock_doors_64x64.png";
+import dialogBox            from "../images/dialog.png";
 
 // Plant image.
 import plantimage from "../../entities/images/plant/plants_16x16.png";
@@ -48,6 +49,7 @@ import islandPlanetImg from   "../images/drifting_planets/planet_island_256px_60
 import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.png";
 import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
+import { Dialog } from '../../scene/dialog';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -68,6 +70,7 @@ export interface IGlobalState {
     gameOverFrame: number;            // The frame number when the game ended
     pendingEvents: AnimEvent[];       // Queue of one-off event animations to draw
     activeEvents: AnimEvent[];        // Queue of one-off event animations to draw
+    dialogs: Dialog[];                // Dialogs to display
     skeleton: any;                    // The skeleton death animation.
     catImage: any;                    // The cat walk cycle animation.
     gardenerImages: any;              // Source images for gardener sprites.
@@ -81,6 +84,7 @@ export interface IGlobalState {
     gameOverImage: any,               // The game over image
     replayImage: any,                 // The replay prompt image
     blackHoleImage: any,              // Images containing animation frames for the black hole
+    dialogImage: any,                 // The dialog box image
     invisibleColliders: Collider[];   // All Colliders that aren't visible.
     muted: boolean;                   // Enable / disable sounds.
     screenShaker: Shaker;             // For causing the screen to shake at key moments.
@@ -142,6 +146,7 @@ export function initialGameState(): IGlobalState {
     gameOverFrame: 0,
     pendingEvents: getEvents(),
     activeEvents: [],
+    dialogs: welcomeDialog(npcs),
     gardenerImages: {
       walkingBase:  loadImage("Base walk strip", basewalkstrip),
       wateringBase: loadImage("Base watering strip", basewateringstrip),
@@ -167,6 +172,7 @@ export function initialGameState(): IGlobalState {
       blackTop:       loadImage("Black top shield", blackTopShield),
       blackBottom:    loadImage("Black bottom shield", blackBottomShield),
     },
+    dialogImage:      loadImage("Dialog box", dialogBox),
     shieldButtonImage: loadImage("Shield button", shieldButton),
     airlockDoorImage: loadImage("Airlock doors", airlockDoors),
     plantImage:       loadImage("Plant image", plantimage),
@@ -280,8 +286,9 @@ function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: numbe
   for (let col = 0; col < cols; col++) {
     for (let row = 0; row < rows; row++) {
       let npc = new NonPlayer({
-        colliderId: colliderId + (row * cols) + col,
+        colliderId: colliderId + (rows * col) + row,
         pos: pos.plus(col * spacing, row * spacing),
+        id: (rows * col) + row,
       });
       all = [...all, npc];
     }
@@ -295,9 +302,10 @@ function gridOfCats(colliderId: number, pos: Coord, spacing: number, cols: numbe
   for (let col = 0; col < cols; col++) {
     for (let row = 0; row < rows; row++) {
       let cat = new Cat({
-        colliderId: colliderId + (row * cols) + col,
+        colliderId: colliderId + (rows * col) + row,
         pos: pos.plus(col * spacing, row * spacing), 
         color: ( col * cols + row ) % 5,
+        id: (rows * col) + row,
       });
       all = [...all, cat];
     }
@@ -378,4 +386,12 @@ export function activateAirlockButton(globalState: IGlobalState): IGlobalState {
     airlockButton: airlockButton,
     airlock: airlock,
   };
+}
+
+export function welcomeDialog(npcs : NonPlayer[]): Dialog[] {
+  let dialogs : Dialog[] = [];
+  dialogs = [...dialogs, new Dialog("Good you're finally awake!", 0, npcs[0].id)];
+  dialogs = [...dialogs, new Dialog("There's no time to explain! Water the\n plants or we'll all die!!", 0, npcs[1].id)];
+  dialogs = [...dialogs, new Dialog("Press 'e' to pick up the watering can.\nIt's on the upper deck.", 0, npcs[2].id)];
+  return dialogs;
 }

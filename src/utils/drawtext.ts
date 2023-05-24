@@ -1,10 +1,8 @@
 import { MONOGRAM_H, MONOGRAM_W, monogramBitmap } from "../store/data/monogram-bitmap";
 import { Coord } from "./coord";
 
-export function drawTextDialog(canvas : CanvasRenderingContext2D, pos : Coord, text : string) : void {
+export function drawText(canvas : CanvasRenderingContext2D, pos : Coord, text : string) : void {
     //draw background rect 12px tall, 5px wide per character with 1px spacing to the left. 
-    canvas.fillStyle = "rgba(255,255,255,1)";
-    canvas.fillRect(pos.x, pos.y, MONOGRAM_W*text.length + 1, MONOGRAM_H);
     pos = pos.toIntegers();
     //draw text
     for(let i = 0; i < text.length; i++){

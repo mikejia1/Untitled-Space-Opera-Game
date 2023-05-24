@@ -9,6 +9,7 @@ import {
  import { Rect } from './rect';
  import { Tile, WrapSector, InvisibleCollider } from '../scene';
 import { drawAnimationEvent } from "./drawevent";
+import { Dialog } from "../scene/dialog";
 
 export * from './coord';
 export * from './constants';
@@ -81,6 +82,11 @@ export const drawState = (
   state.shieldDoors.paintShadows(canvas, state);
   drawAmbientShade(state, canvas);
 
+  //draw dialog
+  if(state.dialogs.length > 0) {
+    state.dialogs[0].paint(canvas, state);
+  }
+  
   drawAnimationEvent(state, shift, canvas);
 
   // Extra debug display.
