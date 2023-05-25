@@ -3,7 +3,7 @@ import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
-    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond, computeCurrentFrame, FPS, oppositeDirection, rectanglesOverlap,
+    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond, computeCurrentFrame, FPS, oppositeDirection, rectanglesOverlap, randLeftOrRight,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -29,7 +29,10 @@ export class NonPlayer implements Paintable, Collider {
     facing: Direction;                      // The direction that the NPC is currently facing.
     stationeryCountdown: number;            // A countdown (measured in frames) for when the NPC stands still.
     moving: boolean;                        // Whether or not the NPC is currently walking (vs standing still).
+    isOffScreen: boolean;                   // Whether or not the NPC is "gone" off screen, to return at a later time.
     invisible: boolean;                     // Whether or not the NPC is currently invisible.
+    biasDirection: Direction;               // A direction that the NPC is biased toward choosing (Left or Right).
+    timeOfLastReturnToGarden: number;       // Frame number of the most recent time the NPC returned from the "holding zone".
     mentalState: MentalState;               // The current mental state of the NPC.
     gardenerAvoidanceCountdown: number;     // NPC is avoiding the gardener when this is non-zero.
     hasCabinFever: boolean;                 // To record that an NPC has cabin fever.
@@ -49,6 +52,9 @@ export class NonPlayer implements Paintable, Collider {
         this.facing = randomDirection();                // Choose a random facing direction.
         this.stationeryCountdown = 0;                   // Start with NPC not standing still.
         this.moving = true;                             // Start with NPC moving.
+        this.isOffScreen = false;                       // Start with NPC on screen.
+        this.biasDirection = randLeftOrRight();         // A random bias direction for the NPC.
+        this.timeOfLastReturnToGarden = 0;              // Dummy value for last time NPC returned from "holding zone".
         this.mentalState = MentalState.Normal;          // Start NPC in normal (~calm) mental state.
         this.gardenerAvoidanceCountdown = 0;            // NPC *not* initially avoiding gardener.
         this.hasCabinFever = false;                     // NPC does *not* initially have cabin fever.
@@ -58,13 +64,14 @@ export class NonPlayer implements Paintable, Collider {
         this.readyToPushAirLockButton = false;          // NPC is not currently trying to kill itself with the air lock.
         this.isHeadingTowardAirLockDoom = false;        // NPC is not initially heading toward the air lock to die.
         this.colliderType = ColliderType.NPCNormalCo;   // NPC default mental state is "normal".
-        this.id = 123;                                  // Dummy npcId meant to be overriden. 
-        this.invisible = false;
+        this.id = 123;                                  // Dummy npcId meant to be overridden. 
+        this.invisible = false;                         // NPC not invisible by default.
 
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
         if (params.clone !== undefined) this.cloneFrom(params.clone);
         if (params.colliderId !== undefined) this.colliderId = params.colliderId;
         if (params.id !== undefined) this.id = params.id;
+        if (params.invisible !== undefined) this.invisible = params.invisible;
         if (params.pos !== undefined) this.pos = params.pos;
         if (params.facing !== undefined) this.facing = params.facing;
         if (params.stationeryCountdown !== undefined) this.stationeryCountdown = params.stationeryCountdown;
@@ -74,6 +81,9 @@ export class NonPlayer implements Paintable, Collider {
         if (params.readyToPushAirLockButton !== undefined) this.readyToPushAirLockButton = params.readyToPushAirLockButton;
         if (params.isHeadingTowardAirLockDoom !== undefined) this.isHeadingTowardAirLockDoom = params.isHeadingTowardAirLockDoom;
         if (params.moving !== undefined) this.moving = params.moving;
+        if (params.isOffScreen !== undefined) this.isOffScreen = params.isOffScreen;
+        if (params.biasDirection !== undefined) this.biasDirection = params.biasDirection;
+        if (params.timeOfLastReturnToGarden !== undefined) this.timeOfLastReturnToGarden = params.timeOfLastReturnToGarden;
         if (params.mentalState !== undefined) this.mentalState = params.mentalState;
         if (params.gardenerAvoidanceCountdown !== undefined) this.gardenerAvoidanceCountdown = params.gardenerAvoidanceCountdown;
         if (params.hasCabinFever !== undefined) this.hasCabinFever = params.hasCabinFever;
@@ -94,6 +104,9 @@ export class NonPlayer implements Paintable, Collider {
         this.readyToPushAirLockButton = other.readyToPushAirLockButton;
         this.isHeadingTowardAirLockDoom = other.isHeadingTowardAirLockDoom;
         this.moving = other.moving;
+        this.isOffScreen = other.isOffScreen;
+        this.biasDirection = other.biasDirection;
+        this.timeOfLastReturnToGarden = other.timeOfLastReturnToGarden;
         this.mentalState = other.mentalState;
         this.gardenerAvoidanceCountdown = other.gardenerAvoidanceCountdown;
         this.hasCabinFever = other.hasCabinFever;
@@ -104,15 +117,27 @@ export class NonPlayer implements Paintable, Collider {
 
     // Return the invisible rectangle that determines collision behaviour for the NPC.
     collisionRect(): Rect {
+        // An off-screen NPC should have a far distant collision rect that won't interfere with anything.
+        // A tiny little square at a very distant location unique to the NPC.
+        if (this.isOffScreen) {
+            let uniq = -1000 * (this.id + 1);
+            return {
+                a: new Coord(uniq, 0),
+                b: new Coord(uniq + 2, 0),
+            };
+        }
+        // Otherwise, use the proper collision rect.
         return {
             a: this.pos.plus(0, -ENTITY_RECT_HEIGHT),
             b: this.pos.plus(ENTITY_RECT_WIDTH, 0),
-        }
+        };
     }
 
     // Override the paintable paint function
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
-      return this.paintAtPos(canvas, state, null);
+        // An invisible NPC doesn't need to be painted.
+        if (this.invisible) return;
+        return this.paintAtPos(canvas, state, null);
     }
 
     // Paint the NPC on the canvas.
@@ -200,6 +225,8 @@ export class NonPlayer implements Paintable, Collider {
 
     // Let the NPC move. Randomly (more or less). Returns new updated version of the NPC.
     move(): NonPlayer {
+        // An NPC that is "gone" off-screen doesn't need to move.
+        if (this.isOffScreen) return this;
         let vPixelSpeed: number;
         let hPixelSpeed: number;
         switch (this.mentalState) {
@@ -245,12 +272,12 @@ export class NonPlayer implements Paintable, Collider {
     }
 
     oxygenConsumption(): number {
-        if(this.mentalState == MentalState.Frazzled){
-            return 0.5;
+        // On-screen NPCs in non-normal mental state consume non-normal amounts of oxygen.
+        if (!this.isOffScreen) {
+            if (this.mentalState == MentalState.Frazzled)   return 0.5;
+            if (this.mentalState == MentalState.Scared)     return 2;
         }
-        if(this.mentalState == MentalState.Scared){
-            return 2;
-        }
+        // An off-screen or normal NPC consumes oxygen at usual rate.
         return 1;
     }
 
@@ -265,6 +292,9 @@ export class NonPlayer implements Paintable, Collider {
 
     // Allow the NPC to change its mental state.
     maybeChangeMentalState(state: IGlobalState): NonPlayer {
+        // An off-screen NPC does not change its mental state.
+        if (this.isOffScreen) return this;
+    
         let newMentalState: MentalState;
         let newSuicideCountdown: number             = this.suicideCountdown;
         let newContemplateDeathCountdown: number    = this.contemplateDeathCountdown;
@@ -342,6 +372,36 @@ export class NonPlayer implements Paintable, Collider {
             isHeadingTowardAirLockDoom: true,
         });
     }
+
+    // Bring an invisible off-screen NPC back to the garden.
+    comeBackOnScreen(): NonPlayer {
+        return new NonPlayer({
+            clone: this,
+            isOffScreen: false,
+            invisible: false,
+            biasDirection: (this.pos.x < 0) ? Direction.Right : Direction.Left,
+            timeOfLastReturnToGarden: computeCurrentFrame(),
+        });
+    }
+
+    // Move NPC to "holding zone" i.e. off-screen and invisible.
+    goOffScreen(): NonPlayer {
+        return new NonPlayer({
+            clone: this,
+            isOffScreen: true,
+            invisible: true,
+        });
+    }
+
+    // Check whether the NPC has just wandered off screen very recently.
+    // This is always false for a short time right after wandering on-screen.
+    justWentOffScreen(): boolean {
+        let f = computeCurrentFrame();
+        // For five seconds, you can't wander off-screen if you just wandered on-screen.
+        if ((f - this.timeOfLastReturnToGarden) < (5 * FPS)) return false;
+        // After five seconds, you're off-screen if the NPC image is fully outside the background.
+        return (this.pos.x < (0 - ENTITY_RECT_WIDTH)) || (this.pos.x > BACKGROUND_WIDTH);
+    }
 }
 
 // Check global state to see if there's currently an impending danger that would scare NPCs.
@@ -359,8 +419,16 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
     let newNPCs: NonPlayer[] = [];
     let atLeastOneNPCPushingAirLockButton: boolean = false;
     state.npcs.forEach(npc => {
+        let newNPC = npc;
+    
+        // With small probability, an off-screen NPC may come back.
+        if (newNPC.isOffScreen && (randomInt(0, 999) < 15)) newNPC = newNPC.comeBackOnScreen();
+
+        // If the NPC has just wandered off-screen, go into the "holding zone".
+        if (newNPC.justWentOffScreen()) newNPC = newNPC.goOffScreen();
+    
         // Get a new version of the npc - one that has taken its next step.
-        let newNPC = moveNPC(state, npc);
+        newNPC = moveNPC(state, npc);
 
         // Allow the NPC to consider adopting a new movement (forced = false).
         newNPC = considerNewNPCMovement(state, newNPC, false);
@@ -403,6 +471,9 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
 // Allow an NPC to randomly choose a new movement. If the NPC is not currently moving, wait for
 // its stationaryCountdown to reach zero before adopting a new movement.
 function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boolean): NonPlayer {
+    // An off-screen NPC does not bother with this.
+    if (npc.isOffScreen) return npc;
+
     // Whether or not the NPC will adopt a new movement.
     let change = false;
   
@@ -454,9 +525,19 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
       case MentalState.Normal:
         // If NPC is currently avoiding the gardener, movement choices are somewhat limited.
         if (npc.gardenerAvoidanceCountdown > 0) choice = gardenerAvoidingDirectionChoice(state, npc);
-        else choice = randomInt(0, 4);
+        else {
+            let choices: number[] = [];
+            for (let i = 0; i < ALL_DIRECTIONS.length; i++) {
+                choices = [...choices, i];
+                // The bias direction appears extra times in the choice list to make it a more likely choice.
+                if (ALL_DIRECTIONS[i] === npc.biasDirection) choices = [...choices, i, i];
+            }
+            // Standing still is also in the list (value is 4).
+            choices = [...choices, 4];
+            choice = choices[randomInt(0, choices.length - 1)];
+        }
         break;
-      // A frazzled NPC doesn't stand still very often.
+      // A frazzled NPC doesn't stand still very often. It also ignores bias direction.
       case MentalState.Frazzled:
         // If suicidal, head toward the air lock button.
         if (npc.suicideCountdown === 0) choice = suicidalDirectionChoice(state, npc);
@@ -466,7 +547,7 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
             if (choice > 4) choice = (choice - 5) % 4;
         }
         break;
-      // A scared NPC is in between the two above.
+      // A scared NPC is in between the two above. It also ignores bias direction.
       case MentalState.Scared:
         // If NPC is currently avoiding the gardener, movement choices are somewhat limited.
         if (npc.gardenerAvoidanceCountdown > 0) choice = gardenerAvoidingDirectionChoice(state, npc);
@@ -545,6 +626,9 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
   
   // "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
   function moveNPC(state: IGlobalState, npc: NonPlayer): NonPlayer {
+    // An off-screen NPC does not bother moving.
+    if (npc.isOffScreen) return npc;
+
     if (!npc.moving) {
       return new NonPlayer({
         clone: npc,

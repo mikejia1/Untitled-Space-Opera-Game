@@ -241,6 +241,10 @@ export function randomDirection(): Direction {
   return ALL_DIRECTIONS[randomInt(0, ALL_DIRECTIONS.length - 1)];
 }
 
+export function randLeftOrRight(): Direction {
+  return (randomInt(0, 99) < 50) ? Direction.Left : Direction.Right;
+}
+
 // Get the direction (Up/Down/Left/Right) of first relative to second.
 export function directionOfFirstRelativeToSecond(first: Paintable | Coord, second: Paintable | Coord): Direction {
   let pos1: Coord = (first instanceof Coord) ? first : first.pos;
