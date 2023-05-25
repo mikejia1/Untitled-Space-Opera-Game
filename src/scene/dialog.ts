@@ -51,10 +51,6 @@ export class Dialog implements Paintable {
         }
     }
 
-    update(state: IGlobalState) : Dialog {
-        this.skipAnimation == state.currentFrame - this.startFrame >= this.totalChars;
-        return this;
-    }
     // Compute a displacement that will place the Plant at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
         return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
@@ -69,7 +65,8 @@ export class Dialog implements Paintable {
 }
 
 export function updateDialogState(state : IGlobalState) : IGlobalState {
-    let newDialogs : Dialog[] = [];
-    state.dialogs.forEach((dialog) => {newDialogs = [...newDialogs, dialog.update(state)]});
-    return { ...state, dialogs: newDialogs};
+    if (state.dialogs.length == 0) return state;
+    let dialogs : Dialog[] = state.dialogs;
+    dialogs[0].skipAnimation = state.currentFrame - dialogs[0].startFrame > dialogs[0].totalChars || dialogs[0].skipAnimation;
+    return { ...state, dialogs: dialogs};
 }
