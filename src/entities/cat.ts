@@ -98,11 +98,6 @@ export function updateCatState(state: IGlobalState): IGlobalState {
     let gardener : Gardener = state.gardener;
     for(let i = 0; i < state.cats.length; i++){
         let cat = state.cats[i];
-        /*
-        //check if cat has touched an npc
-        
-        //check if cat has touched the player
-        */
         if(rectanglesOverlap(cat.deathRect(), gardener.collisionRect())){
             gardener.death = {time: state.currentFrame, cause: CausaMortis.Laceration};
         }
