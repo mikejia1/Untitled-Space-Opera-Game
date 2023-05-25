@@ -13,6 +13,7 @@ export enum ColliderType {
     PlantCo         = "Plant",          // A plant
     LadderCo        = "Ladder",         // A ladder
     CatCo           = "Cat",            // A murderous feline
+    NoneCo          = "None",           // Collides with nothing (hard-coded - i.e. not using exceptions, below)
 };
 
 export interface StrSet {
@@ -23,14 +24,15 @@ export interface StrSet {
 // All exceptions should appear twice here.
 export function ColliderExceptions(col: Collider): StrSet {
     switch (col.colliderType) {
-        case ColliderType.GardenerCo:     return { Ladder: true };
+        case ColliderType.GardenerCo:     return { Ladder: true, Plant: true };
         case ColliderType.NPCNormalCo:    return { GardenerWall: true };
         case ColliderType.NPCFrazzledCo:  return { Plant: true };
         case ColliderType.WallCo:         return { };
         case ColliderType.GardenerWallCo: return { NPCNormal: true };
-        case ColliderType.PlantCo:        return { NPCFrazzled: true };
+        case ColliderType.PlantCo:        return { NPCFrazzled: true, Gardener: true };
         case ColliderType.LadderCo:       return { Gardener: true };
         case ColliderType.CatCo:          return { };
+        case ColliderType.NoneCo:         return { };
     }
 };
 
@@ -57,6 +59,7 @@ export function allCollidersFromState(state: IGlobalState): Map<number, Collider
 // Check whether the given collider overlaps (collides) with any other collider (excluding itself).
 export function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>, collider: Collider): boolean {
     if (state.debugSettings.collisionsDisabled) return false;
+    if (collider.colliderType === ColliderType.NoneCo) return false;  // Hard-coded exception for type NoneCo.
     let cRect = collider.collisionRect();
   
     // Check all colliders and stop if and when any collision is found.
@@ -67,6 +70,7 @@ export function collisionDetected(state: IGlobalState, colliders: Map<number, Co
       if (colliderId === collider.colliderId) continue;
       let co = colliders.get(colliderId);
       if (co === undefined) continue; // Will never happen.
+      if (co.colliderType === ColliderType.NoneCo) return false;  // Hard-coded exception for NoneCo.
       // Ignore collisions if there's an explicit exception for this pair of collider types.
       let exceptions = ColliderExceptions(collider);
       let expt = exceptions[co.colliderType.toString()];

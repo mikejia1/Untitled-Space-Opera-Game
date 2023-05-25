@@ -24,12 +24,13 @@ export class Plant {
   colliderId: number;
   colliderType: ColliderType = ColliderType.PlantCo;
 
-  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 1, timestamp = computeCurrentFrame()) {
+  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 1, dehydTimestamp = computeCurrentFrame(), growthTimestamp = computeCurrentFrame(), colliderType = ColliderType.PlantCo) {
     this.colliderId = colliderId;
+    this.colliderType = colliderType;
     this.pos = pos;
     this.health = initialHealth;
-    this.lastGrowthTimestamp = timestamp;
-    this.lastDehydrationTimestamp = timestamp;
+    this.lastGrowthTimestamp = growthTimestamp;
+    this.lastDehydrationTimestamp = dehydTimestamp;
     this.growthStage = size;
   }
 

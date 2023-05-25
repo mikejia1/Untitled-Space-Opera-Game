@@ -1,9 +1,10 @@
 import { shiftForTile, computeBackgroundShift, Coord, Rect, AIRLOCK_PIXEL_SPEED, rectanglesOverlap, outlineRect, Colour } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
-import { Paintable, IGlobalState, collisionDetected } from '../store/classes';
+import { Paintable, IGlobalState, collisionDetected, ColliderType } from '../store/classes';
 import { Tile } from '../scene';
 import { Cat } from './cat';
 import { NonPlayer } from './nonplayer';
+import { Plant } from './plant';
 
 export enum AirlockState { OPENING, CLOSING, OPEN, CLOSED }
 const MAX_DOOR_OFFSET = 32;
@@ -129,7 +130,10 @@ function getAirlockShiftedEntity(state: IGlobalState, actor: any) : any {
 
 export function updateAirlockState(state: IGlobalState): IGlobalState {
     if (state.airlock.isAirtight(state)) {
-        return state;
+        return {
+            ...state,
+            plants: plantsWithColliderType(state, ColliderType.PlantCo),
+        };
     }
     let cats: Cat[] = [];
     for (let i = 0; i < state.cats.length; i++) {
@@ -149,5 +153,22 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
         }
     }
     let gardener = getAirlockShiftedEntity(state, state.gardener);
-    return { ...state, cats: cats, npcs: npcs, gardener: gardener, airlock: state.airlock.updateDoorState(state) };
+    return {
+        ...state,
+        cats: cats,
+        npcs: npcs,
+        gardener: gardener,
+        airlock: state.airlock.updateDoorState(state),
+        plants: plantsWithColliderType(state, ColliderType.NoneCo),
+    };
+}
+
+function plantsWithColliderType(state: IGlobalState, cType: ColliderType): Plant[] {
+    if (state.plants[0].colliderType === cType) return state.plants;
+    let newPlants: Plant[] = [];
+    for (let i = 0; i < state.plants.length; i++) {
+        let p = state.plants[i];
+        newPlants = [...newPlants, new Plant(p.colliderId, p.pos, p.health, p.growthStage, p.lastDehydrationTimestamp, p.lastGrowthTimestamp, cType)];
+    }
+    return newPlants;
 }
