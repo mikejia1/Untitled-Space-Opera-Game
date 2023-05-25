@@ -213,10 +213,10 @@ export class NonPlayer implements Paintable, Collider {
         if (this.death != null){
             switch(this.death.cause){
                 case CausaMortis.Laceration:
-                    return Math.min(state.currentFrame - (this.death.time) / 3, 15);
+                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 14);
                 case CausaMortis.Asphyxiation:
-                    return Math.min(state.currentFrame - (this.death.time) / 3, 14);
-            }
+                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 13);
+            }   
         }
         // The walking animation has 8 frames.
         let frameCount = 8;

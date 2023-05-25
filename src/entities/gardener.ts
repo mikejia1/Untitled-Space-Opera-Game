@@ -142,16 +142,18 @@ export class Gardener implements Paintable, Collider, Interactable {
     }
 
     paintDeath(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord, newPos: Coord, flip: boolean): void {
+        console.log("painting gardener death");
         if (this.death == null) return;
         let frame = 0;
         let image = null;
         switch(this.death.cause){
             case CausaMortis.Laceration:
-                frame = Math.min(state.currentFrame - (this.death.time) / 3, 15);
+                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 14);
                 image = state.gardenerImages.slainDeath;
+                console.log("painting gardener laceration, frame: "+ frame);
                 break;
             case CausaMortis.Asphyxiation:
-                frame = Math.min(state.currentFrame - (this.death.time) / 3, 14);
+                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 13);
                 image = state.gardenerImages.chokeDeath;
                 break;
         }
