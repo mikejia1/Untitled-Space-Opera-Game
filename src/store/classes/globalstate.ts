@@ -12,8 +12,8 @@ import { Cat } from '../../entities/cat';
 import basewalkstrip             from "../../entities/images/gardener/base_walk_strip8.png";
 import basewateringstrip         from "../../entities/images/gardener/base_watering_strip5.png";
 import toolwateringstrip         from "../../entities/images/gardener/tools_watering_strip5.png";
-import gardenerslainstrip        from "../../entities/images/nonplayer/gardener_slain.png"; 
-import gardenerchokestrip        from "../../entities/images/nonplayer/gardener_suffocation.png";
+import gardenerslainstrip        from "../../entities/images/gardener/gardener_slain.png"; 
+import gardenerchokestrip        from "../../entities/images/gardener/gardener_choke.png";
 
 // Blast shield images.
 import closedShield      from "../../entities/images/shield/shield_32x160.png";
@@ -28,7 +28,7 @@ import npcwalkcycle         from "../../entities/images/nonplayer/npcwalkcycle.p
 import frazzlednpcwalkcycle from "../../entities/images/nonplayer/frazzled_npcwalkcycle.png";
 import scarednpcwalkcycle   from "../../entities/images/nonplayer/scared_npcwalkcycle.png";
 import npcslainstrip        from "../../entities/images/nonplayer/npc_slain.png"; 
-import npcchokestrip        from "../../entities/images/nonplayer/npc_suffocation.png";
+import npcchokestrip        from "../../entities/images/nonplayer/npc_choke.png";
 
 // Other images.
 import catswalkcycle        from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";

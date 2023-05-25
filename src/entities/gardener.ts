@@ -7,7 +7,7 @@ import {
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
-import { paintGameOver } from './skeleton';
+import { CausaMortis, Death, paintSkeletonDeath } from './skeleton';
 import { NonPlayer } from './nonplayer';
 import { drawText } from '../utils/drawtext';
 
@@ -23,6 +23,7 @@ export class Gardener implements Paintable, Collider, Interactable {
     watering: boolean;          // Whether or not the gardener is watering.
     colliderId: number;         // The ID that distinguishes the collider from all others.
     colliderType: ColliderType = ColliderType.GardenerCo; // The type of collider that the gardener is.
+    death : Death | null;       // Death data to specify how to paint death animation.
  
     constructor(colliderId: number, pos: Coord, facing: GardenerDirection, itemEquipped: boolean=false, moving: boolean=false, watering: boolean) {
         this.colliderId = colliderId;
@@ -31,6 +32,7 @@ export class Gardener implements Paintable, Collider, Interactable {
         this.itemEquipped = itemEquipped;
         this.moving = moving;
         this.watering = watering;
+        this.death = null;
     }
     
     opposingDirection(direction1: Direction, direction2: Direction){
@@ -116,7 +118,8 @@ export class Gardener implements Paintable, Collider, Interactable {
         let flip = (this.facing === GardenerDirection.Left);
 
         // The particular sprite cycle to use depends on what the gardener is currently doing.
-        if (state.gameover) paintGameOver(canvas, state, newPos, flip);
+        if (state.gameover) paintSkeletonDeath(canvas, state, newPos, flip);
+        else if (this.death != null) this.paintDeath(canvas, state, shift, newPos, flip);
         else if (this.watering) this.paintWatering(canvas, state, shift, newPos, flip);
         else this.paintWalking(canvas, state, shift, newPos, flip);
 
@@ -136,6 +139,41 @@ export class Gardener implements Paintable, Collider, Interactable {
         if (state.debugSettings.showInteractionRects) {
             outlineRect(canvas, shiftRect(this.interactionRect(), shift.x, shift.y), Colour.INTERACTION_RECT);
         }
+    }
+
+    paintDeath(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord, newPos: Coord, flip: boolean): void {
+        if (this.death == null) return;
+        let frame = 0;
+        let image = null;
+        switch(this.death.cause){
+            case CausaMortis.Laceration:
+                frame = Math.min(state.currentFrame - (this.death.time) / 3, 15);
+                image = state.gardenerImages.slainDeath;
+                break;
+            case CausaMortis.Asphyxiation:
+                frame = Math.min(state.currentFrame - (this.death.time) / 3, 14);
+                image = state.gardenerImages.chokeDeath;
+                break;
+        }
+    
+        // Determine where, on the canvas, the gardener should be painted.
+        let dest = flip
+            ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
+            : new Coord(newPos.x - 3, newPos.y - 18);
+        dest = dest.toIntegers();
+        canvas.save();
+        canvas.scale(flip ? -1 : 1, 1);
+
+        // Paint gardener sprite for current frame.
+        canvas.drawImage(
+            image,                             // Source image
+            (frame * 96) + 40, 20,             // Top-left corner of frame in source
+            48, 48,                            // Size of frame in source
+            dest.x, dest.y,                    // Position of sprite on canvas
+            48, 48);                           // Sprite size on canvas
+
+        // Restore canvas transforms to normal.
+        canvas.restore();
     }
 
     // Paint the gardener standing still or walking.

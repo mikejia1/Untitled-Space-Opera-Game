@@ -7,7 +7,7 @@ import {
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
-import { paintGameOver } from './skeleton';
+import { CausaMortis, Death, paintSkeletonDeath } from './skeleton';
 
 // Probability of cabin fever, per NPC, per frame. 5 in 10,000.
 const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0005;
@@ -43,7 +43,8 @@ export class NonPlayer implements Paintable, Collider {
     isHeadingTowardAirLockDoom: boolean;    // Whether or not the NPC with cabin fever is now headed toward the air lock.
     colliderId: number;                     // ID to distinguish the collider from all others.
     colliderType: ColliderType;             // The type of collider that the NPC currently is (depends on mental state).
-    id: number;                          // Index of the npc in the globalstate npc list. 
+    id: number;                             // Index of the npc in the globalstate npc list. 
+    death: Death | null;                    // If the NPC is dead, death objects describes how to paint the death animation.
 
     constructor(params: any) {
         // Some default values to satisfy the requirement that everything be initialized in the constructor.
@@ -66,6 +67,7 @@ export class NonPlayer implements Paintable, Collider {
         this.colliderType = ColliderType.NPCNormalCo;   // NPC default mental state is "normal".
         this.id = 123;                                  // Dummy npcId meant to be overridden. 
         this.invisible = false;                         // NPC not invisible by default.
+        this.death = null;                              // NPC not dead by default.
 
         // If the NPC is to be cloned from another, do that first before setting any specifically designated field.
         if (params.clone !== undefined) this.cloneFrom(params.clone);
@@ -113,6 +115,7 @@ export class NonPlayer implements Paintable, Collider {
         this.colliderType = other.colliderType;
         this.id = other.id;
         this.invisible = other.invisible;
+        this.death = this.death;
     }
 
     // Return the invisible rectangle that determines collision behaviour for the NPC.
@@ -154,24 +157,12 @@ export class NonPlayer implements Paintable, Collider {
                 break;
         }
         // The walking animation has 8 frames.
-        let frameCount = 8;
-        let frame: number;
-        switch (this.mentalState) {
-            // A normal NPC moves at a normal walking pace.
-            case MentalState.Normal:
-            case MentalState.Scared:
-                frame = this.moving ? Math.floor(state.currentFrame % (6 * frameCount) / 6) : 0;
-                break;
-            // A frazzled NPC moves at a frantic pace.
-            case MentalState.Frazzled:
-                frame = this.moving ? Math.floor(state.currentFrame % (3 * frameCount) / 3) : 0;
-                break;
-        }
+        let frame = this.currentSpriteFrame(state);
         let shift = this.computeShift(state);
         let newPos = this.pos.plus(shift.x, shift.y);
         newPos = newPos.plus(0, jitter);
         let flip = (this.facing === Direction.Left);
-        if (state.gameover) return paintGameOver(canvas, state, newPos, flip);
+        if (state.gameover) return paintSkeletonDeath(canvas, state, newPos, flip);
         newPos = (dialog != null) ? dialog : newPos;
 
         // Determine where, on the canvas, the NPC should be painted.
@@ -204,11 +195,44 @@ export class NonPlayer implements Paintable, Collider {
 
     // Get the walk cycle sprite sheet that currently applies for the NPC (depends on mental state).
     currentWalkCycleImage(state: IGlobalState): any {
+        if(this.death != null){
+            switch(this.death.cause) {
+                case CausaMortis.Laceration: return state.npcImages.slainDeath;
+                case CausaMortis.Asphyxiation: return state.npcImages.chokeDeath;
+            }
+        }
         switch (this.mentalState) {
             case MentalState.Normal:    return state.npcImages.normalWalkCycle;
             case MentalState.Frazzled:  return state.npcImages.frazzledWalkCycle;
             case MentalState.Scared:    return state.npcImages.scaredWalkCycle;
         }
+    }
+
+    currentSpriteFrame(state: IGlobalState) : number {
+        // Check if there is a death animation in progress.
+        if (this.death != null){
+            switch(this.death.cause){
+                case CausaMortis.Laceration:
+                    return Math.min(state.currentFrame - (this.death.time) / 3, 15);
+                case CausaMortis.Asphyxiation:
+                    return Math.min(state.currentFrame - (this.death.time) / 3, 14);
+            }
+        }
+        // The walking animation has 8 frames.
+        let frameCount = 8;
+        let frame: number;
+        switch (this.mentalState) {
+            // A normal NPC moves at a normal walking pace.
+            case MentalState.Normal:
+            case MentalState.Scared:
+                frame = this.moving ? Math.floor(state.currentFrame % (6 * frameCount) / 6) : 0;
+                break;
+            // A frazzled NPC moves at a frantic pace.
+            case MentalState.Frazzled:
+                frame = this.moving ? Math.floor(state.currentFrame % (3 * frameCount) / 3) : 0;
+                break;
+        }
+        return frame;
     }
 
     // Compute a displacement that will place the NPC at the correct place on the canvas.

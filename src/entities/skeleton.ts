@@ -1,8 +1,20 @@
 import { IGlobalState } from '../store/classes';
 import { Coord } from '../utils';
-    
+
+export enum CausaMortis {
+    Asphyxiation, // Oxygen ran out
+    Laceration,   // Cat attack
+    Obliteration, // Black hole or explosion
+    Ejection,     // Airlock opened
+}
+
+export interface Death {
+    time: number;
+    cause: CausaMortis;
+}
+
 // Paint a humanoid skeleton in throngs of death
-export function paintGameOver(canvas: CanvasRenderingContext2D, state: IGlobalState, newPos: Coord, flip: boolean): void {
+export function paintSkeletonDeath(canvas: CanvasRenderingContext2D, state: IGlobalState, newPos: Coord, flip: boolean): void {
     // The walking animation has 20 frames. Stay on the initial skeleton frame for 10 frames,
     let frameTicker = Math.max(state.currentFrame - state.gameOverFrame - 0, 0);
     let frame = Math.min(Math.floor(frameTicker / 2), 19);

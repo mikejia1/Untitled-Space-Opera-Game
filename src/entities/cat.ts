@@ -1,6 +1,8 @@
 import { ColliderType, IGlobalState } from "../store/classes";
-import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED } from "../utils";
+import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, Rect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, rectanglesOverlap } from "../utils";
+import { Gardener } from "./gardener";
 import { NonPlayer } from "./nonplayer";
+import { CausaMortis } from "./skeleton";
 
 // Murderous space cat
 export class Cat extends NonPlayer {
@@ -55,6 +57,13 @@ export class Cat extends NonPlayer {
         }
     }
 
+    deathRect(): Rect {
+        return {
+            a: this.pos.plus(0, -ENTITY_RECT_HEIGHT*3),
+            b: this.pos.plus(ENTITY_RECT_WIDTH*2, 0),
+        };
+    }
+
     // Let the NPC move. Randomly (more or less). Returns new updated version of the NPC.
     move(): Cat {
         var delta = [0,0]
@@ -85,8 +94,29 @@ export class Cat extends NonPlayer {
 
 export function updateCatState(state: IGlobalState): IGlobalState {
     let cats : Cat[] = [];
+    let npcs : NonPlayer[] = [];
+    let gardener : Gardener = state.gardener;
     for(let i = 0; i < state.cats.length; i++){
-      cats = [...cats, state.cats[i].move()]
+        let cat = state.cats[i];
+        /*
+        //check if cat has touched an npc
+        
+        //check if cat has touched the player
+        */
+        if(rectanglesOverlap(cat.deathRect(), gardener.collisionRect())){
+            gardener.death = {time: state.currentFrame, cause: CausaMortis.Laceration};
+        }
+        cats = [...cats, state.cats[i].move()]
     }
-    return {...state, cats: cats};
+    state.npcs.forEach(npc => {
+        for(let i = 0; i < state.cats.length; i++){   
+            let cat = state.cats[i];
+            if(rectanglesOverlap(cat.deathRect(), npc.collisionRect())){
+                npc.death = {time: state.currentFrame, cause: CausaMortis.Laceration};
+                break;
+            }
+        }
+        npcs = [...npcs, npc];
+    });
+    return {...state, cats: cats, npcs: npcs, gardener: gardener};
 }
