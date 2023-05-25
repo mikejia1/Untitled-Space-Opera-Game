@@ -98,15 +98,16 @@ export function updateCatState(state: IGlobalState): IGlobalState {
     let gardener : Gardener = state.gardener;
     for(let i = 0; i < state.cats.length; i++){
         let cat = state.cats[i];
-        if(rectanglesOverlap(cat.deathRect(), gardener.collisionRect())){
+        if(rectanglesOverlap(cat.deathRect(), gardener.collisionRect()) && gardener.death == null){
             gardener.death = {time: state.currentFrame, cause: CausaMortis.Laceration};
+            console.log("Gardener killed by cat at time: "+gardener.death.time);
         }
         cats = [...cats, state.cats[i].move()]
     }
     state.npcs.forEach(npc => {
         for(let i = 0; i < state.cats.length; i++){   
             let cat = state.cats[i];
-            if(rectanglesOverlap(cat.deathRect(), npc.collisionRect())){
+            if(rectanglesOverlap(cat.deathRect(), npc.collisionRect()) && npc.death == null){
                 npc.death = {time: state.currentFrame, cause: CausaMortis.Laceration};
                 break;
             }

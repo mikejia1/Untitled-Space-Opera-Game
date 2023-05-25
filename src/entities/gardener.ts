@@ -1,7 +1,7 @@
 import { IGlobalState, Collider, Paintable, Interactable, ColliderType, playBumpSound, getBumpedNPCs, detectCollisions } from '../store/classes';
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
-    ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH,
+    ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
     Coord, Rect, GardenerDirection,
 } from '../utils';
@@ -150,11 +150,14 @@ export class Gardener implements Paintable, Collider, Interactable {
             case CausaMortis.Laceration:
                 frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 14);
                 image = state.gardenerImages.slainDeath;
+                console.log("laceration current frame: "+ state.currentFrame + " death time: "+ this.death.time);
                 console.log("painting gardener laceration, frame: "+ frame);
                 break;
             case CausaMortis.Asphyxiation:
                 frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 13);
                 image = state.gardenerImages.chokeDeath;
+                console.log("asphyxiation current frame: "+ state.currentFrame + " death time: "+ this.death.time);
+                console.log("painting gardener asphyxiation, frame: "+ frame);
                 break;
         }
     
