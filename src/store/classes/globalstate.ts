@@ -9,9 +9,11 @@ import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
 import { Cat } from '../../entities/cat';
 
 // Gardener images.
-import basewalkstrip     from "../../entities/images/gardener/base_walk_strip8.png";
-import basewateringstrip from "../../entities/images/gardener/base_watering_strip5.png";
-import toolwateringstrip from "../../entities/images/gardener/tools_watering_strip5.png";
+import basewalkstrip             from "../../entities/images/gardener/base_walk_strip8.png";
+import basewateringstrip         from "../../entities/images/gardener/base_watering_strip5.png";
+import toolwateringstrip         from "../../entities/images/gardener/tools_watering_strip5.png";
+import gardenerslainstrip        from "../../entities/images/nonplayer/gardener_slain.png"; 
+import gardenerchokestrip        from "../../entities/images/nonplayer/gardener_suffocation.png";
 
 // Blast shield images.
 import closedShield      from "../../entities/images/shield/shield_32x160.png";
@@ -20,11 +22,15 @@ import bottomShield      from "../../entities/images/shield/shield_bottom_32x.pn
 import blackTopShield    from "../../entities/images/shield/black_shield_top_32x.png";
 import blackBottomShield from "../../entities/images/shield/black_shield_bottom_32x.png";
 
-// Other images.
+// NPC images.
 import skeleton             from "../../entities/images/skeleton/skeleton_death.png";
 import npcwalkcycle         from "../../entities/images/nonplayer/npcwalkcycle.png";
 import frazzlednpcwalkcycle from "../../entities/images/nonplayer/frazzled_npcwalkcycle.png";
 import scarednpcwalkcycle   from "../../entities/images/nonplayer/scared_npcwalkcycle.png";
+import npcslainstrip        from "../../entities/images/nonplayer/npc_slain.png"; 
+import npcchokestrip        from "../../entities/images/nonplayer/npc_suffocation.png";
+
+// Other images.
 import catswalkcycle        from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
 import spacegardenimpact    from "../images/space_garden_impact.png";
 import spacegarden          from "../images/space_garden.png";
@@ -149,9 +155,11 @@ export function initialGameState(): IGlobalState {
     activeEvents: [],
     dialogs: welcomeDialog(npcs),
     gardenerImages: {
-      walkingBase:  loadImage("Base walk strip", basewalkstrip),
-      wateringBase: loadImage("Base watering strip", basewateringstrip),
-      waterPouring: loadImage("Tool watering strip", toolwateringstrip),
+      walkingBase:        loadImage("Base walk strip", basewalkstrip),
+      wateringBase:       loadImage("Base watering strip", basewateringstrip),
+      waterPouring:       loadImage("Tool watering strip", toolwateringstrip),
+      slainDeath:         loadImage("Slain death strip", gardenerslainstrip),
+      chokeDeath:         loadImage("Suffocation death strip", gardenerchokestrip),
     },
     skeleton:       loadImage("Skeleton death", skeleton),
     catImage:       loadImage("Cat walk cycle", catswalkcycle),
@@ -159,6 +167,8 @@ export function initialGameState(): IGlobalState {
       normalWalkCycle:    loadImage("Normal NPC walk cycle", npcwalkcycle),
       frazzledWalkCycle:  loadImage("Frazzled NPC walk cycle", frazzlednpcwalkcycle),
       scaredWalkCycle:    loadImage("Scared NPC walk cycle", scarednpcwalkcycle),
+      slainDeath:         loadImage("Slain death strip", npcslainstrip),
+      chokeDeath:         loadImage("Suffocation death strip", npcchokestrip),
     },
     backgroundImages:{
       default:      loadImage("Space garden", spacegarden),
