@@ -389,7 +389,7 @@ export function activateAirlockButton(globalState: IGlobalState): IGlobalState {
   console.log("Activating airlock button");
   let airlock: Airlock = globalState.airlock.activate(globalState);
   let airlockButton: ShieldButton;
-  if(airlock.state == AirlockState.OPENING){
+  if (airlock.state == AirlockState.OPENING){
     airlockButton = globalState.airlockButton.startAlarm(globalState);
   }
   else {

@@ -55,6 +55,10 @@ export class Airlock implements Paintable {
             this.state = AirlockState.CLOSING;
             this.lastInteraction = state.currentFrame;
         }
+        else if (this.state == AirlockState.OPENING) {
+            this.state = AirlockState.CLOSING;
+            this.lastInteraction = state.currentFrame - (MAX_DOOR_OFFSET / 2) - DOOR_DELAY;
+        }
         return this;
     }
 
@@ -71,7 +75,7 @@ export class Airlock implements Paintable {
         }
     }
 
-    // Paint the plant on the canvas.
+    // Paint the air lock on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord = this.computeShift(state)): void {
         let base: Coord = this.pos.plus(MAP_TILE_SIZE / 2, 0);
         base = base.plus(shift.x, shift.y).toIntegers();
