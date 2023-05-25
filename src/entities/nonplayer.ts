@@ -174,7 +174,7 @@ export class NonPlayer implements Paintable, Collider {
         if (state.gameover) return paintGameOver(canvas, state, newPos, flip);
         newPos = (dialog != null) ? dialog : newPos;
 
-        // Determine where, on the canvas, the gardener should be painted.
+        // Determine where, on the canvas, the NPC should be painted.
         let dest = flip
             ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
             : new Coord(newPos.x - 3, newPos.y - 18);
@@ -223,10 +223,11 @@ export class NonPlayer implements Paintable, Collider {
             Math.floor(this.pos.y / MAP_TILE_SIZE));
     }
 
-    // Let the NPC move. Randomly (more or less). Returns new updated version of the NPC.
+    // Let the NPC move. Returns new updated version of the NPC.
     move(): NonPlayer {
         // An NPC that is "gone" off-screen doesn't need to move.
         if (this.isOffScreen) return this;
+    
         let vPixelSpeed: number;
         let hPixelSpeed: number;
         switch (this.mentalState) {
@@ -261,8 +262,12 @@ export class NonPlayer implements Paintable, Collider {
         }
         // Add deltas to NPC position and keep it within the background rectangle.
         let newPos = new Coord(
-            (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
-            (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
+            this.pos.x + delta[0],
+            this.pos.y + delta[1]
+        );
+        //let newPos = new Coord(
+        //    (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
+        //    (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
         // Return a clone of this NPC, but with a the new position.
         return new NonPlayer({
             clone: this,
@@ -306,7 +311,7 @@ export class NonPlayer implements Paintable, Collider {
             // randomly gets frazzled (cabin fever).
             case MentalState.Normal:
                 if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
-                else if ((randomInt(0, 9999) / 10000) < PER_FRAME_CABIN_FEVER_PROBABILITY) {
+                else if (((randomInt(0, 9999) / 10000) < PER_FRAME_CABIN_FEVER_PROBABILITY) && state.randomCabinFeverAllowed) {
                     // When an NPC first develops cabin fever, that's when the suicide countdown starts.
                     newHasCabinFever = true;
                     newMentalState = MentalState.Frazzled;
@@ -381,6 +386,8 @@ export class NonPlayer implements Paintable, Collider {
             invisible: false,
             biasDirection: (this.pos.x < 0) ? Direction.Right : Direction.Left,
             timeOfLastReturnToGarden: computeCurrentFrame(),
+            stationaryCountdown: 0,
+            moving: true,
         });
     }
 
@@ -390,6 +397,17 @@ export class NonPlayer implements Paintable, Collider {
             clone: this,
             isOffScreen: true,
             invisible: true,
+            mentalState: MentalState.Normal,
+            hasCabinFever: false,
+            pos: randomOffScreenPos(),
+            stationaryCountdown: 0,
+            gardenerAvoidanceCountdown: 0,
+            suicideCountdown: 0,
+            contemplateDeathCountdown: 0,
+            moving: false,
+            hasReachedAirLockButton: false,
+            readyToPushAirLockButton: false,
+            isHeadingTowardAirLockDoom: false,
         });
     }
 
@@ -398,7 +416,8 @@ export class NonPlayer implements Paintable, Collider {
     justWentOffScreen(): boolean {
         let f = computeCurrentFrame();
         // For five seconds, you can't wander off-screen if you just wandered on-screen.
-        if ((f - this.timeOfLastReturnToGarden) < (5 * FPS)) return false;
+        let timeSince = f - this.timeOfLastReturnToGarden;
+        if (timeSince < (5 * FPS)) return false;
         // After five seconds, you're off-screen if the NPC image is fully outside the background.
         return (this.pos.x < (0 - ENTITY_RECT_WIDTH)) || (this.pos.x > BACKGROUND_WIDTH);
     }
@@ -419,25 +438,26 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
     let newNPCs: NonPlayer[] = [];
     let atLeastOneNPCPushingAirLockButton: boolean = false;
     state.npcs.forEach(npc => {
-        let newNPC = npc;
+        let newNPC: NonPlayer = npc;
     
         // With small probability, an off-screen NPC may come back.
-        if (newNPC.isOffScreen && (randomInt(0, 999) < 15)) newNPC = newNPC.comeBackOnScreen();
+        if (newNPC.isOffScreen && (randomInt(0, 9999) < 3)) newNPC = newNPC.comeBackOnScreen();
 
         // If the NPC has just wandered off-screen, go into the "holding zone".
-        if (newNPC.justWentOffScreen()) newNPC = newNPC.goOffScreen();
+        if (!newNPC.isOffScreen && newNPC.justWentOffScreen()) newNPC = newNPC.goOffScreen();
     
         // Get a new version of the npc - one that has taken its next step.
-        newNPC = moveNPC(state, npc);
+        let postMoveNPC = moveNPC(state, newNPC);
 
-        // Allow the NPC to consider adopting a new movement (forced = false).
-        newNPC = considerNewNPCMovement(state, newNPC, false);
+        // Check if it now collides with anything.
+        let collided = collisionDetected(state, allColliders, postMoveNPC);
 
-        // If this new NPC is in collision with anything, revert back to original npc
-        // and force it to choose a new movement.
-        if (collisionDetected(state, allColliders, newNPC)) {
-            newNPC = considerNewNPCMovement(state, npc, true);
-        }
+        // If the NPC is colliding, revert to pre-move state.
+        newNPC = collided ? newNPC : postMoveNPC;
+
+        // Allow the NPC to consider adopting a new movement.
+        // Force it to do so if it collided.
+        newNPC = considerNewNPCMovement(state, newNPC, collided);
 
         // Allow the NPC to change its mental state.
         newNPC = newNPC.maybeChangeMentalState(state);
@@ -530,7 +550,7 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
             for (let i = 0; i < ALL_DIRECTIONS.length; i++) {
                 choices = [...choices, i];
                 // The bias direction appears extra times in the choice list to make it a more likely choice.
-                if (ALL_DIRECTIONS[i] === npc.biasDirection) choices = [...choices, i, i];
+                if (ALL_DIRECTIONS[i] === npc.biasDirection) choices = [...choices, i, i, i, i];
             }
             // Standing still is also in the list (value is 4).
             choices = [...choices, 4];
@@ -636,4 +656,14 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
       });
     }
     return npc.move();
+  }
+
+  // Choose a random off-screen position for an NPC so it can enter the garden area from off-screen.
+  export function randomOffScreenPos(): Coord {
+    let top = 195;
+    let bot = BACKGROUND_HEIGHT - 35;
+    let rangeSize = bot - top - (4 * ENTITY_RECT_HEIGHT);
+    let y = top + (2 * ENTITY_RECT_HEIGHT) + randomInt(0, rangeSize);
+    if (randomInt(0, 99) < 50) return new Coord(-ENTITY_RECT_WIDTH - 2, y);
+    return new Coord(BACKGROUND_WIDTH + 2, y);
   }

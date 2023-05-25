@@ -85,10 +85,6 @@ export class Plant {
         newPos.x-2, newPos.y - 10,                  // Position of sprite on canvas. Offsets were manually adjusted to align with collision box
         16, 16);                                    // Sprite size on canvas
 
-    // Restore canvas transforms to normal.
-      canvas.restore();
-
-
     // Extra debug displays.
     if (state.debugSettings.showCollisionRects) {
         outlineRect(canvas, shiftRect(this.collisionRect(), shift.x, shift.y), Colour.COLLISION_RECT);

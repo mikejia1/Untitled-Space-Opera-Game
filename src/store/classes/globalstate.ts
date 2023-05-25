@@ -1,5 +1,5 @@
 import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
-import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState } from '../../entities';
+import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { BlackHole, InvisibleCollider } from "../../scene";
@@ -93,6 +93,7 @@ export interface IGlobalState {
     planet2: Planet | null;           // One of the planets drifting by. Null if none.
     planet3: Planet | null;           // One of the planets drifting by. Null if none.
     planets: Planet[];                // The full list of available drifting planets.
+    randomCabinFeverAllowed: boolean; // Whether or not NPCs can now develop cabin fever at random.
     debugSettings: any;               // For configuring extra debug info and visualizations.
     colliderMap: Map<number, Collider>// Map of collider IDs to colliders.
   }
@@ -118,7 +119,7 @@ export function initialGameState(): IGlobalState {
   colliderId += worldBoundaries.length;
 
   // Create a bunch of NPCs and increment colliderId accordingly.
-  let npcs = gridOfNPCs(colliderId, new Coord(200, 250), 25, 2, 2);
+  let npcs = gridOfNPCs(colliderId, new Coord(200, 250), 25, 2, 2, 6);
   colliderId += npcs.length;
 
   // Create a bunch of cats. 
@@ -196,6 +197,7 @@ export function initialGameState(): IGlobalState {
       makePlanet(512, 30, loadImage("Star planet",     starPlanetImg)),       // Star planet (yes, a star - actually 512 pixels).
       makePlanet(256, 60, loadImage("Wet planet",      wetPlanetImg)),        // Wet planet.
     ],
+    randomCabinFeverAllowed: false, // No random cabin fever, initially.
     debugSettings: {
       showCollisionRects: false,    // Collision rectangles for colliders.
       showPositionRects: false,     // Position rectangles for paintables.
@@ -281,17 +283,29 @@ function createShieldButtons(): ShieldButton[] {
 }
 
 // Create a grid of NPCs with top-left one at given position, and with given spacing.
-function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: number, rows: number): NonPlayer[] {
+function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: number, rows: number, numOffScreen: number): NonPlayer[] {
   let all: NonPlayer[] = [];
+  let lastColliderId: number = 0;
   for (let col = 0; col < cols; col++) {
     for (let row = 0; row < rows; row++) {
+      lastColliderId = colliderId + (rows * col) + row;
       let npc = new NonPlayer({
-        colliderId: colliderId + (rows * col) + row,
+        colliderId: lastColliderId,
         pos: pos.plus(col * spacing, row * spacing),
         id: (rows * col) + row,
       });
       all = [...all, npc];
     }
+  }
+  for (let i = 0; i < numOffScreen; i++) {
+    let npc = new NonPlayer({
+      colliderId: lastColliderId + i + 1,
+      pos: randomOffScreenPos(),
+      id: (rows * cols) + i,
+      isOffScreen: true,
+      invisible: true,
+    });
+    all = [...all, npc];
   }
   return all;
 }

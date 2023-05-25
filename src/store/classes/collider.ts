@@ -5,13 +5,14 @@ import { IGlobalState } from './globalstate';
 // By default, all types collide.
 // Exceptions must be listed explicitly in ColliderExceptions.
 export enum ColliderType {
-    GardenerCo    = "Gardener",     // A gardener
-    NPCNormalCo   = "NPCNormal",    // An NPC in normal mental state
-    NPCFrazzledCo = "NPCFrazzled",  // An NPC in frazzled mental state
-    WallCo        = "Wall",         // A wall or other solid obstacle
-    PlantCo       = "Plant",        // A plant
-    LadderCo      = "Ladder",       // A ladder
-    CatCo         = "Cat",          // A murderous feline
+    GardenerCo      = "Gardener",       // A gardener
+    NPCNormalCo     = "NPCNormal",      // An NPC in normal mental state
+    NPCFrazzledCo   = "NPCFrazzled",    // An NPC in frazzled mental state
+    WallCo          = "Wall",           // A wall or other solid obstacle
+    GardenerWallCo  = "GardenerWall",   // A wall that blocks the gardener by not the NPCs
+    PlantCo         = "Plant",          // A plant
+    LadderCo        = "Ladder",         // A ladder
+    CatCo           = "Cat",            // A murderous feline
 };
 
 export interface StrSet {
@@ -22,13 +23,14 @@ export interface StrSet {
 // All exceptions should appear twice here.
 export function ColliderExceptions(col: Collider): StrSet {
     switch (col.colliderType) {
-        case ColliderType.GardenerCo:    return { Ladder: true };
-        case ColliderType.NPCNormalCo:   return { };
-        case ColliderType.NPCFrazzledCo: return { Plant: true };
-        case ColliderType.WallCo:        return { };
-        case ColliderType.PlantCo:       return { NPCFrazzled: true };
-        case ColliderType.LadderCo:      return { Gardener: true };
-        case ColliderType.CatCo:         return { };
+        case ColliderType.GardenerCo:     return { Ladder: true };
+        case ColliderType.NPCNormalCo:    return { GardenerWall: true };
+        case ColliderType.NPCFrazzledCo:  return { Plant: true };
+        case ColliderType.WallCo:         return { };
+        case ColliderType.GardenerWallCo: return { NPCNormal: true };
+        case ColliderType.PlantCo:        return { NPCFrazzled: true };
+        case ColliderType.LadderCo:       return { Gardener: true };
+        case ColliderType.CatCo:          return { };
     }
 };
 

@@ -55,6 +55,10 @@ export const drawState = (
   if (!canvas) return;
   if (state.debugSettings.freeze) return;
 
+  canvas.save();
+  //canvas.scale(0.5, 0.5);     // Uncomment for god's eye view.
+  //canvas.translate(100, 100); // Same here.
+
   // Put all paintable objects into a heap-based priority queue.
   // They'll come out sorted by ascending y coordinate for faking 3D.
   let pq = new TypedPriorityQueue<Paintable>(
@@ -65,6 +69,7 @@ export const drawState = (
   let shift = computeBackgroundShift(state, false);
   let deterministicShift = computeBackgroundShift(state, true);
   drawBackground(state, shift, deterministicShift, canvas);
+
   state.plants.forEach(plant => pq.add(plant));
   state.npcs.forEach(npc => pq.add(npc));
   state.cats.forEach(cat => pq.add(cat));
@@ -72,6 +77,7 @@ export const drawState = (
   pq.add(state.airlockButton);
   pq.add(state.gardener);
   pq.add(state.wateringCan);
+
   while (!pq.isEmpty()) {
     let ptbl = pq.poll();
     if (ptbl === undefined) continue;
@@ -86,13 +92,15 @@ export const drawState = (
   if(state.dialogs.length > 0) {
     state.dialogs[0].paint(canvas, state);
   }
-  
+
   drawAnimationEvent(state, shift, canvas);
 
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
   }
+
+  canvas.restore();
 };
 
 // Draw a semi-transparent black rectangle over the canvas to convey global ambient shade from the shield doors.
@@ -334,22 +342,81 @@ export function worldBoundaryColliders(nextColliderId: number): InvisibleCollide
   if (BACKGROUND_WIDTH > CANVAS_WIDTH) return boundaries;
 
   // For non-ring-world maps with width narrower than canvas width, there are left and right boundaries too.
+  // There are basic ones that affect the gardener but not the NPCs, and there are special ones that wall
+  // off little off-screen wander zones for NPCs.
+  let top = 195;                    // Top of each off-screen holding zone.
+  let bot = BACKGROUND_HEIGHT - 35; // Bottom of each off-screen holding zone.
+  let wid = 30;                     // Width of each off-screen holding zone.
+  let deb = 0;                      // Debug value to widen rectangles, making them visible on canvas.
+  let thk = 20;                     // Thickness of the special rectangles.
   return [
     ...boundaries,
+    // Gardener-only boundary on the left.
     new InvisibleCollider(
       nextColliderId + 2,
       {
         a: new Coord(-thickness, -thickness),
         b: new Coord(-1, BACKGROUND_HEIGHT + thickness),
       },
-      ColliderType.WallCo),
+      ColliderType.GardenerWallCo),
+    // Gardener-only boundary on the right.
     new InvisibleCollider(
       nextColliderId + 3,
       {
         a: new Coord(BACKGROUND_WIDTH, -thickness),
         b: new Coord(BACKGROUND_WIDTH + thickness, BACKGROUND_HEIGHT + thickness),
       },
-      ColliderType.WallCo),
+      ColliderType.GardenerWallCo),
+    // Boundary for NPC off-screen wandering on the left.
+    new InvisibleCollider(  // Top edge.
+      nextColliderId + 4,
+      {
+        a: new Coord(-deb -wid, top - thk),
+        b: new Coord(+deb   -1, top),
+      },
+      ColliderType.WallCo
+    ),
+    new InvisibleCollider(  // Bottom edge.
+      nextColliderId + 5,
+      {
+        a: new Coord(-deb -wid, bot),
+        b: new Coord(+deb   -1, bot + thk),
+      },
+      ColliderType.WallCo
+    ),
+    new InvisibleCollider(  // Left edge.
+      nextColliderId + 6,
+      {
+        a: new Coord(-deb -wid - thk, top - thk),
+        b: new Coord(+deb -wid,       bot + thk),
+      },
+      ColliderType.WallCo
+    ),
+    // Boundary for NPC off-screen wandering on the right.
+    new InvisibleCollider(  // Top edge.
+      nextColliderId + 7,
+      {
+        a: new Coord(-deb +BACKGROUND_WIDTH,       top - thk),
+        b: new Coord(+deb +BACKGROUND_WIDTH + wid, top),
+      },
+      ColliderType.WallCo
+    ),
+    new InvisibleCollider(  // Bottom edge.
+      nextColliderId + 8,
+      {
+        a: new Coord(-deb +BACKGROUND_WIDTH,       bot),
+        b: new Coord(+deb +BACKGROUND_WIDTH + wid, bot + thk),
+      },
+      ColliderType.WallCo
+    ),
+    new InvisibleCollider(  // Right edge.
+      nextColliderId + 9,
+      {
+        a: new Coord(-deb +BACKGROUND_WIDTH + wid,       top - thk),
+        b: new Coord(+deb +BACKGROUND_WIDTH + wid + thk, bot + thk),
+      },
+      ColliderType.WallCo
+    ),
   ];
   }
 

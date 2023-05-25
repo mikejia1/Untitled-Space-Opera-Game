@@ -131,20 +131,21 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
     if (state.airlock.isAirtight(state)) {
         return state;
     }
-    // Get all the colliders as they exist now.
-    let allColliders = state.colliderMap;
     let cats: Cat[] = [];
     for (let i = 0; i < state.cats.length; i++) {
         let cat : Cat = getAirlockShiftedEntity(state, state.cats[i]) as Cat;
         if (!rectanglesOverlap(state.airlock.deathRect(), cat.collisionRect())) {
-            cats = [...cats, cat]
+            cats = [...cats, cat];
         }
     }
     let npcs: NonPlayer[] = [];
     for (let i = 0; i < state.npcs.length; i++) {
         let npc : NonPlayer = getAirlockShiftedEntity(state, state.npcs[i]) as NonPlayer;
         if (!rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect())) {
-            npcs = [...npcs, npc]
+            npcs = [...npcs, npc];
+        } else {
+            // An NPC lost to the air lock is just moved to the off-screen "holding zone".
+            npcs = [...npcs, npc.goOffScreen()];
         }
     }
     let gardener = getAirlockShiftedEntity(state, state.gardener);

@@ -78,9 +78,10 @@ export class Gardener implements Paintable, Collider, Interactable {
           }
       }
       // Add deltas to gardener position and keep it within the background rectangle.
-      let newPos = new Coord(
-        (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
-        (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
+      let newPos = new Coord(this.pos.x + delta[0], this.pos.y + delta[1]);
+      //let newPos = new Coord(
+      //  (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
+      //  (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
       return new Gardener(this.colliderId, newPos, this.facing, this.itemEquipped, true, this.watering);
     }
 
