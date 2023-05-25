@@ -390,8 +390,8 @@ export function activateAirlockButton(globalState: IGlobalState): IGlobalState {
 
 export function welcomeDialog(npcs : NonPlayer[]): Dialog[] {
   let dialogs : Dialog[] = [];
-  dialogs = [...dialogs, new Dialog("Good you're finally awake!", 0, npcs[0].id)];
-  dialogs = [...dialogs, new Dialog("There's no time to explain! Water the\n plants or we'll all die!!", 0, npcs[1].id)];
-  dialogs = [...dialogs, new Dialog("Press 'e' to pick up the watering can.\nIt's on the upper deck.", 0, npcs[2].id)];
+  dialogs = [...dialogs, new Dialog("Good you're finally awake!", computeCurrentFrame() + 5*FPS, npcs[0].id)];
+  dialogs = [...dialogs, new Dialog("There's no time to explain! Water the\n plants or we'll all die!!", computeCurrentFrame() + 5*FPS, npcs[1].id)];
+  dialogs = [...dialogs, new Dialog("Press 'e' to pick up the watering can.\nIt's on the upper deck.", computeCurrentFrame() + 5*FPS, npcs[2].id)];
   return dialogs;
 }

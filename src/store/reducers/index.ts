@@ -33,7 +33,7 @@ import {
   TOGGLE_GAME_AUDIO,
 } from "../actions";
 import { updateOxygenState } from "../../entities/oxygen";
-import { Dialog } from "../../scene/dialog";
+import { Dialog, updateDialogState } from "../../scene/dialog";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -144,6 +144,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
   state = updateHeavenlyBodyState(state);
 
   state = updateOxygenState(state);
+
+  state = updateDialogState(state);
 
   return state;
 }
@@ -266,7 +268,13 @@ function canEquip(state: IGlobalState): boolean {
 function utiliseItem(state: IGlobalState): IGlobalState {
   if (state.dialogs.length > 0) {
     let dialogs : Dialog[] = state.dialogs;
-    dialogs.shift();
+    if(dialogs[0].skipAnimation) { 
+      dialogs.shift();
+      dialogs[0].startFrame = state.currentFrame;
+    }
+    else {
+      dialogs[0].skipAnimation = true;
+    }
     return {...state, dialogs:dialogs};
   }
   if (!state.gardener.itemEquipped) {
