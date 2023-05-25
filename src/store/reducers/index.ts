@@ -270,7 +270,8 @@ function utiliseItem(state: IGlobalState): IGlobalState {
     let dialogs : Dialog[] = state.dialogs;
     if(dialogs[0].skipAnimation) { 
       dialogs.shift();
-      dialogs[0].startFrame = state.currentFrame;
+      // Bring forward any stale dialogs so that their text animation doesn't get skipped.
+      if(dialogs[0].startFrame < state.currentFrame) dialogs[0].startFrame = state.currentFrame;
     }
     else {
       dialogs[0].skipAnimation = true;
