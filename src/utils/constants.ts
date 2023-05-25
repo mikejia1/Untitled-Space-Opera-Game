@@ -33,8 +33,10 @@ export const NPC_H_PIXEL_SPEED = 1;
 export const CAT_V_PIXEL_SPEED = 2.5;
 export const CAT_H_PIXEL_SPEED = 2.5;
 
-// Speed at which all things are sucked into the airlock.
-export const AIRLOCK_PIXEL_SPEED = 2;
+// Max speed at which all things are sucked into the airlock.
+export const AIRLOCK_PIXEL_SPEED = 5;
+// Scaling factor affecting how quickly air lock pull falls off with distance.
+export const AIRLOCK_PULL_SCALE = 0.01;
 
 // An enum for the directions.
 export enum Direction {

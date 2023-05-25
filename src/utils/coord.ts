@@ -9,7 +9,7 @@ export class Coord {
     }
     
     magnitude(): number {
-      return Math.sqrt(this.x * this.x + this.y * this.y);
+      return Math.sqrt((this.x * this.x) + (this.y * this.y));
     }
 
     equals(other: Coord): boolean {

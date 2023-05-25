@@ -115,7 +115,7 @@ export class NonPlayer implements Paintable, Collider {
         this.colliderType = other.colliderType;
         this.id = other.id;
         this.invisible = other.invisible;
-        this.death = this.death;
+        this.death = other.death;
     }
 
     // Return the invisible rectangle that determines collision behaviour for the NPC.
@@ -195,7 +195,7 @@ export class NonPlayer implements Paintable, Collider {
 
     // Get the walk cycle sprite sheet that currently applies for the NPC (depends on mental state).
     currentWalkCycleImage(state: IGlobalState): any {
-        if(this.death != null){
+        if (this.death != null){
             switch(this.death.cause) {
                 case CausaMortis.Laceration: return state.npcImages.slainDeath;
                 case CausaMortis.Asphyxiation: return state.npcImages.chokeDeath;

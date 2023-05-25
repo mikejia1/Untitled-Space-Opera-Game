@@ -1,4 +1,4 @@
-import { shiftForTile, computeBackgroundShift, Coord, Rect, AIRLOCK_PIXEL_SPEED, rectanglesOverlap, outlineRect, Colour } from '../utils';
+import { shiftForTile, computeBackgroundShift, Coord, Rect, AIRLOCK_PIXEL_SPEED, rectanglesOverlap, AIRLOCK_PULL_SCALE } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState, collisionDetected, ColliderType } from '../store/classes';
 import { Tile } from '../scene';
@@ -62,10 +62,17 @@ export class Airlock implements Paintable {
         return this;
     }
 
-    getMovementDelta(pos: Coord): Coord {
+    getMovementDelta(pos: Coord, log: boolean): Coord {
         let directVec = this.pos.minus(pos.x, pos.y);
-        let scalar = AIRLOCK_PIXEL_SPEED / directVec.magnitude();
-        return new Coord(directVec.x * scalar, directVec.y * scalar);
+        let actualDist = directVec.magnitude();
+        if (actualDist <= 1) return new Coord(0,0);
+        let unitVec = directVec.times(1 / actualDist);
+        let dist = actualDist;
+        dist = 1 + ((dist - 1) * AIRLOCK_PULL_SCALE);
+        let pull = Math.min(AIRLOCK_PIXEL_SPEED / (dist * dist), AIRLOCK_PIXEL_SPEED);
+        pull = Math.min(pull, actualDist);
+       if (log) console.log("Pull " + pull + " dist " + dist + " actual " + actualDist);
+        return unitVec.times(pull);
     }
 
     deathRect(): Rect {
@@ -105,6 +112,11 @@ export class Airlock implements Paintable {
             64, 64,                             // Size of frame in source
             base.x + doorOffset - 32, base.y - 32,  // Position of sprite on canvas
             64, 64);                            // Sprite size on canvas
+
+        //canvas.fillStyle = `rgb(255,0,0)`;
+        //let debug = this.pos.plus(shift.x, shift.y);
+        //canvas.fillRect(debug.x - 4, debug.y - 4, 8, 8);
+
         canvas.restore();
     }
 
@@ -122,7 +134,7 @@ export class Airlock implements Paintable {
 }
 
 function getAirlockShiftedEntity(state: IGlobalState, actor: any) : any {
-    let move: Coord = state.airlock.getMovementDelta(actor.pos);
+    let move: Coord = state.airlock.getMovementDelta(actor.pos, actor.pos === state.gardener.pos);
     let oldPos: Coord = actor.pos;
     actor.pos = oldPos.plus(move.x, move.y);
     // If there is a collision, negate it.
