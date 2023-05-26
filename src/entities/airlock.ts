@@ -6,6 +6,7 @@ import { Cat } from './cat';
 import { NonPlayer } from './nonplayer';
 import { Plant } from './plant';
 import { off } from 'process';
+import { CausaMortis } from './skeleton';
 
 export enum AirlockState { OPENING, CLOSING, OPEN, CLOSED }
 const MAX_DOOR_OFFSET = 32;
@@ -176,21 +177,24 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
     let cats: Cat[] = [];
     for (let i = 0; i < state.cats.length; i++) {
         let cat : Cat = getAirlockShiftedEntity(state, state.cats[i]) as Cat;
-        if (!rectanglesOverlap(state.airlock.deathRect(), cat.collisionRect())) {
-            cats = [...cats, cat];
+        if (rectanglesOverlap(state.airlock.deathRect(), cat.collisionRect()) && cat.death == null) {
+            cat.death = {time : state.currentFrame, cause: CausaMortis.Ejection}
         }
+        cats = [...cats, cat];
     }
     let npcs: NonPlayer[] = [];
     for (let i = 0; i < state.npcs.length; i++) {
         let npc : NonPlayer = getAirlockShiftedEntity(state, state.npcs[i]) as NonPlayer;
-        if (!rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect())) {
-            npcs = [...npcs, npc];
-        } else {
-            // An NPC lost to the air lock is just moved to the off-screen "holding zone".
-            npcs = [...npcs, npc.goOffScreen()];
+        if (rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect()) && npc.death == null) {
+            npc.death = {time : state.currentFrame, cause: CausaMortis.Ejection}
         }
+        npcs = [...npcs, npc];
     }
     let gardener = getAirlockShiftedEntity(state, state.gardener);
+    if (rectanglesOverlap(state.airlock.deathRect(), gardener.collisionRect()) && gardener.death == null) {
+        console.log("gardener ejected");
+        gardener.death = {time : state.currentFrame, cause: CausaMortis.Ejection}
+    }
     return {
         ...state,
         cats: cats,
