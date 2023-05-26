@@ -33,7 +33,7 @@ import {
   TOGGLE_GAME_AUDIO,
 } from "../actions";
 import { updateOxygenState } from "../../entities/oxygen";
-import { Dialog, updateDialogState } from "../../scene/dialog";
+import { Dialog, isDialogCurrentlyDisplayed, updateDialogState } from "../../scene/dialog";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -260,7 +260,8 @@ function canEquip(state: IGlobalState): boolean {
 // Use currently equipped item, if equipped, other use item that is nearby (like a button).
 // Note: Named "utilise" instead of "use" because "useItem" exists elsewhere.
 function utiliseItem(state: IGlobalState): IGlobalState {
-  if (state.dialogs.length > 0) {
+  if (isDialogCurrentlyDisplayed(state)) {
+    console.log("currently showing dialog");
     let dialogs : Dialog[] = state.dialogs;
     if(dialogs[0].skipAnimation) { 
       console.log("animation skipped, dismissing dialog");
