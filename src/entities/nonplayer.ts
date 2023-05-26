@@ -166,7 +166,6 @@ export class NonPlayer implements Paintable, Collider {
         let newPos = this.pos.plus(shift.x, shift.y);
         newPos = newPos.plus(0, jitter);
         let flip = (this.facing === Direction.Left);
-        if (state.gameover) return paintSkeletonDeath(canvas, state, newPos, flip);
         newPos = (dialog != null) ? dialog : newPos;
 
         // Determine where, on the canvas, the NPC should be painted.
@@ -203,6 +202,7 @@ export class NonPlayer implements Paintable, Collider {
             switch(this.death.cause) {
                 case CausaMortis.Laceration: return state.npcImages.slainDeath;
                 case CausaMortis.Asphyxiation: return state.npcImages.chokeDeath;
+                case CausaMortis.Incineration: return state.skeleton;
             }
         }
         switch (this.mentalState) {
@@ -217,9 +217,13 @@ export class NonPlayer implements Paintable, Collider {
         if (this.death != null){
             switch(this.death.cause){
                 case CausaMortis.Laceration:
-                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 14);
+                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 14);
                 case CausaMortis.Asphyxiation:
-                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 13);
+                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 13);
+                case CausaMortis.Incineration:
+                    // The walking animation has 20 frames. Stay on the initial skeleton frame for 10 frames,
+                    let frameTicker = Math.max(state.currentFrame - state.gameoverFrame - 0, 0);
+                    return Math.min(Math.floor(frameTicker / 2), 19);
             }   
         }
         // The walking animation has 8 frames.

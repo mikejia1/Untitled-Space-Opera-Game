@@ -85,7 +85,7 @@ function newKeyUp(state: IGlobalState, direction: Direction): IGlobalState {
 
 // Only move the gardener if the keypress changes the gardener direction.
 function newKeyDown(state: IGlobalState, direction: Direction): IGlobalState {
-  if (state.gameover && state.currentFrame - state.gameOverFrame > GAMEOVER_RESTART_TIME ) {
+  if (state.gameover && state.currentFrame - state.gameoverFrame > GAMEOVER_RESTART_TIME ) {
     return initialGameState();
   }
   // This is a spurious keypress. Ignore it.
@@ -114,12 +114,6 @@ function updateFrame(state: IGlobalState): IGlobalState {
   let f = computeCurrentFrame();
   if (f === state.currentFrame) {
     return state;
-  }
-  if (state.gameover) {
-    return {
-      ...state,
-      currentFrame: f,
-    }
   }
 
   // Get all the colliders as they exist now.

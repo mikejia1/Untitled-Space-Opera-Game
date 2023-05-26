@@ -12,7 +12,7 @@ export function drawAnimationEvent(state: IGlobalState, shift: Coord, canvas: Ca
         if(anim.event == AnimEventType.IMPACT){
         drawImpactEvent(anim, state, shift, canvas);
         }
-        if(anim.event == AnimEventType.GAMEOVER){
+        if(anim.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
         drawGameoverEvent(anim, state, shift, canvas);
         }
     }

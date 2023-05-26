@@ -14,7 +14,7 @@ export function updateOxygenState(state : IGlobalState): IGlobalState {
     if(!state.airlock.isAirtight(state)){
         oxy -= 0.5;
     }
-/*
+
     let gardener = state.gardener;
     let npcs : NonPlayer [] = [];
     if (oxy < 0){
@@ -28,12 +28,12 @@ export function updateOxygenState(state : IGlobalState): IGlobalState {
                 npc.death = {time: state.currentFrame, cause: CausaMortis.Asphyxiation};
             npcs = [...npcs, npc];
         });
-    }*/
+    }
     return {...state, oxygen: oxy};
 }
 
 function oxygenOutput(plant : Plant): number {
-    return plant.growthStage * plant.growthStage * plant.health * 0.001;
+    return plant.growthStage * plant.growthStage * plant.health * 0.003;
 }
 
 function oxygenConsumption(npc : NonPlayer): number {

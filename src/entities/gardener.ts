@@ -88,27 +88,30 @@ export class Gardener implements Paintable, Collider, Interactable {
     }
 
     stop(): Gardener {
-      return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, false, this.watering);
+        this.moving = false;
+        return this;
     }
 
     setWatering(watering: boolean): Gardener {
-        return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, this.moving, watering);
+        this.watering = watering;
+        return this;
     }
 
     // Change facing direction of the gardener but without changing its position.
     changeFacingDirection(direction: Direction): Gardener {
         // Up and Down won't change gardener facing direction.
         if ((direction === Direction.Up ) || (direction === Direction.Down)) {
-            return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, this.moving, this.watering);
+            return this;
         }
         // Left and Right will change gardener facing direction.
-        let dir = (direction === Direction.Left) ? GardenerDirection.Left : GardenerDirection.Right;
-        return new Gardener(this.colliderId, this.pos, dir, this.itemEquipped, this.moving, this.watering);
+        this.facing = (direction === Direction.Left) ? GardenerDirection.Left : GardenerDirection.Right;
+        return this;
     }
   
     // Set value of itemEquipped. Return new gardener.
     setItemEquipped(itemEquipped: boolean): Gardener {
-      return new Gardener(this.colliderId, this.pos, this.facing, itemEquipped, this.moving, this.watering);
+        this.itemEquipped = itemEquipped;
+        return this;
     }
   
     // Paint the gardener on the canvas.
@@ -145,16 +148,16 @@ export class Gardener implements Paintable, Collider, Interactable {
         let image = null;
         switch(this.death.cause){
             case CausaMortis.Laceration:
-                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 14);
+                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 14);
                 image = state.gardenerImages.slainDeath;
                 break;
             case CausaMortis.Asphyxiation:
-                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 13);
+                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 13);
                 image = state.gardenerImages.chokeDeath;
                 console.log("asphyxiation current frame: "+ state.currentFrame + " death time: "+ this.death.time);
                 console.log("painting gardener asphyxiation, frame: "+ frame);
                 break;
-            case CausaMortis.Obliteration:
+            case CausaMortis.Incineration:
                 return paintSkeletonDeath(canvas, state, newPos, flip);
         }
     
@@ -275,12 +278,16 @@ export class Gardener implements Paintable, Collider, Interactable {
 
 
 export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
-    if(state.gardener.death != null && !state.gameover){
-        return {...state, pendingEvents: [...state.pendingEvents, new AnimEvent(AnimEventType.GAMEOVER, state.currentFrame)]}
+    if(state.gardener.death != null){
+        if(!state.gameover){
+            return {...state, pendingEvents: [...state.pendingEvents, new AnimEvent(AnimEventType.GAMEOVER_REPLAY_FRAME, state.currentFrame)]}
+        }
+        else return state;
     }
     if(!state.gardener.moving) {
       return state;
     }
+    console.log("moving gardener");
     // Move the gardener according to keys pressed.
     // This will be aborted if the would-be new position overlaps with a plant.
     // Would-be new post-move gardener.

@@ -1,5 +1,6 @@
 import { ShieldButton } from "../../entities/shieldbutton";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
+import { CausaMortis } from "../../entities/skeleton";
 import { BlackHole, PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_SUBTLE } from "../../scene";
 import { Coord, SHAKER_INTENSE, SHAKER_MEDIUM, SHAKER_MILD, SHAKER_NO_SHAKE, SHAKER_SUBTLE, computeCurrentFrame, randomInt } from "../../utils";
 import { CANVAS_WIDTH, FPS } from "../../utils/constants";
@@ -8,7 +9,7 @@ import { IGlobalState } from "./globalstate";
 // An enum for event types.
 export enum AnimEventType {
     IMPACT,                 // Supernova impact event.
-    GAMEOVER,               // End the game.
+    GAMEOVER_REPLAY_FRAME,               // End the game.
     ALARM_1,                // Trigger leftmost shield button alarm.
     ALARM_2,                // Trigger middle shield button alarm.
     ALARM_3,                // Trigger rightmost shield button alarm.
@@ -43,12 +44,14 @@ export class AnimEvent {
     }
 }
 
-export const SUPERNOVA_DELAY = FPS*30;
+export const SUPERNOVA_DELAY = FPS*60;
 
 export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newPlants = state.plants;
   let newShield = state.shieldDoors;
   let newShaker = state.screenShaker;
+  let gardener = state.gardener;
+  let npcs = state.npcs;
   let newBlackHole: BlackHole | null = state.blackHole;
   if (newBlackHole !== null) newBlackHole = newBlackHole.adjustPulseMagnitude();
   // Remove finished events.
@@ -56,8 +59,9 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newPendingEvents: AnimEvent[] = [];
   // Events triggered when processing active events.
   let triggeredEvents: AnimEvent[] = [];
-  let gameover: boolean = false;
+  let gameover: boolean = state.gameover;
   let newShieldButtons: ShieldButton[] = state.shieldButtons;
+  let gameoverFrame = state.gameoverFrame;
   // Process active events
   for (let i = 0; i < state.pendingEvents.length; i++){
     const event = state.pendingEvents[i];
@@ -71,7 +75,11 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     if (event.event == AnimEventType.IMPACT){
       // If IMPACT occurs without all shield doors being closed, trigger GAMEOVER event.
       if (!state.shieldDoors.allDoorsClosed()){
-        triggeredEvents = [...triggeredEvents, new AnimEvent(AnimEventType.GAMEOVER, event.startTime + 24)];
+        gardener.death = {time:state.currentFrame + 24, cause: CausaMortis.Incineration};
+        npcs.forEach(npc => npc.death = {time:state.currentFrame + 24, cause: CausaMortis.Incineration});
+        for(let i = 0; i < newPlants.length; i++){
+          newPlants[i].health = 0;
+        }
       } else {
         // Otherwise, go ahead and tell all three shield doors to open early - the danger has passed.
         triggeredEvents = [
@@ -166,17 +174,20 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         event.finished = true;
       }
     }
-    if(event.event == AnimEventType.GAMEOVER){
+    // This event should only ever triggered via the Gardener update method.
+    if(event.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
         console.log("GAME OVER");
-        //Kill all plants
-        for(let i = 0; i < newPlants.length; i++){
-          newPlants[i].health = 0;
-        }
         gameover = true;
+        gameoverFrame = state.currentFrame;
+        // clear remaining events.
+        newPendingEvents = [];
+        triggeredEvents = [];
     }
   }
   return {
     ...state, 
+    gardener : gardener,
+    npcs: npcs,
     plants: newPlants, 
     shieldDoors: newShield, 
     screenShaker: newShaker, 
@@ -184,7 +195,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     activeEvents: newActiveEvents, 
     pendingEvents: [...newPendingEvents, ...triggeredEvents], 
     gameover: gameover,
-    gameOverFrame: gameover ? state.currentFrame : state.gameOverFrame,
+    gameoverFrame: gameoverFrame,
     shieldButtons: newShieldButtons,
     };
 }
