@@ -17,6 +17,9 @@ const SUICIDAL_DELAY = 200;
 // Number of frames a suicidal NPC will contemplate death while hanging around the air lock button.
 const CONTEMPLATE_DEATH_DELAY = 200;
 
+// Number of frames before NPC respawns after death.
+const RESPAWN_DELAY = 96;
+
 // Complete set of possible NPC mental states.
 export enum MentalState {
     Normal,     // NPC acting "normal" wandering randomly around the ship
@@ -89,6 +92,7 @@ export class NonPlayer implements Paintable, Collider {
         if (params.mentalState !== undefined) this.mentalState = params.mentalState;
         if (params.gardenerAvoidanceCountdown !== undefined) this.gardenerAvoidanceCountdown = params.gardenerAvoidanceCountdown;
         if (params.hasCabinFever !== undefined) this.hasCabinFever = params.hasCabinFever;
+        if (params.death !== undefined) this.death = params.death;
 
         // Mental state determines collider type.
         if (this.mentalState === MentalState.Frazzled) this.colliderType = ColliderType.NPCFrazzledCo;
@@ -417,8 +421,10 @@ export class NonPlayer implements Paintable, Collider {
 
     // Move NPC to "holding zone" i.e. off-screen and invisible.
     goOffScreen(): NonPlayer {
+        console.log("NPC going off-screen, id:"+this.id);
         return new NonPlayer({
             clone: this,
+            death: null,
             isOffScreen: true,
             invisible: true,
             mentalState: MentalState.Normal,
@@ -463,7 +469,15 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
     let atLeastOneNPCPushingAirLockButton: boolean = false;
     state.npcs.forEach(npc => {
         let newNPC: NonPlayer = npc;
-    
+        // If NPC is dead, check that the death animation is done.
+        if (newNPC.death != null) {
+            // If npc has been dead long enough, go offscreen. 
+            if (state.currentFrame - newNPC.death.time >= RESPAWN_DELAY) 
+                newNPC = newNPC.goOffScreen();
+            newNPCs = [...newNPCs, newNPC];
+            allColliders.set(newNPC.colliderId, newNPC);  
+            return;
+        }
         // With small probability, an off-screen NPC may come back.
         if (newNPC.isOffScreen && (randomInt(0, 9999) < 3)) newNPC = newNPC.comeBackOnScreen();
 
