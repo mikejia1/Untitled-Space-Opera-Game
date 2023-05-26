@@ -1,8 +1,9 @@
 import { ColliderType, IGlobalState } from '../store/classes';
 import {
   ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT, Colour, computeCurrentFrame, shiftForTile, shiftRect,
-  positionRect, outlineRect, computeBackgroundShift, Coord, Rect, DEHYDRATION_TIME, GROWTH_TIME,
+  positionRect, outlineRect, computeBackgroundShift, Coord, Rect, DEHYDRATION_TIME, GROWTH_TIME, rectanglesOverlap,
 } from '../utils';
+import { FPS } from '../utils/constants';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 
@@ -13,18 +14,30 @@ export const MAX_PLANT_HEALTH = 5;
 // The amount of health imparted to a plant when it gets watered.
 export const WATERING_HEALTH_INCREMENT = 1;
 
+// The number of frames after trampling that a plant cannot be re-trampled.
+export const TRAMPLE_IMMUNITY_DUR = FPS * 2;
+
 // A plant that needs watering to grow.
 export class Plant {
   pos: Coord;
-  health: number;
-  //stages of growth from 0 (just planted), 1 (seedling) - 4 (mature), 5 (harvested)
-  growthStage: number;
-  lastGrowthTimestamp: number;
-  lastDehydrationTimestamp: number;
   colliderId: number;
   colliderType: ColliderType = ColliderType.PlantCo;
+  health: number;                                       // How healthy the plant currently is.
+  // Stages of growth from 0 (just planted), 1 (seedling) - 4 (mature), 5 (harvested)
+  growthStage: number;                                  // The plant's current stage of growth.
+  lastGrowthTimestamp: number;                          // The last time the plant grew.
+  lastDehydrationTimestamp: number;                     // The last time the plant dehydrated.
+  lastTrampleTimestamp: number;                         // The last time the plant was trampled.
 
-  constructor(colliderId: number, pos: Coord, initialHealth: number, size = 1, dehydTimestamp = computeCurrentFrame(), growthTimestamp = computeCurrentFrame(), colliderType = ColliderType.PlantCo) {
+  constructor(
+    colliderId: number,
+    pos: Coord,
+    initialHealth: number,
+    size = 1,
+    dehydTimestamp = computeCurrentFrame(),
+    growthTimestamp = computeCurrentFrame(),
+    colliderType = ColliderType.PlantCo,
+    lastTrampleTimestamp: number = 0) {
     this.colliderId = colliderId;
     this.colliderType = colliderType;
     this.pos = pos;
@@ -32,6 +45,7 @@ export class Plant {
     this.lastGrowthTimestamp = growthTimestamp;
     this.lastDehydrationTimestamp = dehydTimestamp;
     this.growthStage = size;
+    this.lastTrampleTimestamp = lastTrampleTimestamp;
   }
 
   growPlant(state: IGlobalState): Plant {
@@ -45,11 +59,12 @@ export class Plant {
     return this;
   }
 
-  dehydratePlant(state: IGlobalState): Plant {
+  dehydratePlant(state: IGlobalState, forced: boolean = false): Plant {
     if (this.health > 0 && this.growthStage > 0) {
-      if(state.currentFrame > this.lastDehydrationTimestamp + DEHYDRATION_TIME){
+      if (forced || (state.currentFrame > this.lastDehydrationTimestamp + DEHYDRATION_TIME)) {
         this.health--;
         this.lastDehydrationTimestamp = state.currentFrame;
+        if (forced) this.lastTrampleTimestamp = state.currentFrame;
       }
     }
     return this;
@@ -127,13 +142,32 @@ export class Plant {
       b: base.plus(span * 2, span * 2),
     }
   }
+
+  // Check whether the collision rect of the gardener or any NPC is overlapping with the plant.
+  // If the plant's current collider type is NoneCo (when air lock if open) then there's no trampling happening.
+  isBeingTrampled(state: IGlobalState): boolean {
+    // Passing over a plant when the air lock is open doesn't count as trampling.
+    if (this.colliderType === ColliderType.NoneCo) return false;
+    // If the plant was *just* trampled, it cannot be immediately trampled again.
+    if ((state.currentFrame - this.lastTrampleTimestamp) < TRAMPLE_IMMUNITY_DUR) return false;
+    // Otherwise check collision rect overlap with gardener and with NPCs.
+    let plantRect = this.collisionRect();
+    if (rectanglesOverlap(state.gardener.collisionRect(), plantRect)) return true;
+    for (let i = 0; i < state.npcs.length; i++) {
+      let npc = state.npcs[i];
+      if (npc.isOffScreen || npc.invisible) continue;
+      if (rectanglesOverlap(npc.collisionRect(), plantRect)) return true;
+    }
+    return false;
+  }
 }
 
 export function updatePlantState(state: IGlobalState): IGlobalState{
   let newPlants: Plant[] = [];
-  let newOxygen = state.oxygen;
   state.plants.forEach(plant => {
-    newPlants = [...newPlants, plant.dehydratePlant(state).growPlant(state)];
+    let newPlant = plant.dehydratePlant(state).growPlant(state);
+    if (newPlant.isBeingTrampled(state)) newPlant = newPlant.dehydratePlant(state, true);
+    newPlants = [...newPlants, newPlant];
   });
   return {...state, plants: newPlants};
 }
