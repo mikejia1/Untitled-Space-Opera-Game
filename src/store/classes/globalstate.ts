@@ -73,7 +73,7 @@ export interface IGlobalState {
     shieldDoors: ShieldDoor;          // The blast shield that protects the garden
     airlock: Airlock;                 // The airlock that opens up into the void
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
-    gameOverFrame: number;            // The frame number when the game ended
+    gameoverFrame: number;            // The frame number when the game ended
     pendingEvents: AnimEvent[];       // Queue of one-off event animations to draw
     activeEvents: AnimEvent[];        // Queue of one-off event animations to draw
     dialogs: Dialog[];                // Dialogs to display
@@ -129,7 +129,7 @@ export function initialGameState(): IGlobalState {
   colliderId += npcs.length;
 
   // Create a bunch of cats. 
-  let cats = gridOfCats(colliderId, new Coord(200, 250), 25, 2, 2);
+  let cats = gridOfCats(colliderId, new Coord(200, 300), 25, 2, 2);
 
   // Create the buttons that activate the sections of the blast shield.
   let shieldButtons = createShieldButtons();
@@ -150,7 +150,7 @@ export function initialGameState(): IGlobalState {
     shieldDoors: initialShieldDoor(),
     airlock: new Airlock(),
     currentFrame: 0,
-    gameOverFrame: 0,
+    gameoverFrame: 0,
     pendingEvents: getEvents(),
     activeEvents: [],
     dialogs: welcomeDialog(npcs),

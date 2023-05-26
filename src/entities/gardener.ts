@@ -154,7 +154,7 @@ export class Gardener implements Paintable, Collider, Interactable {
                 console.log("asphyxiation current frame: "+ state.currentFrame + " death time: "+ this.death.time);
                 console.log("painting gardener asphyxiation, frame: "+ frame);
                 break;
-            case CausaMortis.Obliteration:
+            case CausaMortis.Incineration:
                 return paintSkeletonDeath(canvas, state, newPos, flip);
         }
     
@@ -275,12 +275,16 @@ export class Gardener implements Paintable, Collider, Interactable {
 
 
 export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
-    if(state.gardener.death != null && !state.gameover){
-        return {...state, pendingEvents: [...state.pendingEvents, new AnimEvent(AnimEventType.GAMEOVER, state.currentFrame)]}
+    if(state.gardener.death != null){
+        if(!state.gameover){
+            return {...state, pendingEvents: [...state.pendingEvents, new AnimEvent(AnimEventType.GAMEOVER_REPLAY_FRAME, state.currentFrame)]}
+        }
+        else return state;
     }
     if(!state.gardener.moving) {
       return state;
     }
+    console.log("moving gardener");
     // Move the gardener according to keys pressed.
     // This will be aborted if the would-be new position overlaps with a plant.
     // Would-be new post-move gardener.
