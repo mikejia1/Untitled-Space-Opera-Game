@@ -17,8 +17,9 @@ const SUICIDAL_DELAY = 200;
 // Number of frames a suicidal NPC will contemplate death while hanging around the air lock button.
 const CONTEMPLATE_DEATH_DELAY = 200;
 
-// Number of frames before NPC respawns after death.
+// Number of frames before NPC respawns after death, and number of frames to fade body away.
 const RESPAWN_DELAY = 96;
+const CORPSE_FADE_DELAY = 40;
 
 // Complete set of possible NPC mental states.
 export enum MentalState {
@@ -175,6 +176,7 @@ export class NonPlayer implements Paintable, Collider {
         dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
+        canvas.globalAlpha = this.deathFadeAlpha(state);
         let shrink = 0;
         if(this.death != null && this.death.cause == CausaMortis.Ejection){
             shrink = Math.min(48, (state.currentFrame - this.death.time)*2);
@@ -197,6 +199,14 @@ export class NonPlayer implements Paintable, Collider {
         if (state.debugSettings.showPositionRects) {
             outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
         }
+    }
+
+    // The amount of alpha that should currently be used. This is for having dead bodies fade away right before respawn.
+    deathFadeAlpha(state: IGlobalState): number {
+        if (this.death === null) return 1.0;
+        if (state.currentFrame < (this.death.time + RESPAWN_DELAY - CORPSE_FADE_DELAY)) return 1.0;
+        if (state.currentFrame > (this.death.time + RESPAWN_DELAY)) return 0.0;
+        return 1 - ((state.currentFrame - (this.death.time + (RESPAWN_DELAY - CORPSE_FADE_DELAY))) / CORPSE_FADE_DELAY);
     }
 
     // Get the walk cycle sprite sheet that currently applies for the NPC (depends on mental state).
