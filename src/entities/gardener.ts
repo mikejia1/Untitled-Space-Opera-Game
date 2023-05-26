@@ -1,9 +1,9 @@
-import { IGlobalState, Collider, Paintable, Interactable, ColliderType, playBumpSound, getBumpedNPCs, detectCollisions, AnimEvent, AnimEventType } from '../store/classes';
+import { IGlobalState, Collider, Paintable, Interactable, ColliderType, playBumpSound, getBumpedNPCs, detectCollisions, AnimEvent, AnimEventType, Lifeform } from '../store/classes';
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
-    Coord, Rect, GardenerDirection,
+    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -15,7 +15,7 @@ import { drawText } from '../utils/drawtext';
 export const GARDENER_HEIGHT = 20;
 
 // The gardener who tends the garden.
-export class Gardener implements Paintable, Collider, Interactable {
+export class Gardener implements Lifeform, Collider, Interactable {
     pos: Coord;                 // Position of the gardener in the environment.
     facing: GardenerDirection;  // Direction the gardener is currently facing.
     itemEquipped: boolean;      // Whether or not the gardener has an item equipped.
@@ -25,14 +25,14 @@ export class Gardener implements Paintable, Collider, Interactable {
     colliderType: ColliderType = ColliderType.GardenerCo; // The type of collider that the gardener is.
     death : Death | null;       // Death data to specify how to paint death animation.
  
-    constructor(colliderId: number, pos: Coord, facing: GardenerDirection, itemEquipped: boolean=false, moving: boolean=false, watering: boolean) {
+    constructor(colliderId: number, pos: Coord, facing: GardenerDirection, itemEquipped: boolean=false, moving: boolean=false, watering: boolean, death: Death | null) {
         this.colliderId = colliderId;
         this.pos = pos;
         this.facing = facing;
         this.itemEquipped = itemEquipped;
         this.moving = moving;
         this.watering = watering;
-        this.death = null;
+        this.death = death;
     }
     
     opposingDirection(direction1: Direction, direction2: Direction){
@@ -84,7 +84,7 @@ export class Gardener implements Paintable, Collider, Interactable {
       //let newPos = new Coord(
       //  (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
       //  (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
-      return new Gardener(this.colliderId, newPos, this.facing, this.itemEquipped, true, this.watering);
+      return new Gardener(this.colliderId, newPos, this.facing, this.itemEquipped, true, this.watering, this.death);
     }
 
     stop(): Gardener {
@@ -142,11 +142,20 @@ export class Gardener implements Paintable, Collider, Interactable {
         }
     }
 
+    // Compute sprite size and shift values for air lock ejection. (48 and 0, respectively, when not being ejected)
+    ejectionScaleAndShift(): any {
+        if (this.death === null) return { scaledSize: 48, shiftToCentre: 0 };
+        let scaledSize = (this.death.ejectionScaleFactor !== null) ? this.death.ejectionScaleFactor : 1;
+        scaledSize = scaledSize * 48;
+        let shiftToCentre = (48 - scaledSize) / 2;  // Maintains sprite centre, despite scaling.
+        return { scaledSize: scaledSize, shiftToCentre: shiftToCentre };
+    }
+
     paintDeath(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord, newPos: Coord, flip: boolean): void {
-        if (this.death == null) return;
+        if (this.death === null) return;
         let frame = 0;
         let image = null;
-        switch(this.death.cause){
+        switch (this.death.cause) {
             case CausaMortis.Laceration:
                 frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 14);
                 image = state.gardenerImages.slainDeath;
@@ -158,7 +167,7 @@ export class Gardener implements Paintable, Collider, Interactable {
                 console.log("painting gardener asphyxiation, frame: "+ frame);
                 break;
             case CausaMortis.Incineration:
-                return paintSkeletonDeath(canvas, state, newPos, flip);
+                return paintSkeletonDeath(canvas, state, newPos, flip, this.death);
             case CausaMortis.Ejection:
                 image = state.gardenerImages.walkingBase;
                 frame = Math.floor(state.currentFrame % (6 * 8) / 6);
@@ -169,20 +178,22 @@ export class Gardener implements Paintable, Collider, Interactable {
             ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
             : new Coord(newPos.x - 3, newPos.y - 18);
         dest = dest.toIntegers();
+        let xScale = flip ? -1 : 1;
         canvas.save();
-        canvas.scale(flip ? -1 : 1, 1);
-        let shrink = 0;
-        if(this.death != null && this.death.cause == CausaMortis.Ejection){
-            shrink = Math.min(48, (state.currentFrame - this.death.time)*2);
-            console.log("shrinking npc by "+shrink + " pixels");
-        }
+        canvas.scale(xScale, 1);
+
+        // Sprite size and shift for air lock ejection.
+        let ejection = this.ejectionScaleAndShift();
+        let scaledSize = ejection.scaledSize;
+        let shiftToCentre = ejection.shiftToCentre;
+
         // Paint gardener sprite for current frame.
         canvas.drawImage(
-            image,                             // Source image
-            (frame * 96) + 40, 20,             // Top-left corner of frame in source
-            48, 48,                            // Size of frame in source
-            dest.x, dest.y,                    // Position of sprite on canvas
-            48 - shrink, 48 - shrink);                           // Sprite size on canvas
+            image,                                                     // Source image
+            (frame * 96) + 40, 20,                                     // Top-left corner of frame in source
+            48, 48,                                                    // Size of frame in source
+            dest.x + (shiftToCentre * xScale), dest.y + shiftToCentre, // Position of sprite on canvas
+            scaledSize, scaledSize);                                   // Sprite size on canvas
 
         // Restore canvas transforms to normal.
         canvas.restore();
@@ -281,20 +292,36 @@ export class Gardener implements Paintable, Collider, Interactable {
         case GardenerDirection.Right: return shiftRect(rect, ENTITY_RECT_WIDTH, 0);
        }
     }
+
+    // Have the gardener die.
+    dieOf(cause: CausaMortis, time: number) {
+        let scale: number | null = (cause === CausaMortis.Ejection) ? 1 : null;
+        if (this.death === null) this.death = { cause: cause, time: time, ejectionScaleFactor: scale };
+        else {
+            // The only death you can inflict *after* having already died is ejection of the corpse through the air lock.
+            // In such a case, the cause of death and the time of death remain the same, but ejectionScaleFactor gets set.
+            // Additionally, in case ejection death is assigned more than once (for whatever reason) only the first time counts.
+            if (cause !== CausaMortis.Ejection) return;             // Only ejection "death" can occur after death.
+            if (this.death.ejectionScaleFactor !== null) return;    // Ejection scale factor will not be reset.
+            this.death.ejectionScaleFactor = 1;                     // Ejection scale factor starts at 1.
+        }
+    }
 }
 
 
 export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
-    if(state.gardener.death != null){
-        if(!state.gameover){
+    if (state.gardener.death !== null) {
+        if (state.gardener.death.ejectionScaleFactor !== null) {
+            state.gardener.death.ejectionScaleFactor *= EJECTION_SHRINK_RATE;
+        }
+        if (!state.gameover) {
             return {...state, pendingEvents: [...state.pendingEvents, new AnimEvent(AnimEventType.GAMEOVER_REPLAY_FRAME, state.currentFrame)]}
         }
         else return state;
     }
-    if(!state.gardener.moving) {
+    if (!state.gardener.moving) {
       return state;
     }
-    console.log("moving gardener");
     // Move the gardener according to keys pressed.
     // This will be aborted if the would-be new position overlaps with a plant.
     // Would-be new post-move gardener.

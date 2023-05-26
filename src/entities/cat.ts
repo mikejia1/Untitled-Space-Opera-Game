@@ -1,14 +1,14 @@
 import { ColliderType, IGlobalState } from "../store/classes";
-import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, Rect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, rectanglesOverlap } from "../utils";
+import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, Rect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, rectanglesOverlap, EJECTION_SHRINK_RATE } from "../utils";
 import { Gardener } from "./gardener";
 import { NonPlayer } from "./nonplayer";
 import { CausaMortis, Death } from "./skeleton";
 
 // Murderous space cat
 export class Cat extends NonPlayer {
-    // cat colour
+    // Cat colour
     color: number = 0;
-    // initial cat rampage (they are charging at the player)
+    // Initial cat rampage (they are charging at the player)
     rampage: boolean = true;
     startFrame: number = Math.floor(Math.random() * 15);
     death: Death | null;
@@ -20,6 +20,15 @@ export class Cat extends NonPlayer {
         this.facing = Direction.Left;
         this.moving = true;
         this.death = null;
+    }
+
+    // Compute sprite size and shift values for air lock ejection. (40 and 0, respectively, when not being ejected)
+    ejectionScaleAndShift(): any {
+        if (this.death === null) return { scaledSize: 40, shiftToCentre: 0 };
+        let scaledSize = (this.death.ejectionScaleFactor !== null) ? this.death.ejectionScaleFactor : 1;
+        scaledSize = scaledSize * 40;
+        let shiftToCentre = (40 - scaledSize) / 2;  // Maintains sprite centre, despite scaling.
+        return { scaledSize: scaledSize, shiftToCentre: shiftToCentre };
     }
 
     // Paint the NPC on the canvas.
@@ -36,21 +45,22 @@ export class Cat extends NonPlayer {
             ? new Coord((newPos.x * -1) - 25, newPos.y - 30)
             : new Coord(newPos.x - 14, newPos.y - 30);
         dest = dest.toIntegers();
+        let xScale = flip ? -1 : 1;
         canvas.save();
-        canvas.scale(flip ? -1 : 1, 1);
+        canvas.scale(xScale, 1);
 
-        let shrink = 0;
-        if(this.death != null && this.death.cause == CausaMortis.Ejection){
-            shrink = Math.min(40, (state.currentFrame - this.death.time)*2);
-        }
+        // Sprite scale and shift for ejection from air lock.
+        let ejection = this.ejectionScaleAndShift();
+        let scaledSize = ejection.scaledSize;
+        let shiftToCentre = ejection.shiftToCentre;
         
         // Paint gardener sprite for current frame.
         canvas.drawImage(
-            state.catImage,                    // Walking base source image
-            frame * 40, this.color * 40,       // Top-left corner of frame in source
-            40, 40,                            // Size of frame in source
-            dest.x, dest.y,                    // Position of sprite on canvas
-            40 - shrink, 40 - shrink);         // Sprite size on canvas
+            state.catImage,                                             // Walking base source image
+            frame * 40, this.color * 40,                                // Top-left corner of frame in source
+            40, 40,                                                     // Size of frame in source
+            dest.x + (shiftToCentre * xScale), dest.y + shiftToCentre,  // Position of sprite on canvas
+            scaledSize, scaledSize);                                    // Sprite size on canvas
     
         // Restore canvas transforms to normal.
         canvas.restore();
@@ -97,25 +107,42 @@ export class Cat extends NonPlayer {
         return this;
     }
 
+    // Have the cat die.
+    dieOf(cause: CausaMortis, time: number) {
+        let scale: number | null = (cause === CausaMortis.Ejection) ? 1 : null;
+        if (this.death === null) this.death = { cause: cause, time: time, ejectionScaleFactor: scale };
+        else {
+            // The only death you can inflict *after* having already died is ejection of the corpse through the air lock.
+            // In such a case, the cause of death and the time of death remain the same, but ejectionScaleFactor gets set.
+            // Additionally, in case ejection death is assigned more than once (for whatever reason) only the first time counts.
+            if (cause !== CausaMortis.Ejection) return;             // Only ejection "death" can occur after death.
+            if (this.death.ejectionScaleFactor !== null) return;    // Ejection scale factor will not be reset.
+            this.death.ejectionScaleFactor = 1;                     // Ejection scale factor starts at 1.
+        }
+    }
 }
 
 export function updateCatState(state: IGlobalState): IGlobalState {
     let cats : Cat[] = [];
     let npcs : NonPlayer[] = [];
     let gardener : Gardener = state.gardener;
-    for(let i = 0; i < state.cats.length; i++){
+    for (let i = 0; i < state.cats.length; i++) {
         let cat = state.cats[i];
-        if(rectanglesOverlap(cat.deathRect(), gardener.collisionRect()) && gardener.death == null){
-            gardener.death = {time: state.currentFrame, cause: CausaMortis.Laceration};
-            console.log("Gardener killed by cat at time: "+gardener.death.time);
+        if (rectanglesOverlap(cat.deathRect(), gardener.collisionRect())) {
+            gardener.dieOf(CausaMortis.Laceration, state.currentFrame);
+        }
+        if (cat.death !== null) {
+            if (cat.death.ejectionScaleFactor !== null) {
+                cat.death.ejectionScaleFactor *= EJECTION_SHRINK_RATE;
+            }
         }
         cats = [...cats, state.cats[i].move()]
     }
     state.npcs.forEach(npc => {
-        for(let i = 0; i < state.cats.length; i++){   
+        for (let i = 0; i < state.cats.length; i++) {
             let cat = state.cats[i];
-            if(rectanglesOverlap(cat.deathRect(), npc.collisionRect()) && npc.death == null){
-                npc.death = {time: state.currentFrame, cause: CausaMortis.Laceration};
+            if (rectanglesOverlap(cat.deathRect(), npc.collisionRect())) {
+                npc.dieOf(CausaMortis.Laceration, state.currentFrame);
                 break;
             }
         }

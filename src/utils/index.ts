@@ -10,6 +10,7 @@ import {
  import { Tile, WrapSector, InvisibleCollider } from '../scene';
 import { drawAnimationEvent } from "./drawevent";
 import { Dialog } from "../scene/dialog";
+import { Lifeform } from "../store/classes/lifeform";
 
 export * from './coord';
 export * from './constants';
@@ -47,6 +48,67 @@ export const clearBoard = (canvas: CanvasRenderingContext2D | null) => {
   }
 };
 
+// Use a priority queue based on y coordinate to paint all paintables that are NOT BEHIND the ship.
+// i.e. the paintables that are NOT behind the air lock doors.
+function drawPaintablesNotBehindShip(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
+  // Put all paintable objects into a heap-based priority queue.
+  // They'll come out sorted by ascending y coordinate for faking 3D.
+  let pq = new TypedPriorityQueue<Paintable>(
+    function (a: Paintable, b: Paintable) {
+      return a.pos.y < b.pos.y;
+    }
+  );
+
+  // Put all paintables into the priority queue, except those that are behind the ship.
+  state.plants.forEach(plant => pq.add(plant));
+  state.npcs.forEach(npc => {
+    if (npc.death === null || npc.death.ejectionScaleFactor === null) pq.add(npc);
+  });
+  state.cats.forEach(cat => {
+    if (cat.death === null || cat.death.ejectionScaleFactor === null) pq.add(cat);
+  });
+  if (state.gardener.death === null || state.gardener.death.ejectionScaleFactor === null) pq.add(state.gardener);
+  state.shieldButtons.forEach(sb => pq.add(sb));
+  pq.add(state.airlockButton);
+  pq.add(state.wateringCan);
+  pq.add(state.railing);
+  
+  while (!pq.isEmpty()) {
+    let ptbl = pq.poll();
+    if (ptbl === undefined) continue;
+    ptbl.paint(canvas, state);
+  }
+}
+
+// Use a priority queue based on air lock ejection scale to paint all life forms that are BEHIND the ship.
+// i.e. the life forms that are behind the air lock doors.
+function drawLifeformsBehindShip(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
+  // Put all life forms into a heap-based priority queue.
+  // They'll come out sorted by ascending ejection scale factor for faking depth.
+  let pq = new TypedPriorityQueue<Lifeform>(
+    function (a: Lifeform, b: Lifeform) {
+      let sa = (a.death !== null && a.death.ejectionScaleFactor !== null) ? a.death.ejectionScaleFactor : 1;
+      let sb = (b.death !== null && b.death.ejectionScaleFactor !== null) ? b.death.ejectionScaleFactor : 1;
+      return sa < sb;
+    }
+  );
+
+  // Put all life forms into the priority queue, except those that are NOT behind the ship.
+  state.npcs.forEach(npc => {
+    if (npc.death !== null && npc.death.ejectionScaleFactor !== null) pq.add(npc);
+  });
+  state.cats.forEach(cat => {
+    if (cat.death !== null && cat.death.ejectionScaleFactor !== null) pq.add(cat);
+  });
+  if (state.gardener.death !== null && state.gardener.death.ejectionScaleFactor !== null) pq.add(state.gardener);
+  
+  while (!pq.isEmpty()) {
+    let ptbl = pq.poll();
+    if (ptbl === undefined) continue;
+    ptbl.paint(canvas, state);
+  }
+}
+
 // Paint the scene, given a canvas and the current game state.
 export const drawState = (
   canvas: CanvasRenderingContext2D | null,
@@ -59,38 +121,18 @@ export const drawState = (
   //canvas.scale(0.5, 0.5);     // Uncomment for god's eye view.
   //canvas.translate(100, 100); // Same here.
 
-  // Put all paintable objects into a heap-based priority queue.
-  // They'll come out sorted by ascending y coordinate for faking 3D.
-  let pq = new TypedPriorityQueue<Paintable>(
-    function (a: Paintable, b: Paintable) {
-      return a.pos.y < b.pos.y;
-    }
-  );
   let shift = computeBackgroundShift(state, false);
   let deterministicShift = computeBackgroundShift(state, true);
   drawBackground(state, shift, deterministicShift, canvas);
 
-  state.plants.forEach(plant => pq.add(plant));
-  state.npcs.forEach(npc => pq.add(npc));
-  state.cats.forEach(cat => pq.add(cat));
-  state.shieldButtons.forEach(sb => pq.add(sb));
-  pq.add(state.airlockButton);
-  pq.add(state.gardener);
-  pq.add(state.wateringCan);
-  pq.add(state.railing);
-  
-  while (!pq.isEmpty()) {
-    let ptbl = pq.poll();
-    if (ptbl === undefined) continue;
-    ptbl.paint(canvas, state);
-  }
+  drawPaintablesNotBehindShip(canvas, state);
 
   // Shield shadows and shade.
   state.shieldDoors.paintShadows(canvas, state);
   drawAmbientShade(state, canvas);
 
   // Draw dialog.
-  if(state.dialogs.length > 0) {
+  if (state.dialogs.length > 0) {
     state.dialogs[0].paint(canvas, state);
   }
 
@@ -216,6 +258,8 @@ function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingConte
   drawSpaceObjects(state, canvas);
   // Draw the blast shield.
   state.shieldDoors.paint(canvas, state);
+  // Draw life forms that are being expelled through the air lock.
+  drawLifeformsBehindShip(canvas, state);
   // Draw the airlock doors.
   state.airlock.paint(canvas, state, deterministicShift);
   // Draw the static background of the ship interior.

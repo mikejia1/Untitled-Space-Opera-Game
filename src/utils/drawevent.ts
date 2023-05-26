@@ -34,8 +34,8 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
     // SUPERNOVA IMPACT
     if (frameCount < 24){
       canvas.drawImage(
-        state.backgroundImages.impact,                         // Sprite source image
-        impactFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,         // Top-left corner of frame in source
+        state.backgroundImages.impact,                            // Sprite source image
+        impactFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,            // Top-left corner of frame in source
         H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE,   // Size of frame in source
         shift.x,                                                  // X position of top-left corner on canvas
         shift.y,                                                  // Y position of top-left corner on canvas
@@ -55,7 +55,6 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
   }
   function drawGameoverEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
     const frameCount = state.currentFrame - anim.startTime;
-    console.log("Draw game over screen");
     // FADE TO BLACK
     if (frameCount > 2.5*FPS){
         let opacity = Math.min((frameCount - 2.5*FPS)/2, 18)/18;
@@ -65,16 +64,16 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
         
         if (frameCount > 4*FPS){
             canvas.drawImage(
-                state.gameOverImage,                  // Sprite source image
-                Math.floor((CANVAS_WIDTH - state.gameOverImage.width)/2),                                   // X position of top-left corner on canvas
-                100,                                  // Y position of top-left corner on canvas
+                state.gameOverImage,                                      // Sprite source image
+                Math.floor((CANVAS_WIDTH - state.gameOverImage.width)/2), // X position of top-left corner on canvas
+                100,                                                      // Y position of top-left corner on canvas
             );
         }
         if (frameCount > 5*FPS){
             canvas.drawImage(
                 state.replayImage,                                      // Sprite source image
                 Math.floor((CANVAS_WIDTH - state.replayImage.width)/2), // X position of top-left corner on canvas
-                ((frameCount % 30) > 15) ? 130 : 132,                    // Y position of top-left corner on canvas
+                ((frameCount % 30) > 15) ? 130 : 132,                   // Y position of top-left corner on canvas
             );
         }
 

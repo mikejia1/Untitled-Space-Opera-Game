@@ -1,4 +1,5 @@
 import { Rect, rectanglesOverlap } from '../../utils';
+import { rectToString } from '../../utils/rect';
 import { IGlobalState } from './globalstate';
 
 // Colliders have types.
@@ -55,12 +56,12 @@ export function allCollidersFromState(state: IGlobalState): Map<number, Collider
     map.set(state.railing.colliderId, state.railing);
     return map;
 }
-  
 
 // Check whether the given collider overlaps (collides) with any other collider (excluding itself).
-export function collisionDetected(state: IGlobalState, colliders: Map<number, Collider>, collider: Collider): boolean {
+export function collisionDetected(state: IGlobalState, collider: Collider): boolean {
     if (state.debugSettings.collisionsDisabled) return false;
     if (collider.colliderType === ColliderType.NoneCo) return false;  // Hard-coded exception for type NoneCo.
+    let colliders = state.colliderMap;
     let cRect = collider.collisionRect();
   
     // Check all colliders and stop if and when any collision is found.
@@ -71,7 +72,7 @@ export function collisionDetected(state: IGlobalState, colliders: Map<number, Co
       if (colliderId === collider.colliderId) continue;
       let co = colliders.get(colliderId);
       if (co === undefined) continue; // Will never happen.
-      if (co.colliderType === ColliderType.NoneCo) return false;  // Hard-coded exception for NoneCo.
+      if (co.colliderType === ColliderType.NoneCo) continue;  // Hard-coded exception for NoneCo.
       // Ignore collisions if there's an explicit exception for this pair of collider types.
       let exceptions = ColliderExceptions(collider);
       let expt = exceptions[co.colliderType.toString()];

@@ -1,11 +1,10 @@
 import { shiftForTile, computeBackgroundShift, Coord, Rect, AIRLOCK_PIXEL_SPEED, rectanglesOverlap, AIRLOCK_PULL_SCALE } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
-import { Paintable, IGlobalState, collisionDetected, ColliderType } from '../store/classes';
+import { Paintable, IGlobalState, collisionDetected, ColliderType, allCollidersFromState, Collider } from '../store/classes';
 import { Tile } from '../scene';
 import { Cat } from './cat';
 import { NonPlayer } from './nonplayer';
 import { Plant } from './plant';
-import { off } from 'process';
 import { CausaMortis } from './skeleton';
 
 export enum AirlockState { OPENING, CLOSING, OPEN, CLOSED }
@@ -72,7 +71,7 @@ export class Airlock implements Paintable {
         return this;
     }
 
-    getMovementDelta(pos: Coord, log: boolean): Coord {
+    getMovementDelta(pos: Coord): Coord {
         let directVec = this.pos.minus(pos.x, pos.y);
         let actualDist = directVec.magnitude();
         if (actualDist <= 1) return new Coord(0,0);
@@ -81,7 +80,6 @@ export class Airlock implements Paintable {
         dist = 1 + ((dist - 1) * AIRLOCK_PULL_SCALE);
         let pull = Math.min(AIRLOCK_PIXEL_SPEED / (dist * dist), AIRLOCK_PIXEL_SPEED);
         pull = Math.min(pull, actualDist);
-       if (log) console.log("Pull " + pull + " dist " + dist + " actual " + actualDist);
         return unitVec.times(pull);
     }
 
@@ -156,46 +154,56 @@ export class Airlock implements Paintable {
     }
 }
 
-function getAirlockShiftedEntity(state: IGlobalState, actor: any) : any {
-    let move: Coord = state.airlock.getMovementDelta(actor.pos, actor.pos === state.gardener.pos);
-    let oldPos: Coord = actor.pos;
-    actor.pos = oldPos.plus(move.x, move.y);
+// Change the position of a paintable and a collider (should be the same object) based on air lock suction.
+function airlockShiftEntity(state: IGlobalState, ptbl: Paintable, cldr: Collider): void {
+    let move: Coord = state.airlock.getMovementDelta(ptbl.pos);
+    let oldPos: Coord = ptbl.pos;
+    ptbl.pos = oldPos.plus(move.x, move.y);
     // If there is a collision, negate it.
-    if (collisionDetected(state, state.colliderMap, actor)) {
-        actor.pos = oldPos;
-    }
-    return actor;
+    let ids = Array.from(state.colliderMap.keys());
+    if (collisionDetected(state, cldr)) ptbl.pos = oldPos;
 }
 
 export function updateAirlockState(state: IGlobalState): IGlobalState {
     if (state.airlock.isAirtight(state)) {
-        return {
+        let newState = {
             ...state,
             plants: plantsWithColliderType(state, ColliderType.PlantCo),
+        };
+        return {
+            ...newState,
+            colliderMap: allCollidersFromState(newState),
         };
     }
     let cats: Cat[] = [];
     for (let i = 0; i < state.cats.length; i++) {
-        let cat : Cat = getAirlockShiftedEntity(state, state.cats[i]) as Cat;
-        if (rectanglesOverlap(state.airlock.deathRect(), cat.collisionRect()) && cat.death == null) {
-            cat.death = {time : state.currentFrame, cause: CausaMortis.Ejection}
+        let cat = state.cats[i];
+        airlockShiftEntity(state, cat, cat);
+        if (rectanglesOverlap(state.airlock.deathRect(), cat.collisionRect())) {
+            cat.dieOf(CausaMortis.Ejection, state.currentFrame);
         }
         cats = [...cats, cat];
     }
     let npcs: NonPlayer[] = [];
     for (let i = 0; i < state.npcs.length; i++) {
-        let npc : NonPlayer = getAirlockShiftedEntity(state, state.npcs[i]) as NonPlayer;
-        if (rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect()) && npc.death == null) {
-            npc.death = {time : state.currentFrame, cause: CausaMortis.Ejection}
+        let npc = state.npcs[i];
+        // Don't pull off-screen NPCs into the air lock.
+        if (npc.isOffScreen) {
+            npcs = [...npcs, npc];
+            continue;
+        }
+        airlockShiftEntity(state, npc, npc);
+        if (rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect())) {
+            npc.dieOf(CausaMortis.Ejection, state.currentFrame);
         }
         npcs = [...npcs, npc];
     }
-    let gardener = getAirlockShiftedEntity(state, state.gardener);
-    if (rectanglesOverlap(state.airlock.deathRect(), gardener.collisionRect()) && gardener.death == null) {
-        console.log("gardener ejected");
-        gardener.death = {time : state.currentFrame, cause: CausaMortis.Ejection}
+    let gardener = state.gardener;
+    airlockShiftEntity(state, gardener, gardener);
+    if (rectanglesOverlap(state.airlock.deathRect(), gardener.collisionRect())) {
+        gardener.dieOf(CausaMortis.Ejection, state.currentFrame);
     }
-    return {
+    let newState = {
         ...state,
         cats: cats,
         npcs: npcs,
@@ -203,9 +211,15 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
         airlock: state.airlock.updateDoorState(state),
         plants: plantsWithColliderType(state, ColliderType.NoneCo),
     };
+    return {
+        ...newState,
+        colliderMap: allCollidersFromState(newState),
+    };
 }
 
+// Get the array of plants, but with the given collider type set for all of them.
 function plantsWithColliderType(state: IGlobalState, cType: ColliderType): Plant[] {
+    // If the first one already has the desired collider type, they all do.
     if (state.plants[0].colliderType === cType) return state.plants;
     let newPlants: Plant[] = [];
     for (let i = 0; i < state.plants.length; i++) {

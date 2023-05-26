@@ -38,6 +38,9 @@ export const AIRLOCK_PIXEL_SPEED = 5;
 // Scaling factor affecting how quickly air lock pull falls off with distance.
 export const AIRLOCK_PULL_SCALE = 0.01;
 
+// Visual shrink factor, per frame, for anything being ejected out of the air lock.
+export const EJECTION_SHRINK_RATE = 0.95;
+
 // An enum for the directions.
 export enum Direction {
     Up, Down, Left, Right,

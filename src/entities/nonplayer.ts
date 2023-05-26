@@ -1,13 +1,15 @@
-import { Collider, ColliderType, IGlobalState, Paintable, activateAirlockButton, collisionDetected } from '../store/classes';
+import { Collider, ColliderType, IGlobalState, Lifeform, activateAirlockButton, collisionDetected } from '../store/classes';
 import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
     outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
-    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond, computeCurrentFrame, FPS, oppositeDirection, rectanglesOverlap, randLeftOrRight,
+    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond,
+    computeCurrentFrame, FPS, oppositeDirection, rectanglesOverlap, randLeftOrRight,
+    EJECTION_SHRINK_RATE,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
-import { CausaMortis, Death, paintSkeletonDeath } from './skeleton';
+import { CausaMortis, Death } from './skeleton';
 
 // Probability of cabin fever, per NPC, per frame. 5 in 10,000.
 const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0005;
@@ -28,7 +30,7 @@ export enum MentalState {
     Scared,     // NPC is scared of some impending danger
 }
 
-export class NonPlayer implements Paintable, Collider {
+export class NonPlayer implements Lifeform, Collider {
     pos: Coord;                             // NPC's current location, in pixels, relative to background image.
     facing: Direction;                      // The direction that the NPC is currently facing.
     stationeryCountdown: number;            // A countdown (measured in frames) for when the NPC stands still.
@@ -141,6 +143,15 @@ export class NonPlayer implements Paintable, Collider {
         };
     }
 
+    // Compute sprite size and shift values for air lock ejection. (48 and 0, respectively, when not being ejected)
+    ejectionScaleAndShift(): any {
+        if (this.death === null) return { scaledSize: 48, shiftToCentre: 0 };
+        let scaledSize = (this.death.ejectionScaleFactor !== null) ? this.death.ejectionScaleFactor : 1;
+        scaledSize = scaledSize * 48;
+        let shiftToCentre = (48 - scaledSize) / 2;  // Maintains sprite centre, despite scaling.
+        return { scaledSize: scaledSize, shiftToCentre: shiftToCentre };
+    }
+    
     // Override the paintable paint function
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         // An invisible NPC doesn't need to be painted.
@@ -167,6 +178,7 @@ export class NonPlayer implements Paintable, Collider {
         let newPos = this.pos.plus(shift.x, shift.y);
         newPos = newPos.plus(0, jitter);
         let flip = (this.facing === Direction.Left);
+        let xScale = flip ? -1 : 1;
         newPos = (dialog != null) ? dialog : newPos;
 
         // Determine where, on the canvas, the NPC should be painted.
@@ -177,17 +189,19 @@ export class NonPlayer implements Paintable, Collider {
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
         canvas.globalAlpha = this.deathFadeAlpha(state);
-        let shrink = 0;
-        if(this.death != null && this.death.cause == CausaMortis.Ejection){
-            shrink = Math.min(48, (state.currentFrame - this.death.time)*2);
-        }
+
+        // Sprite size and shift for ejection from air lock.
+        let ejection = this.ejectionScaleAndShift();
+        let scaledSize = ejection.scaledSize;
+        let shiftToCentre = ejection.shiftToCentre;
+
         // Paint gardener sprite for current frame.
         canvas.drawImage(
-            this.currentWalkCycleImage(state),  // The sprite sheet image
-            (frame * 96) + 40, 20,              // Top-left corner of frame in source
-            48, 48,                             // Size of frame in source
-            dest.x, dest.y,                     // Position of sprite on canvas
-            48-shrink, 48-shrink);              // Sprite size on canvas
+            this.currentWalkCycleImage(state),                          // The sprite sheet image
+            (frame * 96) + 40, 20,                                      // Top-left corner of frame in source
+            48, 48,                                                     // Size of frame in source
+            dest.x + (shiftToCentre * xScale), dest.y + shiftToCentre,  // Position of sprite on canvas
+            scaledSize, scaledSize);                                    // Sprite size on canvas
     
         // Restore canvas transforms to normal.
         canvas.restore();
@@ -204,16 +218,16 @@ export class NonPlayer implements Paintable, Collider {
     // The amount of alpha that should currently be used. This is for having dead bodies fade away right before respawn.
     deathFadeAlpha(state: IGlobalState): number {
         if (this.death === null) return 1.0;
-        if (state.currentFrame < (this.death.time + RESPAWN_DELAY - CORPSE_FADE_DELAY)) return 1.0;
-        if (state.currentFrame > (this.death.time + RESPAWN_DELAY)) return 0.0;
-        return 1 - ((state.currentFrame - (this.death.time + (RESPAWN_DELAY - CORPSE_FADE_DELAY))) / CORPSE_FADE_DELAY);
+        if (state.currentFrame < (this.death.time + RESPAWN_DELAY - CORPSE_FADE_DELAY)) return 1.0;                         // Before fade begins.
+        if (state.currentFrame > (this.death.time + RESPAWN_DELAY)) return 0.0;                                             // After fade ends.
+        return 1 - ((state.currentFrame - (this.death.time + (RESPAWN_DELAY - CORPSE_FADE_DELAY))) / CORPSE_FADE_DELAY);    // During fade.
     }
 
     // Get the walk cycle sprite sheet that currently applies for the NPC (depends on mental state).
     currentWalkCycleImage(state: IGlobalState): any {
-        if (this.death != null){
-            switch(this.death.cause) {
-                case CausaMortis.Laceration: return state.npcImages.slainDeath;
+        if (this.death !== null){
+            switch (this.death.cause) {
+                case CausaMortis.Laceration:   return state.npcImages.slainDeath;
                 case CausaMortis.Asphyxiation: return state.npcImages.chokeDeath;
                 case CausaMortis.Incineration: return state.skeleton;
             }
@@ -227,7 +241,7 @@ export class NonPlayer implements Paintable, Collider {
 
     currentSpriteFrame(state: IGlobalState) : number {
         // Check if there is a death animation in progress.
-        if (this.death != null){
+        if (this.death !== null){
             switch(this.death.cause){
                 case CausaMortis.Laceration:
                     return Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 14);
@@ -438,7 +452,6 @@ export class NonPlayer implements Paintable, Collider {
 
     // Move NPC to "holding zone" i.e. off-screen and invisible.
     goOffScreen(): NonPlayer {
-        console.log("NPC going off-screen, id:"+this.id);
         return new NonPlayer({
             clone: this,
             death: null,
@@ -468,6 +481,20 @@ export class NonPlayer implements Paintable, Collider {
         // After five seconds, you're off-screen if the NPC image is fully outside the background.
         return (this.pos.x < (0 - ENTITY_RECT_WIDTH)) || (this.pos.x > BACKGROUND_WIDTH);
     }
+
+    // Have the NPC die.
+    dieOf(cause: CausaMortis, time: number) {
+        let scale: number | null = (cause === CausaMortis.Ejection) ? 1 : null;
+        if (this.death === null) this.death = { cause: cause, time: time, ejectionScaleFactor: scale };
+        else {
+            // The only death you can inflict *after* having already died is ejection of the corpse through the air lock.
+            // In such a case, the cause of death and the time of death remain the same, but ejectionScaleFactor gets set.
+            // Additionally, in case ejection death is assigned more than once (for whatever reason) only the first time counts.
+            if (cause !== CausaMortis.Ejection) return;             // Only ejection "death" can occur after death.
+            if (this.death.ejectionScaleFactor !== null) return;    // Ejection scale factor will not be reset.
+            this.death.ejectionScaleFactor = 1;                     // Ejection scale factor starts at 1.
+        }
+    }
 }
 
 // Check global state to see if there's currently an impending danger that would scare NPCs.
@@ -480,19 +507,22 @@ function dangerIsImpending(state: IGlobalState): boolean {
 }
 
 export function updateNPCState(state: IGlobalState) : IGlobalState {
-    let allColliders : Map<number, Collider> = state.colliderMap;
+    //let allColliders : Map<number, Collider> = state.colliderMap;
     // Allow NPCs to move and adjust their mental state.
     let newNPCs: NonPlayer[] = [];
     let atLeastOneNPCPushingAirLockButton: boolean = false;
     state.npcs.forEach(npc => {
         let newNPC: NonPlayer = npc;
         // If NPC is dead, check that the death animation is done.
-        if (newNPC.death != null) {
+        if (newNPC.death !== null) {
+            if (newNPC.death.ejectionScaleFactor !== null) {
+                newNPC.death.ejectionScaleFactor *= EJECTION_SHRINK_RATE;
+            }
             // If npc has been dead long enough, go offscreen. 
             if (state.currentFrame - newNPC.death.time >= RESPAWN_DELAY) 
                 newNPC = newNPC.goOffScreen();
             newNPCs = [...newNPCs, newNPC];
-            allColliders.set(newNPC.colliderId, newNPC);  
+            state.colliderMap.set(newNPC.colliderId, newNPC);  
             return;
         }
         // With small probability, an off-screen NPC may come back.
@@ -505,7 +535,7 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
         let postMoveNPC = moveNPC(state, newNPC);
 
         // Check if it now collides with anything.
-        let collided = collisionDetected(state, allColliders, postMoveNPC);
+        let collided = collisionDetected(state, /*allColliders,*/ postMoveNPC);
 
         // If the NPC is colliding, revert to pre-move state.
         newNPC = collided ? newNPC : postMoveNPC;
@@ -531,13 +561,13 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
         // Update the NPC array. Update the colliders so that subsequent NPCs will
         // check collisions against up-to-date locations of their peers.
         newNPCs = [...newNPCs, newNPC];
-        allColliders.set(newNPC.colliderId, newNPC);
+        state.colliderMap.set(newNPC.colliderId, newNPC);
     });
 
     let newState = {
         ...state,
         npcs: newNPCs,
-        colliderMap: allColliders,
+        //colliderMap: allColliders,
     };
     if (atLeastOneNPCPushingAirLockButton) return activateAirlockButton(newState);
     return newState;

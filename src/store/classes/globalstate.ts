@@ -7,6 +7,8 @@ import { Planet, makePlanet } from '../../scene/planet';
 import { ShieldButton } from '../../entities/shieldbutton';
 import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
 import { Cat } from '../../entities/cat';
+import { Dialog } from '../../scene/dialog';
+import { Railing } from '../../scene/railing';
 
 // Gardener images.
 import basewalkstrip             from "../../entities/images/gardener/base_walk_strip8.png";
@@ -58,55 +60,53 @@ import islandPlanetImg from   "../images/drifting_planets/planet_island_256px_60
 import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.png";
 import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
-import { Dialog } from '../../scene/dialog';
-import { Railing } from '../../scene/railing';
 
 // Interface for full game state object.
 export interface IGlobalState {
-    gameover: boolean;                // Is the game over?
-    gardener: Gardener;               // The gardener tending the garden. Controlled by the player.
-    keysPressed: Direction[];         // The movement keys currently pressed by the player.
-    score: number;                    // The current game score
-    oxygen: number;                   // The current oxygen level
-    wateringCan: WateringCan;         // The watering can that the gardener uses to water plants
-    plants: Plant[];                  // All the plants currently living
-    npcs: NonPlayer[];                // The various crew people wandering around in the garden
-    cats: Cat[];                      // Murderous cats on a rampage
-    shieldButtons: ShieldButton[];    // The buttons that activate sections of the blast shield
-    airlockButton: ShieldButton;      // The button that opens the airlock
-    shieldDoors: ShieldDoor;          // The blast shield that protects the garden
-    airlock: Airlock;                 // The airlock that opens up into the void
-    railing: Railing;                 // The railing right above the air lock
-    currentFrame: number;             // The current animation frame number (current epoch quarter second number)
-    gameoverFrame: number;            // The frame number when the game ended
-    pendingEvents: AnimEvent[];       // Queue of one-off event animations to draw
-    activeEvents: AnimEvent[];        // Queue of one-off event animations to draw
-    dialogs: Dialog[];                // Dialogs to display
-    skeleton: any;                    // The skeleton death animation.
-    catImage: any;                    // The cat walk cycle animation.
-    gardenerImages: any;              // Source images for gardener sprites.
-    shieldImages: any;                // Source images for the blast shield image.
-    shieldButtonImage: any;           // Source image for the shield button animation.
-    airlockDoorImage: any;            // Source image for the airlock doors.
-    npcImages: any;                   // The NPC walkcycle sprite source images.
-    backgroundImages: any;            // The background image.
-    wateringCanImage: any;            // The watering can image.
-    plantImage: any;                  // The plant image.
-    gameOverImage: any,               // The game over image
-    replayImage: any,                 // The replay prompt image
-    blackHoleImage: any,              // Images containing animation frames for the black hole
-    dialogImage: any,                 // The dialog box image
-    invisibleColliders: Collider[];   // All Colliders that aren't visible.
-    muted: boolean;                   // Enable / disable sounds.
-    screenShaker: Shaker;             // For causing the screen to shake at key moments.
-    blackHole: BlackHole | null;      // The black hole in view, or null if none in view.
-    planet1: Planet | null;           // One of the planets drifting by. Null if none.
-    planet2: Planet | null;           // One of the planets drifting by. Null if none.
-    planet3: Planet | null;           // One of the planets drifting by. Null if none.
-    planets: Planet[];                // The full list of available drifting planets.
-    randomCabinFeverAllowed: boolean; // Whether or not NPCs can now develop cabin fever at random.
-    debugSettings: any;               // For configuring extra debug info and visualizations.
-    colliderMap: Map<number, Collider>// Map of collider IDs to colliders.
+    gameover: boolean;                  // Is the game over?
+    gardener: Gardener;                 // The gardener tending the garden. Controlled by the player.
+    keysPressed: Direction[];           // The movement keys currently pressed by the player.
+    score: number;                      // The current game score
+    oxygen: number;                     // The current oxygen level
+    wateringCan: WateringCan;           // The watering can that the gardener uses to water plants
+    plants: Plant[];                    // All the plants currently living
+    npcs: NonPlayer[];                  // The various crew people wandering around in the garden
+    cats: Cat[];                        // Murderous cats on a rampage
+    shieldButtons: ShieldButton[];      // The buttons that activate sections of the blast shield
+    airlockButton: ShieldButton;        // The button that opens the airlock
+    shieldDoors: ShieldDoor;            // The blast shield that protects the garden
+    airlock: Airlock;                   // The airlock that opens up into the void
+    railing: Railing;                   // The railing right above the air lock
+    currentFrame: number;               // The current animation frame number (current epoch quarter second number)
+    gameoverFrame: number;              // The frame number when the game ended
+    pendingEvents: AnimEvent[];         // Queue of one-off event animations to draw
+    activeEvents: AnimEvent[];          // Queue of one-off event animations to draw
+    dialogs: Dialog[];                  // Dialogs to display
+    skeleton: any;                      // The skeleton death animation.
+    catImage: any;                      // The cat walk cycle animation.
+    gardenerImages: any;                // Source images for gardener sprites.
+    shieldImages: any;                  // Source images for the blast shield image.
+    shieldButtonImage: any;             // Source image for the shield button animation.
+    airlockDoorImage: any;              // Source image for the airlock doors.
+    npcImages: any;                     // The NPC walkcycle sprite source images.
+    backgroundImages: any;              // The background image.
+    wateringCanImage: any;              // The watering can image.
+    plantImage: any;                    // The plant image.
+    gameOverImage: any,                 // The game over image
+    replayImage: any,                   // The replay prompt image
+    blackHoleImage: any,                // Images containing animation frames for the black hole
+    dialogImage: any,                   // The dialog box image
+    invisibleColliders: Collider[];     // All Colliders that aren't visible.
+    muted: boolean;                     // Enable / disable sounds.
+    screenShaker: Shaker;               // For causing the screen to shake at key moments.
+    blackHole: BlackHole | null;        // The black hole in view, or null if none in view.
+    planet1: Planet | null;             // One of the planets drifting by. Null if none.
+    planet2: Planet | null;             // One of the planets drifting by. Null if none.
+    planet3: Planet | null;             // One of the planets drifting by. Null if none.
+    planets: Planet[];                  // The full list of available drifting planets.
+    randomCabinFeverAllowed: boolean;   // Whether or not NPCs can now develop cabin fever at random.
+    debugSettings: any;                 // For configuring extra debug info and visualizations.
+    colliderMap: Map<number, Collider>; // Map of collider IDs to colliders.
   }
 
  // Generate the game starting state.
@@ -135,15 +135,19 @@ export function initialGameState(): IGlobalState {
 
   // Create a bunch of cats. 
   let cats = gridOfCats(colliderId, new Coord(200, 300), 25, 2, 2);
+  colliderId += cats.length;
 
   // Create the buttons that activate the sections of the blast shield.
   let shieldButtons = createShieldButtons();
   let airlockButton = new ShieldButton(0, new Coord(148, 234), 0, false);
-  colliderId++;
+  
+  // Create gardener.
   let gardener = initialGardener(colliderId);
   colliderId++;
+
   // Railing perfectly aligns with the "fake" one in the background image.
-  let railing = new Railing(new Coord(165, 231), colliderId); 
+  let railing = new Railing(new Coord(165, 231), colliderId);
+  colliderId++;
 
   return {
     gameover: false,
@@ -351,7 +355,7 @@ function gridOfCats(colliderId: number, pos: Coord, spacing: number, cols: numbe
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
-  return new Gardener(colliderId, new Coord(200, 220), GardenerDirection.Right, false, false, false);
+  return new Gardener(colliderId, new Coord(200, 220), GardenerDirection.Right, false, false, false, null);
 }
 
 // Create watering can for start of game.
@@ -395,16 +399,6 @@ function createSupernovaEvents(delay: number): AnimEvent[] {
       shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop,
       pulse1, pulse2, pulse3, pulse4, pulse5, pulse6, pulse7, pulseStop,
     ];
-}
-
-// Get all the colliders from a state.
-function allCollidersFromState(state: IGlobalState): Map<number, Collider> {
-  let map = new Map<number, Collider>();
-  state.plants.forEach(plant => map.set(plant.colliderId, plant));
-  state.invisibleColliders.forEach(ic => map.set(ic.colliderId, ic));
-  state.npcs.forEach(npc => map.set(npc.colliderId, npc));
-  map.set(state.gardener.colliderId, state.gardener);
-  return map;
 }
 
 export function activateAirlockButton(globalState: IGlobalState): IGlobalState {

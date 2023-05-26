@@ -8,5 +8,5 @@ export interface Rect {
 }
 
 export function rectToString(rect: Rect): String {
-    return "[" + rect.a.toString() + " - " + rect.b.toString + "]";
+    return "[" + rect.a.toString() + " - " + rect.b.toString() + "]";
 }

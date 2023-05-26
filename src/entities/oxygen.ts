@@ -18,14 +18,9 @@ export function updateOxygenState(state : IGlobalState): IGlobalState {
     let gardener = state.gardener;
     let npcs : NonPlayer [] = [];
     if (oxy < 0){
-        if(gardener.death == null){
-            console.log("Gardener died of asphyxiation at time: "+state.currentFrame+"!");
-            gardener.death = {time: state.currentFrame, cause: CausaMortis.Asphyxiation};
-        }
-        
+        gardener.dieOf(CausaMortis.Asphyxiation, state.currentFrame);        
         state.npcs.forEach(npc => {
-            if (npc.death == null)
-                npc.death = {time: state.currentFrame, cause: CausaMortis.Asphyxiation};
+            npc.dieOf(CausaMortis.Asphyxiation, state.currentFrame);
             npcs = [...npcs, npc];
         });
     }
