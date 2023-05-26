@@ -30,10 +30,13 @@ import scarednpcwalkcycle   from "../../entities/images/nonplayer/scared_npcwalk
 import npcslainstrip        from "../../entities/images/nonplayer/npc_slain.png"; 
 import npcchokestrip        from "../../entities/images/nonplayer/npc_choke.png";
 
+// Ship interior images.
+import spacegarden          from "../images/space_garden.png";
+import spacegardenimpact    from "../images/space_garden_impact.png";
+import airlockrailing       from "../images/air_lock_railing.png";
+
 // Other images.
 import catswalkcycle        from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
-import spacegardenimpact    from "../images/space_garden_impact.png";
-import spacegarden          from "../images/space_garden.png";
 import gameoverImg          from "../images/gameover.png";
 import replayPrompt         from "../images/replay_prompt.png";
 import blackHoleImg         from "../images/drifting_planets/planet_black_hole_256px_30f.png";
@@ -56,6 +59,7 @@ import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.
 import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
 import { Dialog } from '../../scene/dialog';
+import { Railing } from '../../scene/railing';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -72,6 +76,7 @@ export interface IGlobalState {
     airlockButton: ShieldButton;      // The button that opens the airlock
     shieldDoors: ShieldDoor;          // The blast shield that protects the garden
     airlock: Airlock;                 // The airlock that opens up into the void
+    railing: Railing;                 // The railing right above the air lock
     currentFrame: number;             // The current animation frame number (current epoch quarter second number)
     gameoverFrame: number;            // The frame number when the game ended
     pendingEvents: AnimEvent[];       // Queue of one-off event animations to draw
@@ -149,6 +154,7 @@ export function initialGameState(): IGlobalState {
     airlockButton: airlockButton,
     shieldDoors: initialShieldDoor(),
     airlock: new Airlock(),
+    railing: new Railing(new Coord(165, 231), colliderId++), // Railing perfectly aligns with the "fake" one in the background image.
     currentFrame: 0,
     gameoverFrame: 0,
     pendingEvents: getEvents(),
@@ -171,9 +177,10 @@ export function initialGameState(): IGlobalState {
       chokeDeath:         loadImage("Suffocation death strip", npcchokestrip),
     },
     backgroundImages:{
-      default:      loadImage("Space garden", spacegarden),
-      impact:       loadImage("Space garden impact", spacegardenimpact),
-      deepSpace:    loadImage("Space frames", spaceframes),
+      default:        loadImage("Space garden", spacegarden),
+      impact:         loadImage("Space garden impact", spacegardenimpact),
+      deepSpace:      loadImage("Space frames", spaceframes),
+      airLockRailing: loadImage("Air lock railing", airlockrailing),
     },
     wateringCanImage: loadImage("Watering can", wateringcan),
     shieldImages: {
@@ -183,13 +190,13 @@ export function initialGameState(): IGlobalState {
       blackTop:       loadImage("Black top shield", blackTopShield),
       blackBottom:    loadImage("Black bottom shield", blackBottomShield),
     },
-    dialogImage:      loadImage("Dialog box", dialogBox),
-    shieldButtonImage: loadImage("Shield button", shieldButton),
-    airlockDoorImage: loadImage("Airlock doors", airlockDoors),
-    plantImage:       loadImage("Plant image", plantimage),
-    gameOverImage:    loadImage("Game over", gameoverImg),
-    replayImage:      loadImage("Replay prompt", replayPrompt),
-    blackHoleImage:   loadImage("Black hole", blackHoleImg),
+    dialogImage:        loadImage("Dialog box", dialogBox),
+    shieldButtonImage:  loadImage("Shield button", shieldButton),
+    airlockDoorImage:   loadImage("Airlock doors", airlockDoors),
+    plantImage:         loadImage("Plant image", plantimage),
+    gameOverImage:      loadImage("Game over", gameoverImg),
+    replayImage:        loadImage("Replay prompt", replayPrompt),
+    blackHoleImage:     loadImage("Black hole", blackHoleImg),
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
     muted: true,
     screenShaker:     SHAKER_NO_SHAKE,  // Initially, the screen is not shaking.

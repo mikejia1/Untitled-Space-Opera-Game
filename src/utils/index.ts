@@ -77,7 +77,8 @@ export const drawState = (
   pq.add(state.airlockButton);
   pq.add(state.gardener);
   pq.add(state.wateringCan);
-
+  pq.add(state.railing);
+  
   while (!pq.isEmpty()) {
     let ptbl = pq.poll();
     if (ptbl === undefined) continue;
