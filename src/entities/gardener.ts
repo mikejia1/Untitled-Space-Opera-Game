@@ -88,27 +88,30 @@ export class Gardener implements Paintable, Collider, Interactable {
     }
 
     stop(): Gardener {
-      return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, false, this.watering);
+        this.moving = false;
+        return this;
     }
 
     setWatering(watering: boolean): Gardener {
-        return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, this.moving, watering);
+        this.watering = watering;
+        return this;
     }
 
     // Change facing direction of the gardener but without changing its position.
     changeFacingDirection(direction: Direction): Gardener {
         // Up and Down won't change gardener facing direction.
         if ((direction === Direction.Up ) || (direction === Direction.Down)) {
-            return new Gardener(this.colliderId, this.pos, this.facing, this.itemEquipped, this.moving, this.watering);
+            return this;
         }
         // Left and Right will change gardener facing direction.
-        let dir = (direction === Direction.Left) ? GardenerDirection.Left : GardenerDirection.Right;
-        return new Gardener(this.colliderId, this.pos, dir, this.itemEquipped, this.moving, this.watering);
+        this.facing = (direction === Direction.Left) ? GardenerDirection.Left : GardenerDirection.Right;
+        return this;
     }
   
     // Set value of itemEquipped. Return new gardener.
     setItemEquipped(itemEquipped: boolean): Gardener {
-      return new Gardener(this.colliderId, this.pos, this.facing, itemEquipped, this.moving, this.watering);
+        this.itemEquipped = itemEquipped;
+        return this;
     }
   
     // Paint the gardener on the canvas.
