@@ -5,6 +5,7 @@ import { Tile } from '../scene';
 import { Cat } from './cat';
 import { NonPlayer } from './nonplayer';
 import { Plant } from './plant';
+import { off } from 'process';
 
 export enum AirlockState { OPENING, CLOSING, OPEN, CLOSED }
 const MAX_DOOR_OFFSET = 32;
@@ -47,18 +48,26 @@ export class Airlock implements Paintable {
 
     // Activate the airlock
     activate(state: IGlobalState): Airlock {
-        if (this.state == AirlockState.CLOSED) {
-            this.state = AirlockState.OPENING;
-            this.lastInteraction = state.currentFrame;
-        }
-        else if (this.state == AirlockState.OPEN) {
-            this.state = AirlockState.CLOSING;
-            this.lastInteraction = state.currentFrame;
-        }
-        else if (this.state == AirlockState.OPENING) {
-            this.state = AirlockState.CLOSING;
-            this.lastInteraction = state.currentFrame - (MAX_DOOR_OFFSET / 2) - DOOR_DELAY;
-        }
+        switch (this.state) {
+            case AirlockState.CLOSED:
+                this.state = AirlockState.OPENING;
+                this.lastInteraction = state.currentFrame;
+                break;
+            case AirlockState.OPEN:
+                this.state = AirlockState.CLOSING;
+                this.lastInteraction = state.currentFrame;
+                break;
+            case AirlockState.OPENING:
+                if ((state.currentFrame - this.lastInteraction) < DOOR_DELAY) this.state = AirlockState.CLOSED;
+                else {
+                    // Set state to CLOSING and set lastInteraction time to one that would put door at exactly its current position.
+                    let offset = this.doorOffset(state);
+                    this.state = AirlockState.CLOSING;
+                    this.lastInteraction = state.currentFrame - (MAX_DOOR_OFFSET - offset);
+                }
+                break;
+            case AirlockState.CLOSING:  // No change if door is closing.
+        };
         return this;
     }
 
@@ -82,21 +91,34 @@ export class Airlock implements Paintable {
         }
     }
 
+    // Compute the current door offset value.
+    doorOffset(state: IGlobalState): number {
+        let offset: number;
+        // Door offset calculation varies by air lock state.
+        let timeDelta = state.currentFrame - this.lastInteraction;
+        switch (this.state) {
+            case AirlockState.OPENING:
+                offset = timeDelta - DOOR_DELAY;
+                break;
+            case AirlockState.CLOSING:
+                offset = MAX_DOOR_OFFSET - timeDelta;
+                break;
+            case AirlockState.OPEN:
+                offset = MAX_DOOR_OFFSET;
+                break;
+            case AirlockState.CLOSED:
+                offset = 0;
+        };
+        // Clamp to legal range.
+        return Math.min(MAX_DOOR_OFFSET, Math.max(0, offset));
+    }
+
     // Paint the air lock on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState, shift: Coord = this.computeShift(state)): void {
         let base: Coord = this.pos.plus(MAP_TILE_SIZE / 2, 0);
         base = base.plus(shift.x, shift.y).toIntegers();
         canvas.save();
-        let doorOffset = 0;
-        if (this.state == AirlockState.OPENING) {
-            doorOffset = Math.max(0, state.currentFrame - this.lastInteraction - DOOR_DELAY);
-        }
-        else if (this.state == AirlockState.CLOSING) {
-            doorOffset = MAX_DOOR_OFFSET - Math.max(0, state.currentFrame - this.lastInteraction - DOOR_DELAY);
-        }
-        else if (this.state == AirlockState.OPEN) {
-            doorOffset = MAX_DOOR_OFFSET;
-        }
+        let doorOffset = this.doorOffset(state);
         //Left door
         canvas.drawImage(
             state.airlockDoorImage,             // Watering base source image
@@ -120,7 +142,7 @@ export class Airlock implements Paintable {
         canvas.restore();
     }
 
-    // Compute a displacement that will place the Plant at the correct place on the canvas.
+    // Compute a displacement that will place the air lock at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
         return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
     }
