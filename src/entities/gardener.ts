@@ -1,4 +1,4 @@
-import { IGlobalState, Collider, Paintable, Interactable, ColliderType, playBumpSound, getBumpedNPCs, detectCollisions } from '../store/classes';
+import { IGlobalState, Collider, Paintable, Interactable, ColliderType, playBumpSound, getBumpedNPCs, detectCollisions, AnimEvent, AnimEventType } from '../store/classes';
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
@@ -117,9 +117,7 @@ export class Gardener implements Paintable, Collider, Interactable {
         let newPos = this.pos.plus(shift.x, shift.y);        
         let flip = (this.facing === GardenerDirection.Left);
 
-        // The particular sprite cycle to use depends on what the gardener is currently doing.
-        if (state.gameover) paintSkeletonDeath(canvas, state, newPos, flip);
-        else if (this.death != null) this.paintDeath(canvas, state, shift, newPos, flip);
+        if (this.death != null) this.paintDeath(canvas, state, shift, newPos, flip);
         else if (this.watering) this.paintWatering(canvas, state, shift, newPos, flip);
         else this.paintWalking(canvas, state, shift, newPos, flip);
 
@@ -156,6 +154,8 @@ export class Gardener implements Paintable, Collider, Interactable {
                 console.log("asphyxiation current frame: "+ state.currentFrame + " death time: "+ this.death.time);
                 console.log("painting gardener asphyxiation, frame: "+ frame);
                 break;
+            case CausaMortis.Obliteration:
+                return paintSkeletonDeath(canvas, state, newPos, flip);
         }
     
         // Determine where, on the canvas, the gardener should be painted.
@@ -275,6 +275,9 @@ export class Gardener implements Paintable, Collider, Interactable {
 
 
 export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
+    if(state.gardener.death != null && !state.gameover){
+        return {...state, pendingEvents: [...state.pendingEvents, new AnimEvent(AnimEventType.GAMEOVER, state.currentFrame)]}
+    }
     if(!state.gardener.moving) {
       return state;
     }
