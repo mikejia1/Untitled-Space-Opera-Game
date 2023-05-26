@@ -175,14 +175,17 @@ export class NonPlayer implements Paintable, Collider {
         dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
-        
+        let shrink = 0;
+        if(this.death != null && this.death.cause == CausaMortis.Ejection){
+            shrink = Math.min(48, (state.currentFrame - this.death.time)*2);
+        }
         // Paint gardener sprite for current frame.
         canvas.drawImage(
             this.currentWalkCycleImage(state),  // The sprite sheet image
             (frame * 96) + 40, 20,              // Top-left corner of frame in source
             48, 48,                             // Size of frame in source
             dest.x, dest.y,                     // Position of sprite on canvas
-            48, 48);                            // Sprite size on canvas
+            48-shrink, 48-shrink);              // Sprite size on canvas
     
         // Restore canvas transforms to normal.
         canvas.restore();

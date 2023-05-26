@@ -2,7 +2,7 @@ import { ColliderType, IGlobalState } from "../store/classes";
 import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, Rect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, rectanglesOverlap } from "../utils";
 import { Gardener } from "./gardener";
 import { NonPlayer } from "./nonplayer";
-import { CausaMortis } from "./skeleton";
+import { CausaMortis, Death } from "./skeleton";
 
 // Murderous space cat
 export class Cat extends NonPlayer {
@@ -11,6 +11,7 @@ export class Cat extends NonPlayer {
     // initial cat rampage (they are charging at the player)
     rampage: boolean = true;
     startFrame: number = Math.floor(Math.random() * 15);
+    death: Death | null;
 
     constructor(params: any) {
         super(params);
@@ -18,6 +19,7 @@ export class Cat extends NonPlayer {
         this.colliderType = ColliderType.CatCo; // The type of collider that NPCs are.
         this.facing = Direction.Left;
         this.moving = true;
+        this.death = null;
     }
 
     // Paint the NPC on the canvas.
@@ -36,14 +38,19 @@ export class Cat extends NonPlayer {
         dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
+
+        let shrink = 0;
+        if(this.death != null && this.death.cause == CausaMortis.Ejection){
+            shrink = Math.min(40, (state.currentFrame - this.death.time)*2);
+        }
         
         // Paint gardener sprite for current frame.
         canvas.drawImage(
             state.catImage,                    // Walking base source image
-            frame * 40, this.color * 40,             // Top-left corner of frame in source
+            frame * 40, this.color * 40,       // Top-left corner of frame in source
             40, 40,                            // Size of frame in source
             dest.x, dest.y,                    // Position of sprite on canvas
-            40, 40);                           // Sprite size on canvas
+            40 - shrink, 40 - shrink);         // Sprite size on canvas
     
         // Restore canvas transforms to normal.
         canvas.restore();

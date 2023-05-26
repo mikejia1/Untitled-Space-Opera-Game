@@ -139,10 +139,15 @@ export function initialGameState(): IGlobalState {
   // Create the buttons that activate the sections of the blast shield.
   let shieldButtons = createShieldButtons();
   let airlockButton = new ShieldButton(0, new Coord(148, 234), 0, false);
+  colliderId++;
+  let gardener = initialGardener(colliderId);
+  colliderId++;
+  // Railing perfectly aligns with the "fake" one in the background image.
+  let railing = new Railing(new Coord(165, 231), colliderId); 
 
   return {
     gameover: false,
-    gardener: initialGardener(colliderId++),
+    gardener: gardener,
     keysPressed: [],
     score: 0,
     oxygen: 100,
@@ -154,7 +159,7 @@ export function initialGameState(): IGlobalState {
     airlockButton: airlockButton,
     shieldDoors: initialShieldDoor(),
     airlock: new Airlock(),
-    railing: new Railing(new Coord(165, 231), colliderId++), // Railing perfectly aligns with the "fake" one in the background image.
+    railing: railing,
     currentFrame: 0,
     gameoverFrame: 0,
     pendingEvents: getEvents(),

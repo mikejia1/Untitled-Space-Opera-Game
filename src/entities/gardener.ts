@@ -159,6 +159,9 @@ export class Gardener implements Paintable, Collider, Interactable {
                 break;
             case CausaMortis.Incineration:
                 return paintSkeletonDeath(canvas, state, newPos, flip);
+            case CausaMortis.Ejection:
+                image = state.gardenerImages.walkingBase;
+                frame = Math.floor(state.currentFrame % (6 * 8) / 6);
         }
     
         // Determine where, on the canvas, the gardener should be painted.
@@ -168,14 +171,18 @@ export class Gardener implements Paintable, Collider, Interactable {
         dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
-
+        let shrink = 0;
+        if(this.death != null && this.death.cause == CausaMortis.Ejection){
+            shrink = Math.min(48, (state.currentFrame - this.death.time)*2);
+            console.log("shrinking npc by "+shrink + " pixels");
+        }
         // Paint gardener sprite for current frame.
         canvas.drawImage(
             image,                             // Source image
             (frame * 96) + 40, 20,             // Top-left corner of frame in source
             48, 48,                            // Size of frame in source
             dest.x, dest.y,                    // Position of sprite on canvas
-            48, 48);                           // Sprite size on canvas
+            48 - shrink, 48 - shrink);                           // Sprite size on canvas
 
         // Restore canvas transforms to normal.
         canvas.restore();
