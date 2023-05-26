@@ -52,6 +52,7 @@ export function allCollidersFromState(state: IGlobalState): Map<number, Collider
     state.invisibleColliders.forEach(ic => map.set(ic.colliderId, ic));
     state.npcs.forEach(npc => map.set(npc.colliderId, npc));
     map.set(state.gardener.colliderId, state.gardener);
+    map.set(state.railing.colliderId, state.railing);
     return map;
 }
   
