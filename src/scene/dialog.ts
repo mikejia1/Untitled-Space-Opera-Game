@@ -70,3 +70,8 @@ export function updateDialogState(state : IGlobalState) : IGlobalState {
     dialogs[0].skipAnimation = state.currentFrame - dialogs[0].startFrame > dialogs[0].totalChars || dialogs[0].skipAnimation;
     return { ...state, dialogs: dialogs};
 }
+
+export function isDialogCurrentlyDisplayed(state : IGlobalState) : boolean {
+    if (state.gameover) return false;
+    return state.dialogs.length > 0 && state.dialogs[0].startFrame <= state.currentFrame;
+}
