@@ -44,7 +44,7 @@ export class AnimEvent {
     }
 }
 
-export const SUPERNOVA_DELAY = FPS*17;
+export const SUPERNOVA_DELAY = FPS*60;
 
 export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newPlants = state.plants;
@@ -179,6 +179,9 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         console.log("GAME OVER");
         gameover = true;
         gameoverFrame = state.currentFrame;
+        // clear remaining events.
+        newPendingEvents = [];
+        triggeredEvents = [];
     }
   }
   return {

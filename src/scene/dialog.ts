@@ -26,7 +26,7 @@ export class Dialog implements Paintable {
     }
 
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState) : void {
-        if (state.currentFrame < this.startFrame) return;
+        if (state.currentFrame < this.startFrame || state.gameover) return;
         let npc : NonPlayer = state.npcs[this.npcId];
         let base: Coord = this.pos;
         canvas.drawImage(

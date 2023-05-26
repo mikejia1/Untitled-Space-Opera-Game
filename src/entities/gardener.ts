@@ -148,11 +148,11 @@ export class Gardener implements Paintable, Collider, Interactable {
         let image = null;
         switch(this.death.cause){
             case CausaMortis.Laceration:
-                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 14);
+                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 14);
                 image = state.gardenerImages.slainDeath;
                 break;
             case CausaMortis.Asphyxiation:
-                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 13);
+                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 13);
                 image = state.gardenerImages.chokeDeath;
                 console.log("asphyxiation current frame: "+ state.currentFrame + " death time: "+ this.death.time);
                 console.log("painting gardener asphyxiation, frame: "+ frame);

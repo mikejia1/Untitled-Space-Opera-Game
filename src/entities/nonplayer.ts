@@ -217,9 +217,9 @@ export class NonPlayer implements Paintable, Collider {
         if (this.death != null){
             switch(this.death.cause){
                 case CausaMortis.Laceration:
-                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 14);
+                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 14);
                 case CausaMortis.Asphyxiation:
-                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 2), 13);
+                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 13);
                 case CausaMortis.Incineration:
                     // The walking animation has 20 frames. Stay on the initial skeleton frame for 10 frames,
                     let frameTicker = Math.max(state.currentFrame - state.gameoverFrame - 0, 0);

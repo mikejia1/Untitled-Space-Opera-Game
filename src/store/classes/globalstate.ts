@@ -145,7 +145,7 @@ export function initialGameState(): IGlobalState {
     gardener: initialGardener(colliderId++),
     keysPressed: [],
     score: 0,
-    oxygen: 50,
+    oxygen: 100,
     wateringCan: initialWateringCan(),
     plants: allPlants,
     npcs: npcs,
