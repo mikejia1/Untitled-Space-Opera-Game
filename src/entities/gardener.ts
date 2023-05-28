@@ -1,9 +1,9 @@
-import { IGlobalState, Collider, Paintable, Interactable, ColliderType, playBumpSound, getBumpedNPCs, detectCollisions, AnimEvent, AnimEventType, Lifeform } from '../store/classes';
+import { IGlobalState, Collider, Interactable, ColliderType, playBumpSound, getBumpedNPCs, detectCollisions, AnimEvent, AnimEventType, Lifeform } from '../store/classes';
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
-    ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, BACKGROUND_WIDTH, BACKGROUND_HEIGHT,
+    ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH,
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
-    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE,
+    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -34,57 +34,23 @@ export class Gardener implements Lifeform, Collider, Interactable {
         this.watering = watering;
         this.death = death;
     }
-    
-    opposingDirection(direction1: Direction, direction2: Direction){
-        switch(direction1) {
-            case Direction.Left:  return direction2 === Direction.Right;
-            case Direction.Right: return direction2 === Direction.Left;
-            case Direction.Up:    return direction2 === Direction.Down;
-            case Direction.Down:  return direction2 === Direction.Up;
+
+    // Check whether gardener is currently in collision with a plant.
+    isOnAPlant(state: IGlobalState): boolean {
+        for (let i = 0; i < state.plants.length; i++) {
+            if (rectanglesOverlap(this.collisionRect(), state.plants[i].collisionRect())) return true;
         }
+        return false;
     }
 
     // Move the gardener along the direction its currently facing. Return new gardener.
-    move(directions: Direction[]): Gardener {
-      var delta = [0,0]
-      // Diagonal gardener movement.
-      if(directions.length > 1 && !this.opposingDirection(directions[0], directions[1])){
-        const diagonalDirection = directions.slice(0,2);
-        if(diagonalDirection.includes(Direction.Up) && diagonalDirection.includes(Direction.Left)){
-            delta = [-GARDENER_DH_PIXEL_SPEED, -GARDENER_DV_PIXEL_SPEED];
-        }
-        else if(diagonalDirection.includes(Direction.Up) && diagonalDirection.includes(Direction.Right)){
-            delta = [GARDENER_DH_PIXEL_SPEED, -GARDENER_DV_PIXEL_SPEED];
-        }
-        else if(diagonalDirection.includes(Direction.Down) && diagonalDirection.includes(Direction.Left)){
-            delta = [-GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED];
-        }
-        else if(diagonalDirection.includes(Direction.Down) && diagonalDirection.includes(Direction.Right)){
-            delta = [GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED];
-        }
-      }
-      else {
-        switch (directions[0]) {
-            case Direction.Down:
-              delta = [0, GARDENER_V_PIXEL_SPEED];
-              break;
-            case Direction.Up:
-              delta = [0, -GARDENER_V_PIXEL_SPEED];
-              break;
-            case Direction.Left:
-              delta = [-GARDENER_H_PIXEL_SPEED, 0];
-              break;
-            case Direction.Right:
-              delta = [GARDENER_H_PIXEL_SPEED, 0];
-              break;
-          }
-      }
-      // Add deltas to gardener position and keep it within the background rectangle.
-      let newPos = new Coord(this.pos.x + delta[0], this.pos.y + delta[1]);
-      //let newPos = new Coord(
-      //  (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
-      //  (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
-      return new Gardener(this.colliderId, newPos, this.facing, this.itemEquipped, true, this.watering, this.death);
+    move(state: IGlobalState, directions: Direction[]): Gardener {
+        var slowFactor = this.isOnAPlant(state) ? 0.5 : 1;
+        var dir8 = directionsToDir8(directions); // Convert 1 or more Direction values to a single Dir8.
+        var delta = dir8ToDeltas(dir8, GARDENER_DH_PIXEL_SPEED * slowFactor, GARDENER_DV_PIXEL_SPEED * slowFactor);
+        // Add deltas to gardener position.
+        let newPos = new Coord(this.pos.x + delta[0], this.pos.y + delta[1]);
+        return new Gardener(this.colliderId, newPos, this.facing, this.itemEquipped, true, this.watering, this.death);
     }
 
     stop(): Gardener {
@@ -325,7 +291,7 @@ export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
     // Move the gardener according to keys pressed.
     // This will be aborted if the would-be new position overlaps with a plant.
     // Would-be new post-move gardener.
-    const newGar = state.gardener.move(state.keysPressed);
+    const newGar = state.gardener.move(state, state.keysPressed);
     let allColliders: Map<number, Collider> = state.colliderMap;
   
     // Get all colliders currently in collision with the gardener.

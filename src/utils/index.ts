@@ -327,6 +327,33 @@ export function directionCloseToDir8(direction: Direction, dir8: Dir8): boolean 
   }
 }
 
+// Convert a Direction to equivalent Dir8.
+function directionToDir8(direction: Direction): Dir8 {
+  switch (direction) {
+    case Direction.Up:    return Dir8.Up;
+    case Direction.Down:  return Dir8.Down;
+    case Direction.Left:  return Dir8.Left;
+    case Direction.Right: return Dir8.Right;
+  };
+}
+
+// Check if an array of 2 Direction values includes two given Direction values, regardless of order.
+function includesBoth(dirs: Direction[], d1: Direction, d2: Direction): boolean {
+  return dirs.includes(d1) && dirs.includes(d2);
+}
+
+// Return the Dir8 that results from the given array of Direction values (correspond to direction keys currently being pressed).
+export function directionsToDir8(directions: Direction[]): Dir8 {
+  if (directions.length === 1) return directionToDir8(directions[0]);
+  const diag = directions.slice(0, 2);
+  if (oppositeDirection(diag[0]) === diag[1]) return directionToDir8(directions[0]);
+  if (includesBoth(diag, Direction.Up, Direction.Right))    return Dir8.UpRight;
+  if (includesBoth(diag, Direction.Down, Direction.Right))  return Dir8.DownRight;
+  if (includesBoth(diag, Direction.Up, Direction.Left))     return Dir8.UpLeft;
+  if (includesBoth(diag, Direction.Down, Direction.Left))   return Dir8.DownLeft;
+  return directionToDir8(diag[0]); // Should never reach this.
+}
+
 // Get the direction (Up/Down/Left/Right) of first relative to second.
 export function directionOfFirstRelativeToSecond(first: Paintable | Coord, second: Paintable | Coord): Direction {
   let pos1: Coord = (first instanceof Coord) ? first : first.pos;
