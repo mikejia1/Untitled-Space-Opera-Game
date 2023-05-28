@@ -85,8 +85,8 @@ export class Airlock implements Paintable {
 
     deathRect(): Rect {
         return {
-            a: this.centre().plus(-10, -10),
-            b: this.centre().plus(10, 10),
+            a: this.centre().plus(-18, -18),
+            b: this.centre().plus(18, 18),
         }
     }
 
