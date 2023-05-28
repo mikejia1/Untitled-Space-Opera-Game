@@ -1,4 +1,4 @@
-import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect, GardenerDirection } from '../utils';
+import { Colour, positionRect, outlineRect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, shiftRect, shiftForTile, computeBackgroundShift, Coord, Rect, GardenerDirection, SHAKE_CAP } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Gardener } from './gardener';
@@ -52,7 +52,7 @@ export class WateringCan implements Paintable {
 
     // Compute a displacement that will place the Plant at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, SHAKE_CAP));
     }
 
     // Determine the grid tile that is the closest approximation to the watering can's position.

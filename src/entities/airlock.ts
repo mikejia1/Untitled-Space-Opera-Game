@@ -118,7 +118,7 @@ export class Airlock implements Paintable {
         base = base.plus(shift.x, shift.y).toIntegers();
         canvas.save();
         let doorOffset = this.doorOffset(state);
-        //Left door
+        // Left door
         canvas.drawImage(
             state.airlockDoorImage,             // Watering base source image
             64, 0,                              // Top-left corner of frame in source
@@ -126,7 +126,7 @@ export class Airlock implements Paintable {
             base.x - doorOffset - 32, base.y - 32,// Position of sprite on canvas
             64, 64);                            // Sprite size on canvas
 
-        //Right door
+        // Right door
         canvas.drawImage(
             state.airlockDoorImage,             // Watering base source image
             128, 0,                             // Top-left corner of frame in source
@@ -143,7 +143,7 @@ export class Airlock implements Paintable {
 
     // Compute a displacement that will place the air lock at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, 0));
     }
 
     // Determine the grid tile that is the closest approximation to the watering can's position.

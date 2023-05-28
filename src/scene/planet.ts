@@ -54,7 +54,7 @@ export class Planet implements Paintable {
         // Paint it.
         let sc = this.scale * tweak.shrink;
         let frame = this.computeAnimationFrame();
-        let shake = state.screenShaker.shakeDeterministic(state.currentFrame);
+        let shake = state.screenShaker.shake(state.currentFrame, 0);
         let paintSize = this.size * sc;
         let flipScale = this.flipped ? -1 : 1;
         let flipShift = this.flipped ? (this.size * sc) : 0;
@@ -133,9 +133,9 @@ export class Planet implements Paintable {
     }
 
     // Compute a displacement that will place the planet at the correct place on the canvas.
-    // Using deterministic shake to keep planet aligned with starfield and ship shake for good clipping.
+    // Using no-delta shake to keep planet aligned with starfield and ship shake for good clipping.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, true));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, 0));
     }
 
     // Determine the grid tile that is the closest approximation to the watering can's position.

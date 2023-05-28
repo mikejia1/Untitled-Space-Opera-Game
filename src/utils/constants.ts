@@ -73,3 +73,6 @@ export enum Colour {
 // Named constants for colours.
 export var GROWTH_TIME = FPS * 35;
 export var DEHYDRATION_TIME = FPS * 15;
+
+// Max horz & vert extra shake for non-background objects.
+export const SHAKE_CAP = 2.5;

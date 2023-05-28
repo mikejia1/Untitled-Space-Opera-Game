@@ -3,7 +3,7 @@ import {
   ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT, Colour, computeCurrentFrame, shiftForTile, shiftRect,
   positionRect, outlineRect, computeBackgroundShift, Coord, Rect, DEHYDRATION_TIME, GROWTH_TIME, rectanglesOverlap,
 } from '../utils';
-import { FPS } from '../utils/constants';
+import { FPS, SHAKE_CAP } from '../utils/constants';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 
@@ -115,7 +115,7 @@ export class Plant {
 
   // Compute a displacement that will place the Plant at the correct place on the canvas.
   computeShift(state: IGlobalState): Coord {
-    return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
+    return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, SHAKE_CAP));
   }
 
   // Determine the grid tile that is the closest approximation to the Gardener's position.

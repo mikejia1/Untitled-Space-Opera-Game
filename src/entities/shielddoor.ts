@@ -103,14 +103,13 @@ export class ShieldDoor implements Paintable {
 
     // Paint the shadows cast by the shield.
     paintShadows(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
-        let f = computeCurrentFrame();
         let shift = this.computeShift(state);
         let clipRect = {
             a: SHIP_INTERIOR_RECT.a.plus(shift.x, shift.y),
             b: SHIP_INTERIOR_RECT.b.plus(shift.x, shift.y),
         };
         for (let i = 0; i < 3; i++) {
-            this.paintShieldDoorShadows(i, canvas, state, f, shift, clipRect);
+            this.paintShieldDoorShadows(i, canvas, state, state.currentFrame, shift, clipRect);
         }
     }
 
@@ -418,7 +417,7 @@ export class ShieldDoor implements Paintable {
 
     // Compute a displacement that will place the blast shield at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(new Tile(0,0), state, computeBackgroundShift(state, true));
+        return shiftForTile(new Tile(0,0), state, computeBackgroundShift(state, 0));
     }
 
     // Trigger a specific door to being its CLOSING -> CLOSED -> OPENING -> OPEN animation sequence.

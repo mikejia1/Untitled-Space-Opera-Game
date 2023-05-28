@@ -46,7 +46,7 @@ export class BlackHole implements Paintable {
 
         // A lambda to draw the disc of material around the black hole.
         let disc = (): void => {
-            let shake = state.screenShaker.shakeDeterministic(state.currentFrame);
+            let shake = state.screenShaker.shake(state.currentFrame, 0);
             drawClippedImage(
                 canvas,
                 state.blackHoleImage,
@@ -157,9 +157,9 @@ export class BlackHole implements Paintable {
     }
 
     // Compute a displacement that will place the black hole at the correct place on the canvas.
-    // Using deterministic shake to keep black hole aligned with starfield and ship shake for good clipping.
+    // Using no-delta shake to keep black hole aligned with starfield and ship shake for good clipping.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, true));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, 0));
     }
 
     // Determine the grid tile that is the closest approximation to the watering can's position.

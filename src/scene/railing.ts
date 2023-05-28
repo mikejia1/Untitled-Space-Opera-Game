@@ -36,9 +36,9 @@ export class Railing implements Paintable, Collider {
     }
 
     // Compute a displacement that will place the railing at the correct place on the canvas.
-    // Using deterministic shake to keep railing aligned with ship interior background image.
+    // Using no-delta shake to keep railing aligned with ship interior background image.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, true));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, 0));
     }
 
     // Determine the grid tile that is the closest approximation to the railing's position.

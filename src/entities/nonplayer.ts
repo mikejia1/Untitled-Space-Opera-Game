@@ -10,6 +10,7 @@ import {
     directionCloseToDir8,
     dir8ToDeltas,
     randomDir8,
+    SHAKE_CAP,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -288,7 +289,7 @@ export class NonPlayer implements Lifeform, Collider {
 
     // Compute a displacement that will place the NPC at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, SHAKE_CAP));
     }
 
     // Determine the grid tile that is the closest approximation to the NPC's position.

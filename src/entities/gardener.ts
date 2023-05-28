@@ -3,7 +3,7 @@ import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH,
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
-    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap,
+    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap, SHAKE_CAP,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -225,7 +225,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
 
     // Compute a displacement that will place the Gardener at the correct place on the canvas.
     computeShift(state: IGlobalState): Coord {
-        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, false));
+        return shiftForTile(this.closestTile(), state, computeBackgroundShift(state, SHAKE_CAP));
     }
 
     // Determine the grid tile that is the closest approximation to the Gardener's position.

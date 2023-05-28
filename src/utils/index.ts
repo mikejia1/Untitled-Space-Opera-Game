@@ -121,9 +121,8 @@ export const drawState = (
   //canvas.scale(0.5, 0.5);     // Uncomment for god's eye view.
   //canvas.translate(100, 100); // Same here.
 
-  let shift = computeBackgroundShift(state, false);
-  let deterministicShift = computeBackgroundShift(state, true);
-  drawBackground(state, shift, deterministicShift, canvas);
+  let shift = computeBackgroundShift(state, 0); // A no-delta shift.
+  drawBackground(state, shift, canvas);
 
   drawPaintablesNotBehindShip(canvas, state);
 
@@ -158,11 +157,11 @@ function drawAmbientShade(state: IGlobalState, canvas: CanvasRenderingContext2D)
 
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle. This includes any screen shake.
-export function computeBackgroundShift(state: IGlobalState, deterministic: boolean): Coord {
+export function computeBackgroundShift(state: IGlobalState, deltaCap: number): Coord {
   let shift = computeBackgroundShiftWithoutShake(state);
 
   // Let the screenShaker do its thing.
-  let shake = deterministic ? state.screenShaker.shakeDeterministic(state.currentFrame) : state.screenShaker.shake();
+  let shake = state.screenShaker.shake(state.currentFrame, deltaCap);
   shift = shift.plus(shake.x, shake.y);
 
   return shift.toIntegers();
@@ -232,28 +231,26 @@ export function rectanglesOverlap(rect1: any, rect2: any): boolean {
 // First paint it in the WrapSector.Middle or "normal" position/sector.
 // If any of the WrapSector.Left copy of the world should be visible, paint a copy there as well.
 // If any of the WrapSector.Right copy of the world should be visible, paint a copy there as well.
-function drawBackground(state: IGlobalState, shift: Coord, deterministicShift: Coord, canvas: CanvasRenderingContext2D): void {
-  drawShiftedBackground(state, canvas, shift, deterministicShift);
+function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
+  drawShiftedBackground(state, canvas, shift);
   // A ring-world background image wider than the canvas. 
   if (BACKGROUND_WIDTH > CANVAS_WIDTH) {
     if (shift.x >= 0) {
       let reshift = shift.minus(BACKGROUND_WIDTH, 0);
-      let deterministicReshift = deterministicShift.minus(BACKGROUND_WIDTH, 0);
-      drawShiftedBackground(state, canvas, reshift, deterministicReshift);
+      drawShiftedBackground(state, canvas, reshift);
     } else if ((shift.x + BACKGROUND_WIDTH) < CANVAS_WIDTH) {
       let reshift = shift.plus(BACKGROUND_WIDTH, 0);
-      let deterministicReshift = deterministicShift.plus(BACKGROUND_WIDTH, 0);
-      drawShiftedBackground(state, canvas, reshift, deterministicReshift);
+      drawShiftedBackground(state, canvas, reshift);
     }
   } else {
     // A narrow bounded map that is not wider than the canvas.
-      drawShiftedBackground(state, canvas, shift, deterministicShift);
+      drawShiftedBackground(state, canvas, shift);
   }
 }
 
-function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord, deterministicShift: Coord) {
+function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord) {
   // Draw the starfield visible through the ship's window.
-  drawStarfield(state, canvas, deterministicShift);
+  drawStarfield(state, canvas, shift);
   // Draw objects that are in space, visible through the window.
   drawSpaceObjects(state, canvas);
   // Draw the blast shield.
@@ -261,9 +258,9 @@ function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingConte
   // Draw life forms that are being expelled through the air lock.
   drawLifeformsBehindShip(canvas, state);
   // Draw the airlock doors.
-  state.airlock.paint(canvas, state, deterministicShift);
+  state.airlock.paint(canvas, state, shift);
   // Draw the static background of the ship interior.
-  canvas.drawImage(state.backgroundImages.default, deterministicShift.x, deterministicShift.y);
+  canvas.drawImage(state.backgroundImages.default, shift.x, shift.y);
 }
 
 // Draw objects that are in space, visible through the window.

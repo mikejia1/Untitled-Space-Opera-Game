@@ -1,9 +1,6 @@
 import { FPS } from "./constants";
 import { Coord } from "./coord";
 
-// Max horz and vert shake displacement for non-background objects.
-const SHAKE_MAX = 2.5;
-
 // A Shaker that is used to shake the screen.
 export class Shaker {
   magnitude: number;  // How big can the shake deltas get?
@@ -14,24 +11,15 @@ export class Shaker {
     this.speed = speed;
   }
 
-  // Return a shake delta in the form of a Coord.
-  shake(): Coord {
-      let t = Date.now();
-      let x = Math.sin(t * this.speed) * this.magnitude;
-      let y = Math.cos(t * this.speed * 0.777) * this.magnitude;
-      return new Coord(
-          Math.max(-SHAKE_MAX, Math.min(SHAKE_MAX, x)),
-          Math.max(-SHAKE_MAX, Math.min(SHAKE_MAX, y))
-      );
-  }
-
-  // Returns a shake delta that is based on a given frame number.
-  shakeDeterministic(frameNumber: number): Coord {
+  // Return shake delta for given frame number, plus capped-magnitude additional delta.
+  shake(frameNumber: number, deltaCap: number): Coord {
     let t = frameNumber * FPS;
-    return new Coord(
+    let shake = new Coord(
         Math.sin(t * this.speed) * this.magnitude,
         Math.cos(t * this.speed * 0.777) * this.magnitude
     );
+    let delta = shake.times(2);
+    return shake.plus(Math.min(delta.x, deltaCap), Math.min(delta.y, deltaCap));
   }
 }
 
