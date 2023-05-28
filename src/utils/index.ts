@@ -400,6 +400,16 @@ export function shiftRect(rect: Rect, deltaX: number, deltaY: number): Rect {
   };
 }
 
+// Given a rectangle, return a new one that is stretched by factors x and y (horz, vert) away from top-left corner.
+export function stretchRect(rect: Rect, x: number, y: number): Rect {
+  return {
+    a: rect.a,
+    b: new Coord(
+      rect.a.x + ((rect.b.x - rect.a.x) * x),
+      rect.a.y + ((rect.b.y - rect.a.y) * y)),
+  };
+}
+
 // Given a rectangle, return a new one that is shifted to be in the correct WrapSector for visibility on canvas.
 export function shiftForVisibleRect(rect: Rect, shift: Coord): Rect {
   let leftRect = {

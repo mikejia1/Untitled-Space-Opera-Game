@@ -3,7 +3,7 @@ import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH,
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
-    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap, SHAKE_CAP,
+    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap, SHAKE_CAP, stretchRect,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -13,6 +13,12 @@ import { drawText } from '../utils/drawtext';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
+
+// Max length factor when stretching the water part of the watering sprites.
+const MAX_WATER_STRETCH = 3;
+
+// Controls water pulsing speed. Larger number is faster.
+const WATER_PULSE_SPEED = 0.4;
 
 // The gardener who tends the garden.
 export class Gardener implements Lifeform, Collider, Interactable {
@@ -101,7 +107,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
             outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
         }
         if (state.debugSettings.showFacingRects) {
-            outlineRect(canvas, shiftRect(this.facingDetectionRect(), shift.x, shift.y), Colour.FACING_RECT);
+            outlineRect(canvas, shiftRect(this.facingDetectionRect(this.watering, state.currentFrame), shift.x, shift.y), Colour.FACING_RECT);
         }
         if (state.debugSettings.showInteractionRects) {
             outlineRect(canvas, shiftRect(this.interactionRect(), shift.x, shift.y), Colour.INTERACTION_RECT);
@@ -201,6 +207,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
         let dest = flip
             ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
             : new Coord(newPos.x - 3, newPos.y - 18);
+        let xScale = flip ? -1 : 1;
         dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
@@ -212,13 +219,28 @@ export class Gardener implements Lifeform, Collider, Interactable {
             48, 48,                             // Size of frame in source
             dest.x, dest.y,                     // Position of sprite on canvas
             48, 48);                            // Sprite size on canvas
+        let w = 18; // Width that keeps the water can, but cuts off the water.
         canvas.drawImage(
             state.gardenerImages.waterPouring,  // Pouring water and watering can
             (frame * 96) + 40, 20,              // Top-left corner of frame in source
-            48, 48,                             // Size of frame in source
+            w, 48,                             // Size of frame in source
             dest.x, dest.y,                     // Position of sprite on canvas
-            48, 48);                            // Sprite size on canvas
+            w, 48);                            // Sprite size on canvas
     
+        // Where the water part of the sprite is.
+        // let testRect = {
+        //     a: flip ? dest.plus(30, 10) : dest.plus(17, 10),
+        //     b: flip ? dest.plus(17, 20) : dest.plus(30, 20),
+        // };
+
+        let pulse = this.currentWaterPulseFactor(state.currentFrame);
+        canvas.drawImage(
+            state.gardenerImages.waterPouring,  // Pouring water and watering can
+            (frame * 96) + 40 + w, 20,          // Top-left corner of frame in source
+            48 - w, 48,                         // Size of frame in source
+            dest.x + w, dest.y,                     // Position of sprite on canvas
+            (48 - w) * pulse, 48);                            // Sprite size on canvas
+
         // Restore canvas transforms to normal.
         canvas.restore();
     }
@@ -251,12 +273,18 @@ export class Gardener implements Lifeform, Collider, Interactable {
     }
 
     // Return a rectangle adjacent to the gardener in the direction it is facing.
-    facingDetectionRect(): Rect {
+    facingDetectionRect(pulseStretch: boolean, frame: number = 0): Rect {
         let rect = this.collisionRect();
-       switch (this.facing) {
-        case GardenerDirection.Left:  return shiftRect(rect, -ENTITY_RECT_WIDTH, 0);
-        case GardenerDirection.Right: return shiftRect(rect, ENTITY_RECT_WIDTH, 0);
-       }
+        let pulse = pulseStretch ? this.currentWaterPulseFactor(frame) : 1;
+        switch (this.facing) {
+            case GardenerDirection.Left:  return stretchRect(shiftRect(rect, -ENTITY_RECT_WIDTH * pulse, 0), pulse, 1);
+            case GardenerDirection.Right: return stretchRect(shiftRect(rect, ENTITY_RECT_WIDTH, 0), pulse, 1);
+        }
+    }
+
+    // Get current stretch factor for water pulsing.
+    currentWaterPulseFactor(frame: number): number {
+        return ((1 + MAX_WATER_STRETCH) / 2) + (Math.sin(frame * WATER_PULSE_SPEED) * ((MAX_WATER_STRETCH - 1) / 2));
     }
 
     // Have the gardener die.

@@ -252,7 +252,7 @@ function toggleEquip(state: IGlobalState): IGlobalState {
 // Check whether or not an item can be equipped right now.
 function canEquip(state: IGlobalState): boolean {
   // Rectangle for the direction the gardener is facing.
-  let faceRect = state.gardener.facingDetectionRect();
+  let faceRect = state.gardener.facingDetectionRect(false); // Facing rect with no pulsating stretch factor.
   let rect = state.wateringCan.equipRect();
   return rectanglesOverlap(faceRect, rect);
 }
@@ -279,7 +279,7 @@ function utiliseItem(state: IGlobalState): IGlobalState {
   }
   var newPlants: Plant[] = [];
   var newNPCs: NonPlayer[] = [];
-  let faceRect = state.gardener.facingDetectionRect();
+  let faceRect = state.gardener.facingDetectionRect(true, state.currentFrame);  // Facing rect that is stretched to match pulsating water.
 
   // Water a single plant if close enough.
   let alreadyAbsorbed = false;
