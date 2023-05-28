@@ -20,17 +20,17 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     if (!blackHoleFarAlready) {
         if ((newPlanet1 === null) && chance1) {
             let choice = randomInt(0, state.planets.length - 1);
-            console.log("Welcome planet 1, type " + choice);
+            //console.log("Welcome planet 1, type " + choice);
             newPlanet1 = state.planets[choice].randomizedClone();
         }
         if ((newPlanet2 === null) && chance2 && (newPlanet1 !== null) && ((f - newPlanet1.startFrame) > 150)) {
             let choice = randomInt(0, state.planets.length - 1);
-            console.log("Welcome planet 2, type " + choice);
+            //console.log("Welcome planet 2, type " + choice);
             newPlanet2 = state.planets[choice].randomizedClone();
         }
         if ((newPlanet3 === null) && chance3 && (newPlanet2 !== null) && ((f - newPlanet2.startFrame) > 150)) {
             let choice = randomInt(0, state.planets.length - 1);
-            console.log("Welcome planet 3, type " + choice);
+            //console.log("Welcome planet 3, type " + choice);
             newPlanet3 = state.planets[choice].randomizedClone();
         }
     }
@@ -38,15 +38,15 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     // Remove planets that have drifted out of view.
     if ((newPlanet1 !== null) && newPlanet1.isFinished()) {
         newPlanet1 = null;
-        console.log("Goodbye planet 1!");
+        //console.log("Goodbye planet 1!");
     }
     if ((newPlanet2 !== null) && newPlanet2.isFinished()) {
         newPlanet2 = null;
-        console.log("Goodbye planet 2!");
+        //console.log("Goodbye planet 2!");
     }
     if ((newPlanet3 !== null) && newPlanet3.isFinished()) {
         newPlanet3 = null;
-        console.log("Goodbye planet 3!");
+        //console.log("Goodbye planet 3!");
     }
     return { ...state, blackHole: newBlackHole, planet1: newPlanet1, planet2: newPlanet2, planet3: newPlanet3 };
 
