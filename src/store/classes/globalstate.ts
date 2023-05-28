@@ -33,13 +33,17 @@ import scarednpcwalkcycle   from "../../entities/images/nonplayer/scared_npcwalk
 import npcslainstrip        from "../../entities/images/nonplayer/npc_slain.png"; 
 import npcchokestrip        from "../../entities/images/nonplayer/npc_choke.png";
 
+// Cat images.
+import catswalkcycle        from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
+import catattack            from "../../entities/images/cats/cats_attack_40p_4f.png";
+import catdeath             from "../../entities/images/cats/cats_melt_40p_12f.png";
+
 // Ship interior images.
 import spacegarden          from "../images/space_garden.png";
 import spacegardenimpact    from "../images/space_garden_impact.png";
 import airlockrailing       from "../images/air_lock_railing.png";
 
 // Other images.
-import catswalkcycle        from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
 import gameoverImg          from "../images/gameover.png";
 import replayPrompt         from "../images/replay_prompt.png";
 import blackHoleImg         from "../images/drifting_planets/planet_black_hole_256px_30f.png";
@@ -50,7 +54,11 @@ import airlockDoors         from "../../entities/images/airlock/airlock_doors_64
 import dialogBox            from "../images/dialog.png";
 
 // Plant image.
-import plantimage from "../../entities/images/plant/plants_16x16.png";
+import plantimage       from "../../entities/images/plant/plants_16x16.png";
+import plantcoinsprite  from "../../entities/images/plant/coin_generation_16x32p_8f.png";
+
+// Coin image.
+import coinimage        from "../../entities/images/coin/coin_16p_8f.png";
 
 // Drifting planet images.
 import crateredPlanetImg from "../images/drifting_planets/planet_cratered_256px_60f.png";
@@ -85,7 +93,7 @@ export interface IGlobalState {
     dialogs: Dialog[];                  // Dialogs to display
     skeleton: any;                      // The skeleton death animation.
     ghost: any;                         // The ghost animation.
-    catImage: any;                      // The cat walk cycle animation.
+    catImages: any;                     // Source images for cat sprites.
     gardenerImages: any;                // Source images for gardener sprites.
     shieldImages: any;                  // Source images for the blast shield image.
     shieldButtonImage: any;             // Source image for the shield button animation.
@@ -93,7 +101,8 @@ export interface IGlobalState {
     npcImages: any;                     // The NPC walkcycle sprite source images.
     backgroundImages: any;              // The background image.
     wateringCanImage: any;              // The watering can image.
-    plantImage: any;                    // The plant image.
+    plantImages: any;                   // The plant image.
+    coinImage: any;                     // The coin image.
     gameOverImage: any,                 // The game over image
     replayImage: any,                   // The replay prompt image
     blackHoleImage: any,                // Images containing animation frames for the black hole
@@ -181,7 +190,11 @@ export function initialGameState(): IGlobalState {
     },
     skeleton:       loadImage("Skeleton death", skeleton),
     ghost:          loadImage("Ghost wabble cycle", ghost),
-    catImage:       loadImage("Cat walk cycle", catswalkcycle),
+    catImages:       {
+      run:      loadImage("Cat walk cycle", catswalkcycle),
+      death:    loadImage("Cat death strip", catdeath),
+      attack:   loadImage("Cat attack strip", catattack),
+    },
     npcImages:       {
       normalWalkCycle:    loadImage("Normal NPC walk cycle", npcwalkcycle),
       frazzledWalkCycle:  loadImage("Frazzled NPC walk cycle", frazzlednpcwalkcycle),
@@ -206,7 +219,11 @@ export function initialGameState(): IGlobalState {
     dialogImage:        loadImage("Dialog box", dialogBox),
     shieldButtonImage:  loadImage("Shield button", shieldButton),
     airlockDoorImage:   loadImage("Airlock doors", airlockDoors),
-    plantImage:         loadImage("Plant image", plantimage),
+    plantImages:  {
+      base: loadImage("Plant image", plantimage),
+      coinGeneration: loadImage("Coin generation", plantcoinsprite),
+    },
+    coinImage: loadImage("Coin image", coinimage),
     gameOverImage:      loadImage("Game over", gameoverImg),
     replayImage:        loadImage("Replay prompt", replayPrompt),
     blackHoleImage:     loadImage("Black hole", blackHoleImg),

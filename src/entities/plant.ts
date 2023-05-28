@@ -95,7 +95,7 @@ export class Plant {
     let newPos = this.pos.plus(shift.x, shift.y);
       // Paint plant.
       canvas.drawImage(
-        state.plantImage,                           // Plant base image
+        state.plantImages.base,                           // Plant base image
         ((this.growthStage) * 16), this.health * 16,// Top-left corner of frame in source
         16, 16,                                     // Size of frame in source
         newPos.x-2, newPos.y - 10,                  // Position of sprite on canvas. Offsets were manually adjusted to align with collision box

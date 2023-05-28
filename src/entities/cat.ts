@@ -56,7 +56,7 @@ export class Cat extends NonPlayer {
         
         // Paint gardener sprite for current frame.
         canvas.drawImage(
-            state.catImage,                                             // Walking base source image
+            state.catImages.run,                                             // Walking base source image
             frame * 40, this.color * 40,                                // Top-left corner of frame in source
             40, 40,                                                     // Size of frame in source
             dest.x + (shiftToCentre * xScale), dest.y + shiftToCentre,  // Position of sprite on canvas
