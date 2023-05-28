@@ -125,20 +125,29 @@ export class NonPlayer implements Lifeform, Collider {
         this.death = other.death;
     }
 
+    // An dummy far-distant off-screen Rect that can be used for off-screen NPCs. Won't overlap with anything.
+    dummyRect(): Rect {
+        let uniq = -1000 * (this.id + 1);
+        return {
+            a: new Coord(uniq, 0),
+            b: new Coord(uniq + 2, 0),
+        };
+    }
+
     // Return the invisible rectangle that determines collision behaviour for the NPC.
     collisionRect(): Rect {
-        // An off-screen NPC should have a far distant collision rect that won't interfere with anything.
-        // A tiny little square at a very distant location unique to the NPC.
-        if (this.isOffScreen) {
-            let uniq = -1000 * (this.id + 1);
-            return {
-                a: new Coord(uniq, 0),
-                b: new Coord(uniq + 2, 0),
-            };
-        }
-        // Otherwise, use the proper collision rect.
+        if (this.isOffScreen) return this.dummyRect();
         return {
             a: this.pos.plus(0, -ENTITY_RECT_HEIGHT),
+            b: this.pos.plus(ENTITY_RECT_WIDTH, 0),
+        };
+    }
+
+    // Return the invisible rectangle that determines interaction behaviour (splash with water) for the NPC.
+    interactionRect(): Rect {
+        if (this.isOffScreen) return this.dummyRect();
+        return {
+            a: this.pos.plus(0, -ENTITY_RECT_WIDTH),
             b: this.pos.plus(ENTITY_RECT_WIDTH, 0),
         };
     }
@@ -212,6 +221,9 @@ export class NonPlayer implements Lifeform, Collider {
         }
         if (state.debugSettings.showPositionRects) {
             outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
+        }
+        if (state.debugSettings.showInteractionRects) {
+            outlineRect(canvas, shiftRect(this.interactionRect(), shift.x, shift.y), Colour.INTERACTION_RECT);
         }
     }
 
@@ -437,6 +449,19 @@ export class NonPlayer implements Lifeform, Collider {
         });
     }
 
+    // Cure an NPC of its cabin fever.
+    cureCabinFever(): NonPlayer {
+        this.hasCabinFever = false;
+        this.mentalState = MentalState.Normal;
+        this.gardenerAvoidanceCountdown = 0;
+        this.suicideCountdown = 0;
+        this.contemplateDeathCountdown = 0;
+        this.hasReachedAirLockButton = false;
+        this.readyToPushAirLockButton = false;
+        this.isHeadingTowardAirLockDoom = false;
+        return this;
+    }
+
     // Bring an invisible off-screen NPC back to the garden.
     comeBackOnScreen(): NonPlayer {
         return new NonPlayer({
@@ -535,7 +560,7 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
         let postMoveNPC = moveNPC(state, newNPC);
 
         // Check if it now collides with anything.
-        let collided = collisionDetected(state, /*allColliders,*/ postMoveNPC);
+        let collided = collisionDetected(state, postMoveNPC);
 
         // If the NPC is colliding, revert to pre-move state.
         newNPC = collided ? newNPC : postMoveNPC;

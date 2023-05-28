@@ -3,7 +3,7 @@
 
 import { Direction, computeCurrentFrame, rectanglesOverlap } from "../../utils";
 import { GAMEOVER_RESTART_TIME, IGlobalState, activateAirlockButton, allCollidersFromState, initialGameState, updateAnimEventState } from "../classes";
-import { Airlock, AirlockState, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
+import { Airlock, AirlockState, MentalState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
 import { updateCatState } from "../../entities/cat";
 import { updateHeavenlyBodyState } from "../../entities/heavenlybody";
 import {
@@ -278,7 +278,10 @@ function utiliseItem(state: IGlobalState): IGlobalState {
     return utiliseNearbyItem(state);
   }
   var newPlants: Plant[] = [];
+  var newNPCs: NonPlayer[] = [];
   let faceRect = state.gardener.facingDetectionRect();
+
+  // Water a single plant if close enough.
   let alreadyAbsorbed = false;
   for (let i = 0; i < state.plants.length; i++) {
     let plant = state.plants[i];
@@ -286,16 +289,33 @@ function utiliseItem(state: IGlobalState): IGlobalState {
     if (!alreadyAbsorbed && rectanglesOverlap(faceRect, plantRect)) {
       newPlants = [...newPlants, plant.absorbWater()];
       alreadyAbsorbed = true;
-    } else {
-      newPlants = [...newPlants, plant];
-    }
+    } else newPlants = [...newPlants, plant];
   }
 
-  return {
+  // Cure a single NPC of cabin fever if close enough.
+  let alreadyCured = false;
+  for (let i = 0; i < state.npcs.length; i++) {
+    let npc = state.npcs[i];
+    if (npc.mentalState !== MentalState.Frazzled) {
+      newNPCs = [...newNPCs, npc];
+      continue;
+    }
+    let npcRect = npc.interactionRect();
+    if (!alreadyCured && rectanglesOverlap(faceRect, npcRect)) {
+      newNPCs = [...newNPCs, npc.cureCabinFever()];
+    } else newNPCs = [...newNPCs, npc];
+  }
+
+  let s = {
     ...state,
     plants: newPlants,
+    npcs: newNPCs,
     gardener: state.gardener.setWatering(true),
   };
+  return {
+    ...s,
+    colliderMap: allCollidersFromState(s),
+  }
 }
 
 function utiliseNearbyItem(state: IGlobalState): IGlobalState {
