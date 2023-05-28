@@ -18,8 +18,9 @@ export class Shaker {
         Math.sin(t * this.speed) * this.magnitude,
         Math.cos(t * this.speed * 0.777) * this.magnitude
     );
-    let delta = shake.times(2);
-    return shake.plus(Math.min(delta.x, deltaCap), Math.min(delta.y, deltaCap));
+    return shake.plus(
+      Math.max(Math.min(shake.x, deltaCap), -deltaCap),
+      Math.max(Math.min(shake.y, deltaCap), -deltaCap));
   }
 }
 
