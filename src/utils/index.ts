@@ -3,7 +3,7 @@ import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/positio
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
   BACKGROUND_WIDTH, BACKGROUND_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT, Direction, ALL_DIRECTIONS,
-  Colour, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, FPS,
+  ALL_DIR8S, Colour, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, FPS, Dir8,
  } from "./constants";
  import { Coord } from './coord';
  import { Rect } from './rect';
@@ -294,8 +294,37 @@ export function randomDirection(): Direction {
   return ALL_DIRECTIONS[randomInt(0, ALL_DIRECTIONS.length - 1)];
 }
 
+export function randomDir8(): Dir8 {
+  return ALL_DIR8S[randomInt(0, ALL_DIR8S.length - 1)];
+}
+
 export function randLeftOrRight(): Direction {
   return (randomInt(0, 99) < 50) ? Direction.Left : Direction.Right;
+}
+
+// Return an [x,y] deltas array for a given Dir8, horizontal speed, and vertical speed.
+const RT2 = 1.41421356237;
+export function dir8ToDeltas(d: Dir8, h: number, v: number): number[] {
+  switch (d) {
+    case Dir8.Up:         return [ 0,       -v      ];
+    case Dir8.UpRight:    return [ h / RT2, -v / RT2];
+    case Dir8.Right:      return [ h,        0      ];
+    case Dir8.DownRight:  return [ h / RT2,  v / RT2];
+    case Dir8.Down:       return [ 0,        v      ];
+    case Dir8.DownLeft:   return [-h / RT2,  v / RT2];
+    case Dir8.Left:       return [-h,        0      ];
+    case Dir8.UpLeft:     return [-h / RT2, -v / RT2];
+  };
+}
+
+// Return true iff given Direction is within 45 degrees of given Dir8.
+export function directionCloseToDir8(direction: Direction, dir8: Dir8): boolean {
+  switch (direction) {
+    case Direction.Up:    return (dir8 === Dir8.UpLeft    || dir8 === Dir8.Up     || dir8 === Dir8.UpRight);
+    case Direction.Right: return (dir8 === Dir8.UpRight   || dir8 === Dir8.Right  || dir8 === Dir8.DownRight);
+    case Direction.Down:  return (dir8 === Dir8.DownRight || dir8 === Dir8.Down   || dir8 === Dir8.DownLeft);
+    case Direction.Left:  return (dir8 === Dir8.DownLeft  || dir8 === Dir8.Left   || dir8 === Dir8.UpLeft);
+  }
 }
 
 // Get the direction (Up/Down/Left/Right) of first relative to second.

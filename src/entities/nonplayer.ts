@@ -6,6 +6,10 @@ import {
     Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond,
     computeCurrentFrame, FPS, oppositeDirection, rectanglesOverlap, randLeftOrRight,
     EJECTION_SHRINK_RATE,
+    Dir8,
+    directionCloseToDir8,
+    dir8ToDeltas,
+    randomDir8,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -32,7 +36,7 @@ export enum MentalState {
 
 export class NonPlayer implements Lifeform, Collider {
     pos: Coord;                             // NPC's current location, in pixels, relative to background image.
-    facing: Direction;                      // The direction that the NPC is currently facing.
+    facing: Dir8;                           // The direction that the NPC is currently facing.
     stationeryCountdown: number;            // A countdown (measured in frames) for when the NPC stands still.
     moving: boolean;                        // Whether or not the NPC is currently walking (vs standing still).
     isOffScreen: boolean;                   // Whether or not the NPC is "gone" off screen, to return at a later time.
@@ -56,7 +60,7 @@ export class NonPlayer implements Lifeform, Collider {
         // Some default values to satisfy the requirement that everything be initialized in the constructor.
         this.colliderId = 8675309;                      // A dummy collider ID, meant to be overwritten.
         this.pos = new Coord(50, 50);                   // A dummy position, meant to be overwritten.
-        this.facing = randomDirection();                // Choose a random facing direction.
+        this.facing = randomDir8();                     // Choose a random facing direction.
         this.stationeryCountdown = 0;                   // Start with NPC not standing still.
         this.moving = true;                             // Start with NPC moving.
         this.isOffScreen = false;                       // Start with NPC on screen.
@@ -186,7 +190,7 @@ export class NonPlayer implements Lifeform, Collider {
         let shift = this.computeShift(state);
         let newPos = this.pos.plus(shift.x, shift.y);
         newPos = newPos.plus(0, jitter);
-        let flip = (this.facing === Direction.Left);
+        let flip = directionCloseToDir8(Direction.Left, this.facing) || this.facing === Dir8.Up;    // 4 of 8 directions.
         let xScale = flip ? -1 : 1;
         newPos = (dialog != null) ? dialog : newPos;
 
@@ -316,22 +320,8 @@ export class NonPlayer implements Lifeform, Collider {
                 hPixelSpeed = Math.floor(NPC_H_PIXEL_SPEED * 2.5);
                 break;
         }
-        var delta = [0,0]
-        switch (this.facing) {
-            case Direction.Down:
-            delta = [0, vPixelSpeed];
-            break;
-            case Direction.Up:
-            delta = [0, -vPixelSpeed];
-            break;
-            case Direction.Left:
-            delta = [-hPixelSpeed, 0];
-            break;
-            case Direction.Right:
-            delta = [hPixelSpeed, 0];
-             break;
-        }
-        // Add deltas to NPC position and keep it within the background rectangle.
+        // Add directional deltas to NPC position and keep it within the background rectangle.
+        var delta = dir8ToDeltas(this.facing, hPixelSpeed, vPixelSpeed);
         let newPos = new Coord(
             this.pos.x + delta[0],
             this.pos.y + delta[1]
@@ -619,7 +609,7 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
           // it's time to force a direction change.
           if (npc.gardenerAvoidanceCountdown > 0) {
             let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
-            if (badDir === npc.facing) change = true;
+            if (directionCloseToDir8(badDir, npc.facing)) change = true;
             else change = (Math.random() < 0.02);
           } else change = (Math.random() < 0.02);
           break;
@@ -627,7 +617,7 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         case MentalState.Frazzled:
           if (npc.isHeadingTowardAirLockDoom) {
             let deathDir = directionOfFirstRelativeToSecond(state.airlock.centre(), npc);
-            if (deathDir === npc.facing) change = false;
+            if (directionCloseToDir8(deathDir, npc.facing)) change = false;
             else change = true;
           } else change = (Math.random() < 0.6);
           break;
@@ -637,7 +627,7 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
           // it's time to force a direction change.
           if (npc.gardenerAvoidanceCountdown > 0) {
             let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
-            if (badDir === npc.facing) change = true;
+            if (directionCloseToDir8(badDir, npc.facing)) change = true;
             else change = (Math.random() < 0.2);
           } else change = (Math.random() < 0.2);
           break;

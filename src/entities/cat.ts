@@ -1,5 +1,5 @@
 import { ColliderType, IGlobalState } from "../store/classes";
-import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, Rect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, rectanglesOverlap, EJECTION_SHRINK_RATE } from "../utils";
+import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, Rect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, rectanglesOverlap, EJECTION_SHRINK_RATE, dir8ToDeltas, directionCloseToDir8, Dir8 } from "../utils";
 import { Gardener } from "./gardener";
 import { NonPlayer } from "./nonplayer";
 import { CausaMortis, Death } from "./skeleton";
@@ -17,7 +17,7 @@ export class Cat extends NonPlayer {
         super(params);
         this.color = params.color;
         this.colliderType = ColliderType.CatCo; // The type of collider that NPCs are.
-        this.facing = Direction.Left;
+        this.facing = Dir8.Left;
         this.moving = true;
         this.death = null;
     }
@@ -38,7 +38,7 @@ export class Cat extends NonPlayer {
         let frame = this.moving ? Math.floor((state.currentFrame + this.startFrame) % (2 * frameCount) / 2) : 0;
         let shift = this.computeShift(state);
         let newPos = this.pos.plus(shift.x, shift.y);
-        let flip = (this.facing === Direction.Left);
+        let flip = directionCloseToDir8(Direction.Left, this.facing) || this.facing === Dir8.Up;   // 4 of 8 directions.
 
         // Determine where, on the canvas, the cat should be painted.
         let dest = flip
@@ -83,22 +83,8 @@ export class Cat extends NonPlayer {
 
     // Let the NPC move. Randomly (more or less). Returns new updated version of the NPC.
     move(): Cat {
-        var delta = [0,0]
-        switch (this.facing) {
-            case Direction.Down:
-            delta = [0, CAT_V_PIXEL_SPEED];
-            break;
-            case Direction.Up:
-            delta = [0, -CAT_V_PIXEL_SPEED];
-            break;
-            case Direction.Left:
-            delta = [-CAT_H_PIXEL_SPEED, 0];
-            break;
-            case Direction.Right:
-            delta = [0, 0];
-                break;
-        }
-        // Add deltas to NPC position and keep it within the background rectangle.
+        // Add directional deltas to NPC position and keep it within the background rectangle.
+        var delta = dir8ToDeltas(this.facing, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED);
         let newPos = new Coord(
             (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
             (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);

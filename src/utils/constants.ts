@@ -46,12 +46,18 @@ export enum Direction {
     Up, Down, Left, Right,
 }
 
+// An enum for 8-way directions.
+export enum Dir8 {
+    Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft,
+}
+
 // An enum for gardener facing direction.
 export enum GardenerDirection {
     Left, Right,
 }
 
 export const ALL_DIRECTIONS = [Direction.Up, Direction.Down, Direction.Left, Direction.Right];
+export const ALL_DIR8S = [Dir8.Up, Dir8.UpRight, Dir8.Right, Dir8.DownRight, Dir8.Down, Dir8.DownLeft, Dir8.Left, Dir8.UpLeft];
 
 // Named constants for colours.
 export enum Colour {
