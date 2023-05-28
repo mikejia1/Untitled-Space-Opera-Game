@@ -28,6 +28,8 @@ export class Plant {
   lastGrowthTimestamp: number;                          // The last time the plant grew.
   lastDehydrationTimestamp: number;                     // The last time the plant dehydrated.
   lastTrampleTimestamp: number;                         // The last time the plant was trampled.
+  lastCoinGenTimestamp: number;                         // The last time the plant generated a coin.
+  coinCount: number;                                    // The number of coins the plant has generated that are not yet collected.
 
   constructor(
     colliderId: number,
@@ -46,6 +48,8 @@ export class Plant {
     this.lastDehydrationTimestamp = dehydTimestamp;
     this.growthStage = size;
     this.lastTrampleTimestamp = lastTrampleTimestamp;
+    this.lastCoinGenTimestamp = 0;
+    this.coinCount = 0;
   }
 
   growPlant(state: IGlobalState): Plant {
@@ -72,12 +76,19 @@ export class Plant {
 
   // Absorb water and return a new plant because state is supposed to be immutable.
   absorbWater(): Plant {
+    if (this.health == MAX_PLANT_HEALTH){
+      return this;
+    }
     if (this.health == 0) {
       // Return plant to seed state if it's dead.
       this.health = MAX_PLANT_HEALTH;
       this.growthStage = 0;
       this.lastGrowthTimestamp = computeCurrentFrame();
       return this;
+    }
+    if(this.growthStage == 4){
+      this.lastCoinGenTimestamp = computeCurrentFrame();
+      this.coinCount++;
     }
     var h = this.health + WATERING_HEALTH_INCREMENT;
     this.health = Math.min(h, MAX_PLANT_HEALTH);
@@ -93,6 +104,19 @@ export class Plant {
     // Determine where, on the canvas, the plant should be painted.
     let shift = this.computeShift(state);
     let newPos = this.pos.plus(shift.x, shift.y);
+    
+    // Draw coin generation
+    if(this.lastCoinGenTimestamp + 15 >= state.currentFrame ){
+      let coinFrame = Math.floor((state.currentFrame - this.lastCoinGenTimestamp)/2);
+      // Paint plant.
+      canvas.drawImage(
+        state.plantImages.coinGeneration,           // Plant base image
+        coinFrame * 16, 0,                         // Top-left corner of frame in source
+        16, 32,                                     // Size of frame in source
+        newPos.x-2, newPos.y - 26,                  // Position of sprite on canvas. Offsets were manually adjusted to align with collision box
+        16, 32);                                    // Sprite size on canvas
+
+    }else {
       // Paint plant.
       canvas.drawImage(
         state.plantImages.base,                           // Plant base image
@@ -100,6 +124,18 @@ export class Plant {
         16, 16,                                     // Size of frame in source
         newPos.x-2, newPos.y - 10,                  // Position of sprite on canvas. Offsets were manually adjusted to align with collision box
         16, 16);                                    // Sprite size on canvas
+    }
+
+    // Paint coin.
+    if(this.coinCount > 1 || this.coinCount == 1 && state.currentFrame - this.lastCoinGenTimestamp > 15){
+      let coinFrame = Math.floor((state.currentFrame - this.lastCoinGenTimestamp) / 4) % 8;
+      canvas.drawImage(
+        state.coinImage,                            // Plant base image
+        coinFrame * 16, 0,                          // Top-left corner of frame in source
+        16, 16,                                     // Size of frame in source
+        newPos.x-2, newPos.y -2,                   // Position of sprite on canvas. +8px on the y axis to fall below plant
+        16, 16);                                    // Sprite size on canvas
+    }
 
     // Extra debug displays.
     if (state.debugSettings.showCollisionRects) {

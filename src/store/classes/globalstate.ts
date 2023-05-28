@@ -170,7 +170,7 @@ export function initialGameState(): IGlobalState {
     wateringCan: initialWateringCan(),
     plants: allPlants,
     npcs: npcs,
-    cats: cats,
+    cats: [],
     shieldButtons: shieldButtons,
     airlockButton: airlockButton,
     shieldDoors: initialShieldDoor(),
@@ -307,7 +307,7 @@ function createPlants(colliderId: number): Plant[] {
       let i = (r * H_TILE_COUNT) + c;
       if (plants[i] == 0) continue;
       // Shift the vertical position of plants by 4 pixels to better align with dirt patch. Give size type based on non-zero value in plants.
-      let plant: Plant = new Plant(colliderId++, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE+6), INITIAL_PLANT_HEALTH, plants[i]-baseValue);
+      let plant: Plant = new Plant(colliderId++, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE+6), INITIAL_PLANT_HEALTH, plants[i]-baseValue+1);
       all = [...all, plant];
     }
   }
