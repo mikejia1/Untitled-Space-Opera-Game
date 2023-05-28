@@ -202,23 +202,26 @@ export class NonPlayer implements Lifeform, Collider {
         dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
-        canvas.globalAlpha = this.deathFadeAlpha(state);
+        canvas.globalAlpha = this.deathFadeAlpha(state);// * 0.75;
 
         // Sprite size and shift for ejection from air lock.
         let ejection = this.ejectionScaleAndShift();
-        let scaledSize = ejection.scaledSize;
+        let scaledSize = ejection.scaledSize;// * 0.5;
         let shiftToCentre = ejection.shiftToCentre;
 
         // Paint gardener sprite for current frame.
         canvas.drawImage(
             this.currentWalkCycleImage(state),                          // The sprite sheet image
             (frame * 96) + 40, 20,                                      // Top-left corner of frame in source
+            //frame * 48, 0,
             48, 48,                                                     // Size of frame in source
             dest.x + (shiftToCentre * xScale), dest.y + shiftToCentre,  // Position of sprite on canvas
             scaledSize, scaledSize);                                    // Sprite size on canvas
     
         // Restore canvas transforms to normal.
         canvas.restore();
+
+        if (this.death !== null) this.paintRisingGhost(canvas, state, dest);
 
         // Extra debug displays.
         if (state.debugSettings.showCollisionRects) {
@@ -230,6 +233,22 @@ export class NonPlayer implements Lifeform, Collider {
         if (state.debugSettings.showInteractionRects) {
             outlineRect(canvas, shiftRect(this.interactionRect(), shift.x, shift.y), Colour.INTERACTION_RECT);
         }
+    }
+
+    paintRisingGhost(canvas: CanvasRenderingContext2D, state: IGlobalState, dest: Coord): void {
+        if (this.death === null) return;
+        let t = Math.max(0, state.currentFrame - this.death.time - (FPS / 2));
+        if (t === 0) return;
+        let frame = state.currentFrame % 20;
+        canvas.save();
+        canvas.globalAlpha = Math.max(0, 0.75 - ((t / 80) * 0.75));
+        canvas.drawImage(
+            state.ghost,                // The sprite sheet image
+            frame * 48, 0,              // Top-left corner of frame in source
+            48, 48,                     // Size of frame in source
+            dest.x, dest.y - (t * 3),   // Position of sprite on canvas
+            24, 24);                    // Sprite size on canvas
+        canvas.restore();
     }
 
     // The amount of alpha that should currently be used. This is for having dead bodies fade away right before respawn.
@@ -277,7 +296,8 @@ export class NonPlayer implements Lifeform, Collider {
             // A normal NPC moves at a normal walking pace.
             case MentalState.Normal:
             case MentalState.Scared:
-                frame = this.moving ? Math.floor(state.currentFrame % (6 * frameCount) / 6) : 0;
+                let speed = 6;
+                frame = this.moving ? Math.floor(state.currentFrame % (speed * frameCount) / speed) : 0;
                 break;
             // A frazzled NPC moves at a frantic pace.
             case MentalState.Frazzled:

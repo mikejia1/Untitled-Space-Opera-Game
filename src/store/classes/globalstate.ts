@@ -26,6 +26,7 @@ import blackBottomShield from "../../entities/images/shield/black_shield_bottom_
 
 // NPC images.
 import skeleton             from "../../entities/images/skeleton/skeleton_death.png";
+import ghost                from "../../entities/images/skeleton/ghost_48px_20f.png";
 import npcwalkcycle         from "../../entities/images/nonplayer/npcwalkcycle.png";
 import frazzlednpcwalkcycle from "../../entities/images/nonplayer/frazzled_npcwalkcycle.png";
 import scarednpcwalkcycle   from "../../entities/images/nonplayer/scared_npcwalkcycle.png";
@@ -83,6 +84,7 @@ export interface IGlobalState {
     activeEvents: AnimEvent[];          // Queue of one-off event animations to draw
     dialogs: Dialog[];                  // Dialogs to display
     skeleton: any;                      // The skeleton death animation.
+    ghost: any;                         // The ghost animation.
     catImage: any;                      // The cat walk cycle animation.
     gardenerImages: any;                // Source images for gardener sprites.
     shieldImages: any;                  // Source images for the blast shield image.
@@ -178,6 +180,7 @@ export function initialGameState(): IGlobalState {
       chokeDeath:         loadImage("Suffocation death strip", gardenerchokestrip),
     },
     skeleton:       loadImage("Skeleton death", skeleton),
+    ghost:          loadImage("Ghost wabble cycle", ghost),
     catImage:       loadImage("Cat walk cycle", catswalkcycle),
     npcImages:       {
       normalWalkCycle:    loadImage("Normal NPC walk cycle", npcwalkcycle),
