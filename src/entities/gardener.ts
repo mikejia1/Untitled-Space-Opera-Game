@@ -3,7 +3,7 @@ import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH,
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
-    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap, SHAKE_CAP, stretchRect,
+    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap, SHAKE_CAP, stretchRect, FPS,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -51,7 +51,9 @@ export class Gardener implements Lifeform, Collider, Interactable {
 
     // Move the gardener along the direction its currently facing. Return new gardener.
     move(state: IGlobalState, directions: Direction[]): Gardener {
-        var slowFactor = this.isOnAPlant(state) ? 0.5 : 1;
+        var slowFactor = 1;
+        if (this.isOnAPlant(state)) slowFactor = 0.5;
+        if ((state.currentFrame - state.lastNPCDeath) < (FPS * 5)) slowFactor = 0.5;
         var dir8 = directionsToDir8(directions); // Convert 1 or more Direction values to a single Dir8.
         var delta = dir8ToDeltas(dir8, GARDENER_DH_PIXEL_SPEED * slowFactor, GARDENER_DV_PIXEL_SPEED * slowFactor);
         // Add deltas to gardener position.

@@ -124,15 +124,17 @@ export function updateCatState(state: IGlobalState): IGlobalState {
         }
         cats = [...cats, state.cats[i].move()]
     }
+    let newLastNPCDeath = state.lastNPCDeath;
     state.npcs.forEach(npc => {
         for (let i = 0; i < state.cats.length; i++) {
             let cat = state.cats[i];
             if (rectanglesOverlap(cat.deathRect(), npc.collisionRect())) {
                 npc.dieOf(CausaMortis.Laceration, state.currentFrame);
+                newLastNPCDeath = state.currentFrame;
                 break;
             }
         }
         npcs = [...npcs, npc];
     });
-    return {...state, cats: cats, npcs: npcs, gardener: gardener};
+    return {...state, cats: cats, npcs: npcs, lastNPCDeath: newLastNPCDeath, gardener: gardener};
 }

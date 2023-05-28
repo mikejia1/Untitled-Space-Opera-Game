@@ -105,6 +105,7 @@ export interface IGlobalState {
     planet3: Planet | null;             // One of the planets drifting by. Null if none.
     planets: Planet[];                  // The full list of available drifting planets.
     randomCabinFeverAllowed: boolean;   // Whether or not NPCs can now develop cabin fever at random.
+    lastNPCDeath: number;               // Frame number of the last time an NPC died.
     debugSettings: any;                 // For configuring extra debug info and visualizations.
     colliderMap: Map<number, Collider>; // Map of collider IDs to colliders.
   }
@@ -224,6 +225,7 @@ export function initialGameState(): IGlobalState {
       makePlanet(256, 60, loadImage("Wet planet",      wetPlanetImg)),        // Wet planet.
     ],
     randomCabinFeverAllowed: false, // No random cabin fever, initially.
+    lastNPCDeath: 0,                // Dummy value for initialization.
     debugSettings: {
       showCollisionRects: false,    // Collision rectangles for colliders.
       showPositionRects: false,     // Position rectangles for paintables.

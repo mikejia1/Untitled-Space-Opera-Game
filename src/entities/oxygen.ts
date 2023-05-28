@@ -16,15 +16,17 @@ export function updateOxygenState(state : IGlobalState): IGlobalState {
     }
 
     let gardener = state.gardener;
+    let newLastNPCDeath = state.lastNPCDeath;
     let npcs : NonPlayer [] = [];
     if (oxy < 0){
         gardener.dieOf(CausaMortis.Asphyxiation, state.currentFrame);        
         state.npcs.forEach(npc => {
             npc.dieOf(CausaMortis.Asphyxiation, state.currentFrame);
+            newLastNPCDeath = state.currentFrame;
             npcs = [...npcs, npc];
         });
     }
-    return {...state, oxygen: oxy};
+    return {...state, oxygen: oxy, lastNPCDeath: newLastNPCDeath};
 }
 
 function oxygenOutput(plant : Plant): number {

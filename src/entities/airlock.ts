@@ -184,6 +184,7 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
         }
         cats = [...cats, cat];
     }
+    let newLastNPCDeath = state.lastNPCDeath;
     let npcs: NonPlayer[] = [];
     for (let i = 0; i < state.npcs.length; i++) {
         let npc = state.npcs[i];
@@ -195,6 +196,7 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
         airlockShiftEntity(state, npc, npc);
         if (rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect())) {
             npc.dieOf(CausaMortis.Ejection, state.currentFrame);
+            newLastNPCDeath = state.currentFrame;
         }
         npcs = [...npcs, npc];
     }
@@ -210,6 +212,7 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
         gardener: gardener,
         airlock: state.airlock.updateDoorState(state),
         plants: plantsWithColliderType(state, ColliderType.NoneCo),
+        lastNPCDeath: newLastNPCDeath,
     };
     return {
         ...newState,

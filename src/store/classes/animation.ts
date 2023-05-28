@@ -50,6 +50,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newPlants = state.plants;
   let newShield = state.shieldDoors;
   let newShaker = state.screenShaker;
+  let newLastNPCDeath = state.lastNPCDeath;
   let gardener = state.gardener;
   let npcs = state.npcs;
   let newBlackHole: BlackHole | null = state.blackHole;
@@ -77,7 +78,8 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
       if (!state.shieldDoors.allDoorsClosed()) {
         gardener.dieOf(CausaMortis.Incineration, state.currentFrame + 24);
         npcs.forEach(npc => npc.dieOf(CausaMortis.Incineration, state.currentFrame + 24));
-        for(let i = 0; i < newPlants.length; i++){
+        newLastNPCDeath = state.currentFrame + 24;
+        for (let i = 0; i < newPlants.length; i++){
           newPlants[i].health = 0;
         }
       } else {
@@ -197,7 +199,8 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     gameover: gameover,
     gameoverFrame: gameoverFrame,
     shieldButtons: newShieldButtons,
-    };
+    lastNPCDeath: newLastNPCDeath,
+  };
 }
 
 export const GAMEOVER_RESTART_TIME = 5*FPS;
