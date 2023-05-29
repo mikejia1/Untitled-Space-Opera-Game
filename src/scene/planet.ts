@@ -1,130 +1,74 @@
 import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, 
-    computeBackgroundShift, Coord, drawClippedImage, 
-    CANVAS_RECT, CANVAS_WIDTH, randomInt, BACKGROUND_HEIGHT } from '../utils';
+    computeBackgroundShift, drawClippedImage, Coord,
+    CANVAS_RECT, randomInt, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, STARFIELD_RECT, FPS } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Tile } from '../scene';
 
-// Min and max scale values for planets in the three distance ranges.
-const SCALE_MIN: number[] = [0.02, 0.1,  0.5];
-const SCALE_MAX: number[] = [0.4,  1.0,  2.4];
-
-// Lifetime, in frames, of planets, depending on their distance range.
-const LIFETIME: number[] = [2000, 1500, 1000];
-
-// How much bigger is a planet when it disappears compared to when it first appears.
-const EXPAND_FACTOR: number = 10;
-
-// Identifiers for the three distance ranges of drifting planets.
-export enum PlanetRange {
-    Background, Midground, Foreground,
-}
-
-export function indexToPlanetRange(i: number): PlanetRange {
-    if (i === 0) return PlanetRange.Background;
-    else if (i === 1) return PlanetRange.Midground;
-    else return PlanetRange.Foreground;
-}
-
-export function planetRangeToIndex(r: PlanetRange): number {
-    if (r === PlanetRange.Background) return 0;
-    else if (r === PlanetRange.Midground) return 1;
-    else return 2;
-}
+const SCALE_CAP = 1.5;
 
 // A rotating planet that can drift by.
 export class Planet implements Paintable {
-    pos: Coord;
-    range: PlanetRange;     // Whether this is a background, midground, or foreground planet.
+    pos: Coord;             // To comply with paintable, though it is not used.
     startFrame: number;     // The frame when the planet first appeared.
-    endFrame: number;       // The frame when the planet will disappear (ignoring black hole effects).
     size: number;           // Width and height of the planet in source image.
     frames: number;         // The number of frames in the planet animation.
-    scaleStart: number;     // Scaling factor used when planet is spawned.
-    scaleEnd: number;       // Scaling factor used but the time planet is done.
-    startY: number;         // The vertical (y) position of the planet when it first appears.
-    endY: number;           // The vertical (y) position of the planet when it will disappear (ignoring black hole effects).
+    scale: number;          // Scaling factor for sizing the planet.
     spinRate: number;       // Number of animation frames between sprite frames.
     flipped: boolean;       // Whether or not the planet is flipped horizontally.
     image: any;             // The sprite sheet source image.
-    blackHolePull: number;  // How far the fall into the black hole has progressed. Range 0 to 1.
+    angle: number;          // 0 to 2*PI. Angle that planet moves away from radial centre.
   
     constructor(
-        pos: Coord, range: PlanetRange, startFrame: number, endFrame: number, size: number,
-        frames: number, scaleStart: number, scaleEnd: number, startY: number, endY: number,
-        spinRate: number, flipped: boolean, image: any, blackHolePull: number) {
-        this.pos = pos;
-        this.range = range;
+        startFrame: number, size: number,
+        frames: number, scale: number,
+        spinRate: number, flipped: boolean, image: any, angle: number) {
+        this.pos = new Coord(0,0);
         this.startFrame = startFrame;
-        this.endFrame = endFrame;
         this.size = size;
         this.frames = frames;
-        this.scaleStart = scaleStart;
-        this.scaleEnd = scaleEnd;
-        this.startY = startY;
-        this.endY = endY;
+        this.scale = scale;
         this.spinRate = spinRate;
         this.flipped = flipped;
         this.image = image;
-        this.blackHolePull = blackHolePull;
+        this.angle = angle;
     }
 
-    // Pick some random values for position, scale, and spin rate.
-    randomizedClone(state: IGlobalState, range: PlanetRange) {
-        let f = state.currentFrame;
-        let i = planetRangeToIndex(range);
-
-        // Pick a scale in range but biased toward smaller scales.
-        let scaleEnd: number = 2;
-        for (let j = 0; j < 2; j++) {
-            let alternative = randomInt(SCALE_MIN[i] * 1000, SCALE_MAX[i] * 1000) / 1000;
-            scaleEnd = Math.min(scaleEnd, alternative);
-        }
-        let scaleStart = scaleEnd / EXPAND_FACTOR;
-
-        // How fast does the planet spin.
-        let spinRate = randomInt(10, 30);
-
-        // Horizontal starting position of the planet.
-        let x = randomInt(0, CANVAS_WIDTH - (this.size * scaleStart));
-
-        // Vertical start and end positions (y coordinates) for the planet.
-        let startY = 0 - (scaleStart * this.size * 1.2);
-        let endY   = BACKGROUND_HEIGHT + (scaleEnd * this.size * 1.2);
-
-        // Start and end frames for the planet (ignoring black hole effects).
-        let startFrame = f;
-        let endFrame = f + LIFETIME[i];
-
-        let flipped = ((randomInt(0, 99) % 2) === 0);
+    // Pick some random values for angle, scale, spin rate, etc.
+    randomizedClone(state: IGlobalState) {
+        let scale: number = randomInt(1500, 3500) / 1000;   // Planet scale multiplier.
+        let spinRate = randomInt(10, 30);                   // Planet rotation speed.
+        let startFrame = state.currentFrame;                // Spawning time of the planet.
+        let angle = Math.random() * Math.PI * 2;            // Angle of recession from vanishing point.
+        let flipped = ((randomInt(0, 99) % 2) === 0);       // 50-50 chance of being flipped horizontally.
         return new Planet(
-            new Coord(x, startY),                   // Planet starting position.
-            range,                                  // Distance range (background, midground, foreground).
-            startFrame, endFrame,                   // Expected frame lifetime of planet.
-            this.size, this.frames,                 // Source image size and number of frames.
-            scaleStart, scaleEnd,                   // Scale of planet at start and end of lifetime.
-            startY, endY,                           // Start and end y coordinates over planet's lifetime.
-            spinRate, flipped, this.image, 0);      // Rotation speed, left-right flip, image, and black hole pull.
+            startFrame,                         // Expected frame lifetime of planet.
+            this.size, this.frames,             // Source image size and number of frames.
+            scale,                              // Scale multiplier.
+            spinRate, flipped, this.image,      // Rotation speed, left-right flip, image.
+            angle);                             // Direction to recede from vanishing point.
     }
 
     // Paint the planet on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         // Determine where, on the canvas, the planet should be painted.
         let shift = this.computeShift(state);
-        let dest = this.paintPosition(state, shift);
+        let cntr = this.paintCentre(state, shift);
 
         // Drop it into the black hole.
-        let tweak = this.blackHoleTweak(dest, state);
-        dest = dest.plus(tweak.fall.x, tweak.fall.y);
-        dest = dest.toIntegers();
+        let tweak = this.blackHoleTweak(cntr, state);
+        cntr = cntr.plus(tweak.fall.x, tweak.fall.y);
+        cntr = cntr.toIntegers();
 
-        // Paint it.
-        let sc = this.currentScale(state) * tweak.shrink;
+        // Scale it, shake it, flip it.
+        let sz = this.currentSize(state) * tweak.shrink;
+        let dest = cntr.minus(sz/2, sz/2);
         let frame = this.computeAnimationFrame(state);
         let shake = state.screenShaker.shake(state.currentFrame, 0);
-        let paintSize = this.size * sc;
         let flipScale = this.flipped ? -1 : 1;
-        let flipShift = this.flipped ? (this.size * sc) : 0;
+        let flipShift = this.flipped ? sz : 0;
+
+        // Paint it.
         canvas.save();
         canvas.scale(flipScale, 1);
         let clipRect = {
@@ -141,7 +85,7 @@ export class Planet implements Paintable {
             frame * this.size, 0,                       // Top-left corner of frame in source
             this.size, this.size,                       // Size of frame in source
             (dest.x * flipScale) - flipShift, dest.y,   // Position of sprite on canvas
-            paintSize, paintSize,                       // Sprite size on canvas
+            sz, sz,                                     // Sprite size on canvas
             clipRect);                                  // Paint only what's inside this rectangle
 
         canvas.restore();
@@ -152,10 +96,21 @@ export class Planet implements Paintable {
         }
     }
 
-    // Get the position where the planet should be painted on the canvas (before black hole adjustment).
-    paintPosition(state: IGlobalState, shift: Coord): Coord {
-        // Drift it and shift it.
-        return new Coord(this.pos.x, this.verticalPosition(state)).plus(shift.x, shift.y).toIntegers();
+    // Position of the centre of the planet in space. Does not include background shift.
+    spaceCentre(state: IGlobalState): Coord {
+        const RADIAL_CENTRE: Coord = new Coord(BACKGROUND_WIDTH / 2, ((STARFIELD_RECT.a.y + STARFIELD_RECT.b.y) / 2) * 1.5);
+        let t = state.currentFrame - this.startFrame;
+        t = t / (5 * FPS);
+        t *= t;
+        let d = t * 200;
+        let x = Math.sin(this.angle) * d;
+        let y = Math.cos(this.angle) * d;
+        return RADIAL_CENTRE.plus(x,y);
+    }
+
+    // Get the position where the centre of the planet should be painted on the canvas (before black hole adjustment).
+    paintCentre(state: IGlobalState, shift: Coord): Coord {
+        return this.spaceCentre(state).plus(shift.x, shift.y).toIntegers();
     }
 
     // Return a position and scale adjustment, allowing the planet to "fall" into the black hole.
@@ -165,7 +120,6 @@ export class Planet implements Paintable {
             let sz = this.size * this.currentScale(state);
             let dst = state.blackHole.driftDistance();
             let travel = Math.min(Math.max(dst - 20, 0) / 150, 1);
-            console.log("travel " + travel);
             let shrink = 1.0 - travel;
             shrink *= shrink;
             let finalDest = bhPos.plus(256, 256).minus(sz * 0.5 * shrink, sz * 0.5 * shrink);
@@ -181,24 +135,41 @@ export class Planet implements Paintable {
         };
     }
 
-    // The lifestage of the planet, where 0 means it just spawned and 1 means it's ready to disappear.
-    lifeStage(state: IGlobalState): number {
-        return ((state.currentFrame - this.startFrame) / (this.endFrame - this.startFrame));
-    }
-
     // Check to see if the planet has drifted far enough that we can stop painting it.
     isFinished(state: IGlobalState): boolean {
-        return (this.lifeStage(state) >= 1) && (state.blackHole === null);
-    }
-
-    // Determine what the planet's vertical postion should be right now (ignoring black hole effects).
-    verticalPosition(state: IGlobalState): number {
-        return this.startY + ((this.endY - this.startY) * this.lifeStage(state));
+        if (state.blackHole !== null) return false;
+        let p = this.spaceCentre(state);
+        let sz = this.currentSize(state);
+        if (p.x < -(sz/2)) {
+            console.log("Off to the left p.x " + p.x + " sz " + sz);
+            return true;
+        }
+        if (p.x > (BACKGROUND_WIDTH + (sz/2))) {
+            console.log("Off to the right p.x " + p.x + " sz " + sz);
+            return true;
+        }
+        if (p.y < -(sz/2)) {
+            console.log("Off the top p.y " + p.y + " sz " + sz);
+            return true;
+        }
+        if (p.y > (BACKGROUND_HEIGHT + (sz/2))) {
+            console.log("Off the bottom p.y " + p.y + " sz " + sz);
+            return true;
+        }
+        return false;
     }
 
     // Determine the current scale factor for the planet.
     currentScale(state: IGlobalState): number {
-        return this.scaleStart + ((this.scaleEnd - this.scaleStart) * this.lifeStage(state));
+        let t = state.currentFrame - this.startFrame;
+        t = t / (12 * FPS);
+        t *= t;
+        return Math.min(this.scale * t, SCALE_CAP);
+    }
+
+    // Determine the current size of the planet.
+    currentSize(state: IGlobalState): number {
+        return this.size * this.currentScale(state);
     }
 
     // Compute the current animation sprite frame to use for the planet.
@@ -222,5 +193,5 @@ export class Planet implements Paintable {
 
 // Make a new planet. Takes all constructor arguments that don't have a default.
 export function makePlanet(size: number, frames: number, image: any): Planet {
-    return new Planet(new Coord(0,0), PlanetRange.Background, 0, 0, size, frames, 1, 1, 0, 0, 1, false, image, 0);
+    return new Planet(0, size, frames, 1, 1, false, image, 0);
 }
