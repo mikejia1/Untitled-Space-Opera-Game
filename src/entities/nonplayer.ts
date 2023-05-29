@@ -11,6 +11,8 @@ import {
     dir8ToDeltas,
     randomDir8,
     SHAKE_CAP,
+    ALL_DIR8S,
+    dir8ToIndex,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -42,7 +44,7 @@ export class NonPlayer implements Lifeform, Collider {
     moving: boolean;                        // Whether or not the NPC is currently walking (vs standing still).
     isOffScreen: boolean;                   // Whether or not the NPC is "gone" off screen, to return at a later time.
     invisible: boolean;                     // Whether or not the NPC is currently invisible.
-    biasDirection: Direction;               // A direction that the NPC is biased toward choosing (Left or Right).
+    biasDirection: Dir8;                    // A direction that the NPC is biased toward choosing (Left or Right).
     timeOfLastReturnToGarden: number;       // Frame number of the most recent time the NPC returned from the "holding zone".
     mentalState: MentalState;               // The current mental state of the NPC.
     gardenerAvoidanceCountdown: number;     // NPC is avoiding the gardener when this is non-zero.
@@ -213,7 +215,6 @@ export class NonPlayer implements Lifeform, Collider {
         canvas.drawImage(
             this.currentWalkCycleImage(state),                          // The sprite sheet image
             (frame * 96) + 40, 20,                                      // Top-left corner of frame in source
-            //frame * 48, 0,
             48, 48,                                                     // Size of frame in source
             dest.x + (shiftToCentre * xScale), dest.y + shiftToCentre,  // Position of sprite on canvas
             scaledSize, scaledSize);                                    // Sprite size on canvas
@@ -479,7 +480,7 @@ export class NonPlayer implements Lifeform, Collider {
             clone: this,
             isOffScreen: false,
             invisible: false,
-            biasDirection: (this.pos.x < 0) ? Direction.Right : Direction.Left,
+            biasDirection: (this.pos.x < 0) ? Dir8.Right : Dir8.Left,
             timeOfLastReturnToGarden: computeCurrentFrame(),
             stationaryCountdown: 0,
             moving: true,
@@ -668,13 +669,13 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         if (npc.gardenerAvoidanceCountdown > 0) choice = gardenerAvoidingDirectionChoice(state, npc);
         else {
             let choices: number[] = [];
-            for (let i = 0; i < ALL_DIRECTIONS.length; i++) {
+            for (let i = 0; i < ALL_DIR8S.length; i++) {
                 choices = [...choices, i];
                 // The bias direction appears extra times in the choice list to make it a more likely choice.
-                if (ALL_DIRECTIONS[i] === npc.biasDirection) choices = [...choices, i, i, i, i];
+                if (ALL_DIR8S[i] === npc.biasDirection) choices = [...choices, i, i, i, i];
             }
-            // Standing still is also in the list (value is 4).
-            choices = [...choices, 4];
+            // Standing still is also in the list (value is 8).
+            choices = [...choices, 8, 8];
             choice = choices[randomInt(0, choices.length - 1)];
         }
         break;
@@ -684,19 +685,19 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         if (npc.suicideCountdown === 0) choice = suicidalDirectionChoice(state, npc);
         else {
             // If non (yet) suicidal, just moved in frazzled manner.
-            choice = randomInt(0, 4 + (4 * 5));
-            if (choice > 4) choice = (choice - 5) % 4;
+            choice = randomInt(0, 8 + (8 * 5));
+            if (choice > 8) choice = (choice - 9) % 8;
         }
         break;
       // A scared NPC is in between the two above. It also ignores bias direction.
       case MentalState.Scared:
         // If NPC is currently avoiding the gardener, movement choices are somewhat limited.
         if (npc.gardenerAvoidanceCountdown > 0) choice = gardenerAvoidingDirectionChoice(state, npc);
-        else choice = randomInt(0, 4 + (2 * 5));
-        if (choice > 4) choice = (choice - 5) % 4;
+        else choice = randomInt(0, 8 + (8 * 5));
+        if (choice > 8) choice = (choice - 9) % 8;
         break;
     }
-    if (choice === 4) {
+    if (choice === 8) {
       let countdown: number;
       switch (npc.mentalState) {
         // A normal NPC will stand still for a little while.
@@ -721,7 +722,7 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
     return new NonPlayer({
       clone: npc,
       moving: true,
-      facing: ALL_DIRECTIONS[choice],
+      facing: ALL_DIR8S[choice],
     });
   }
   
@@ -731,13 +732,11 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
     let badDir = directionOfFirstRelativeToSecond(state.gardener, npc);
     // Gather up all the indices that don't correspond to that direction.
     let indices: number[] = [];
-    for (let i = 0; i < 4; i++) {
-      if (ALL_DIRECTIONS[i] !== badDir) {
-        indices = [...indices, i];
-      }
+    for (let i = 0; i < 8; i++) {
+        if (!directionCloseToDir8(badDir, ALL_DIR8S[i])) indices = [...indices, i];
     }
     // Return one of those indices.
-    let j = randomInt(0, 2);
+    let j = randomInt(0, indices.length - 1);
     return indices[j];
   }
 
@@ -745,24 +744,16 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
   function suicidalDirectionChoice(state: IGlobalState, npc: NonPlayer): number {
     // Compute the desired direction.
     let buttonDir = directionOfFirstRelativeToSecond(state.airlockButton, npc);
-    // All directions, but with the desired one replacing its opposite (i.e. it's present twice), and
-    // the other two directions represented twice times each. 
-    let indices: number[] = [];
-    let oppositeDir = oppositeDirection(buttonDir);
-    let buttonDirIndex: number = 0;
-    let oppositeDirIndex: number = 0;
-    let otherDirIndex1: number = -1;
-    let otherDirIndex2: number = -1;
-    for (let i = 0; i < 4; i++) {
-        indices = [...indices, i];
-        if (ALL_DIRECTIONS[i] === buttonDir) buttonDirIndex = i;
-        else if (ALL_DIRECTIONS[i] === oppositeDir) oppositeDirIndex = i;
-        else if (otherDirIndex1 === -1) otherDirIndex1 = i;
-        else otherDirIndex2 = i;
-    }
-    indices[oppositeDirIndex] = buttonDirIndex;
-    indices = [...indices, otherDirIndex1, otherDirIndex2];
-    return indices[randomInt(0, 5)];
+    let badDir = oppositeDirection(buttonDir);
+    let choices: Dir8[] = [];
+    for (let i = 0; i < ALL_DIR8S.length; i++) {
+        let d8 = ALL_DIR8S[i];
+        if (directionCloseToDir8(badDir, d8)) continue;                      // Moving away from button forbidden.
+        choices = [...choices, d8];                                          // Al other directions are okay.
+        if (directionCloseToDir8(buttonDir, d8)) choices = [...choices, d8]; // Directions toward button get a boost.
+    } 
+    let d: Dir8 = choices[randomInt(0, choices.length - 1)];
+    return dir8ToIndex(d);
   }
   
   // "Move" the NPC. In quotes because NPCs sometimes stand still and that's handled here too.
