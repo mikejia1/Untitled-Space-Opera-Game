@@ -135,6 +135,9 @@ export const drawState = (
     state.dialogs[0].paint(canvas, state);
   }
 
+  // Draw status bar. 
+  state.statusBar.paint(canvas, state);
+
   drawAnimationEvent(state, shift, canvas);
 
   // Extra debug display.

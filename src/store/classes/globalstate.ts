@@ -52,6 +52,8 @@ import spaceframes          from "../images/space_frames.png";
 import shieldButton         from "../../entities/images/button/button_32x32.png";
 import airlockDoors         from "../../entities/images/airlock/airlock_doors_64x64.png";
 import dialogBox            from "../images/dialog.png";
+import oxymeter             from "../images/oxymeter.png";
+import oxymeterflash        from "../images/oxymeter_flash.png";
 
 // Plant image.
 import plantimage       from "../../entities/images/plant/plants_16x16.png";
@@ -69,6 +71,7 @@ import islandPlanetImg from   "../images/drifting_planets/planet_island_256px_60
 import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.png";
 import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
+import { StatusBar } from '../../scene/statusbar';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -91,6 +94,7 @@ export interface IGlobalState {
     pendingEvents: AnimEvent[];         // Queue of one-off event animations to draw
     activeEvents: AnimEvent[];          // Queue of one-off event animations to draw
     dialogs: Dialog[];                  // Dialogs to display
+    statusBar: StatusBar;               // The status bar at the top of the screen
     skeleton: any;                      // The skeleton death animation.
     ghost: any;                         // The ghost animation.
     catImages: any;                     // Source images for cat sprites.
@@ -106,7 +110,7 @@ export interface IGlobalState {
     gameOverImage: any,                 // The game over image
     replayImage: any,                   // The replay prompt image
     blackHoleImage: any,                // Images containing animation frames for the black hole
-    dialogImage: any,                   // The dialog box image
+    uiImages: any,                      // Images containing UI elements
     invisibleColliders: Collider[];     // All Colliders that aren't visible.
     muted: boolean;                     // Enable / disable sounds.
     screenShaker: Shaker;               // For causing the screen to shake at key moments.
@@ -181,6 +185,7 @@ export function initialGameState(): IGlobalState {
     pendingEvents: getEvents(),
     activeEvents: [],
     dialogs: welcomeDialog(npcs),
+    statusBar: new StatusBar(),
     gardenerImages: {
       walkingBase:        loadImage("Base walk strip", basewalkstrip),
       wateringBase:       loadImage("Base watering strip", basewateringstrip),
@@ -216,7 +221,11 @@ export function initialGameState(): IGlobalState {
       blackTop:       loadImage("Black top shield", blackTopShield),
       blackBottom:    loadImage("Black bottom shield", blackBottomShield),
     },
-    dialogImage:        loadImage("Dialog box", dialogBox),
+    uiImages: {
+      dialogBox:      loadImage("Dialog box", dialogBox),
+      oxymeter:       loadImage("Oxymeter", oxymeter),
+      oxymeterFlash:  loadImage("Oxymeter flash", oxymeterflash),
+    },
     shieldButtonImage:  loadImage("Shield button", shieldButton),
     airlockDoorImage:   loadImage("Airlock doors", airlockDoors),
     plantImages:  {

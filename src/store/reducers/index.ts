@@ -141,6 +141,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
 
   state = updateDialogState(state);
 
+  state = state.statusBar.updateStatusBarState(state);
+
   return state;
 }
 

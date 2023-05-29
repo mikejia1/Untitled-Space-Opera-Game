@@ -30,7 +30,7 @@ export class Dialog implements Paintable {
         let npc : NonPlayer = state.npcs[this.npcId];
         let base: Coord = this.pos;
         canvas.drawImage(
-            state.dialogImage,             
+            state.uiImages.dialogBox,             
             this.pos.x, this.pos.y);
         npc.paintAtPos(canvas, state, this.avatar);
         if (this.skipAnimation){
