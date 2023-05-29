@@ -18,12 +18,12 @@ export const MOVE_HORZ = 5;
 export const MOVE_VERT = 1;
 
 // Walking speed of gardener.
-export const GARDENER_V_PIXEL_SPEED = 3;
-export const GARDENER_H_PIXEL_SPEED = 3;
+export const GARDENER_V_PIXEL_SPEED = 4;
+export const GARDENER_H_PIXEL_SPEED = 4;
 
 // Diagonal alking speed of gardener.
-export const GARDENER_DV_PIXEL_SPEED = 2.12;
-export const GARDENER_DH_PIXEL_SPEED = 2.12;
+export const GARDENER_DV_PIXEL_SPEED = 2.83;
+export const GARDENER_DH_PIXEL_SPEED = 2.83;
 
 // Walking speed of NPCs.
 export const NPC_V_PIXEL_SPEED = 1;
@@ -71,8 +71,8 @@ export enum Colour {
 }
 
 // Named constants for colours.
-export var GROWTH_TIME = FPS * 35;
-export var DEHYDRATION_TIME = FPS * 15;
+export var GROWTH_TIME = FPS * 16;
+export var DEHYDRATION_TIME = FPS * 45;
 
 // Max horz & vert extra shake for non-background objects.
 export const SHAKE_CAP = 2.5;

@@ -30,7 +30,7 @@ export function updateOxygenState(state : IGlobalState): IGlobalState {
 }
 
 function oxygenOutput(plant : Plant): number {
-    return plant.growthStage * plant.growthStage * plant.health * 0.003;
+    return plant.growthStage * plant.growthStage * plant.health * 0.001;
 }
 
 function oxygenConsumption(npc : NonPlayer): number {
