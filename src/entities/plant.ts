@@ -184,6 +184,8 @@ export class Plant {
   isBeingTrampled(state: IGlobalState): boolean {
     // Passing over a plant when the air lock is open doesn't count as trampling.
     if (this.colliderType === ColliderType.NoneCo) return false;
+    // Fully matured plant at full health cannot be trampled. 
+    if (this.growthStage == 4 && this.health == MAX_PLANT_HEALTH) return false;
     // If the plant was *just* trampled, it cannot be immediately trampled again.
     if ((state.currentFrame - this.lastTrampleTimestamp) < TRAMPLE_IMMUNITY_DUR) return false;
     // Otherwise check collision rect overlap with gardener and with NPCs.
