@@ -11,6 +11,7 @@ import {
 import { drawAnimationEvent } from "./drawevent";
 import { Dialog } from "../scene/dialog";
 import { Lifeform } from "../store/classes/lifeform";
+import { Planet } from "../scene/planet";
 
 export * from './coord';
 export * from './constants';
@@ -273,10 +274,22 @@ function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingConte
 
 // Draw objects that are in space, visible through the window.
 function drawSpaceObjects(state: IGlobalState, canvas: CanvasRenderingContext2D) {
-  if (state.blackHole !== null)         state.blackHole.paint(canvas, state);
-  if (state.backgroundPlanet !== null)  state.backgroundPlanet.paint(canvas, state);
-  if (state.midgroundPlanet !== null)   state.midgroundPlanet.paint(canvas, state);
-  if (state.foregroundPlanet !== null)  state.foregroundPlanet.paint(canvas, state);
+  if (state.blackHole !== null) state.blackHole.paint(canvas, state);
+
+  // Put all drifters into a heap-based priority queue.
+  // They'll come out sorted by decreasing start frame.
+  let pq = new TypedPriorityQueue<Planet>(
+    function (a: Planet, b: Planet) {
+      return a.startFrame > b.startFrame;
+    }
+  );
+  state.drifters.forEach(d => {
+    if (d !== null) pq.add(d);
+  });
+  while (!pq.isEmpty()) {
+    let d = pq.poll();
+    d?.paint(canvas, state);
+  }
 }
 
 // Draw the starfield seen through the window of the ship.

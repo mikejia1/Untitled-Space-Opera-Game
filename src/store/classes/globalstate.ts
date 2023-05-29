@@ -1,6 +1,6 @@
 import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
-import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE } from '../../utils';
+import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { BlackHole, InvisibleCollider } from "../../scene";
 import { Planet, makePlanet } from '../../scene/planet';
@@ -115,9 +115,7 @@ export interface IGlobalState {
     muted: boolean;                     // Enable / disable sounds.
     screenShaker: Shaker;               // For causing the screen to shake at key moments.
     blackHole: BlackHole | null;        // The black hole in view, or null if none in view.
-    backgroundPlanet: Planet | null;    // A planet drifting by. Distance range: far.
-    midgroundPlanet: Planet | null;     // A planet drifting by. Distance range: medium.
-    foregroundPlanet: Planet | null;    // A planet drifting by. Distance range: near.
+    drifters: (Planet | null)[];        // Array of potentially drifting planets.
     planets: Planet[];                  // The full list of available drifting planets.
     randomCabinFeverAllowed: boolean;   // Whether or not NPCs can now develop cabin fever at random.
     lastNPCDeath: number;               // Frame number of the last time an NPC died.
@@ -238,11 +236,9 @@ export function initialGameState(): IGlobalState {
     blackHoleImage:     loadImage("Black hole", blackHoleImg),
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
     muted: true,
-    screenShaker:     SHAKER_NO_SHAKE,  // Initially, the screen is not shaking.
-    blackHole:        null,             // Initially, there's no black hole in view.
-    backgroundPlanet: null,             // No planet drifting by in the far distance.
-    midgroundPlanet:  null,             // No planet drifting by in the medium distance.
-    foregroundPlanet: null,             // No planet drifting by in the near distance.
+    screenShaker:     SHAKER_NO_SHAKE,      // Initially, the screen is not shaking.
+    blackHole:        null,                 // Initially, there's no black hole in view.
+    drifters:         emptyDrifterArray(),  // Drifting planets.
     planets:          [
       makePlanet(256, 60, loadImage("Cratered planet", crateredPlanetImg)),   // Cratered planet.
       makePlanet(256, 60, loadImage("Dry planet",      dryPlanetImg)),        // Dry planet.
@@ -267,6 +263,13 @@ export function initialGameState(): IGlobalState {
     },
     colliderMap: new Map<number, Collider>(),
   }
+}
+
+// Initial array of drifting planets. All null.
+function emptyDrifterArray(): (Planet | null)[] {
+  let d: (Planet | null)[] = [];
+  for (let i = 0; i < DRIFTER_COUNT; i++) d = [...d, null];
+  return d;
 }
 
 function loadImage(title: string, resource: string) {

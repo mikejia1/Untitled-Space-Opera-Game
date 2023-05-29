@@ -76,3 +76,6 @@ export var DEHYDRATION_TIME = FPS * 45;
 
 // Max horz & vert extra shake for non-background objects.
 export const SHAKE_CAP = 2.5;
+
+// Size of "drifters" array in global state (max simultaneous drifting planets).
+export const DRIFTER_COUNT = 7;
