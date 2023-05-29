@@ -44,7 +44,7 @@ export class AnimEvent {
     }
 }
 
-export const SUPERNOVA_DELAY = FPS*60;
+export const SUPERNOVA_DELAY = FPS*300;
 
 export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newPlants = state.plants;
