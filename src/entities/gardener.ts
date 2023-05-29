@@ -135,7 +135,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
                 image = state.gardenerImages.slainDeath;
                 break;
             case CausaMortis.Asphyxiation:
-                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 13);
+                frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 16);
                 image = state.gardenerImages.chokeDeath;
                 console.log("asphyxiation current frame: "+ state.currentFrame + " death time: "+ this.death.time);
                 console.log("painting gardener asphyxiation, frame: "+ frame);

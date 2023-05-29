@@ -283,7 +283,7 @@ export class NonPlayer implements Lifeform, Collider {
                 case CausaMortis.Laceration:
                     return Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 14);
                 case CausaMortis.Asphyxiation:
-                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 13);
+                    return Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 16);
                 case CausaMortis.Incineration:
                     // The walking animation has 20 frames. Stay on the initial skeleton frame for 10 frames,
                     let frameTicker = Math.max(state.currentFrame - state.gameoverFrame - 0, 0);
