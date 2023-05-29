@@ -1,4 +1,6 @@
-import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, computeBackgroundShift, Coord, computeCurrentFrame, drawClippedImage, CANVAS_RECT, FPS, CANVAS_WIDTH, randomInt, CANVAS_HEIGHT, BACKGROUND_HEIGHT } from '../utils';
+import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, 
+    computeBackgroundShift, Coord, computeCurrentFrame, drawClippedImage, 
+    CANVAS_RECT, CANVAS_WIDTH, randomInt, BACKGROUND_HEIGHT } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Tile } from '../scene';
@@ -31,7 +33,7 @@ export class Planet implements Paintable {
     randomizedClone() {
         let scale = randomInt(15, 100) / 100;
         scale = scale * scale; // A bias toward smaller scales.
-        let spinRate = randomInt(1, 10);
+        let spinRate = randomInt(10, 30);
         let x = randomInt(0, CANVAS_WIDTH - (this.size * scale));
         let flipped = ((randomInt(0, 99) % 2) === 0);
         return new Planet(
