@@ -78,6 +78,7 @@ export class Plant {
   // Absorb water and return a new plant because state is supposed to be immutable.
   absorbWater(): Plant {
     if (this.health == MAX_PLANT_HEALTH){
+      this.lastDehydrationTimestamp = computeCurrentFrame();
       return this;
     }
     if (this.health == 0) {

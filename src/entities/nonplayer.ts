@@ -563,7 +563,7 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
             return;
         }
         // With small probability, an off-screen NPC may come back.
-        if (newNPC.isOffScreen && (randomInt(0, 9999) < 3)) newNPC = newNPC.comeBackOnScreen();
+        if (newNPC.isOffScreen && (randomInt(0, 9999) < 10)) newNPC = newNPC.comeBackOnScreen();
 
         // If the NPC has just wandered off-screen, go into the "holding zone".
         if (!newNPC.isOffScreen && newNPC.justWentOffScreen()) newNPC = newNPC.goOffScreen();
