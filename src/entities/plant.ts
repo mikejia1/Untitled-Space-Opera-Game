@@ -6,6 +6,7 @@ import {
 import { FPS, SHAKE_CAP } from '../utils/constants';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
+import { Coin } from './coin';
 
 // Initial, min, and max value for plant health.
 export const INITIAL_PLANT_HEALTH = 4;
@@ -29,7 +30,7 @@ export class Plant {
   lastDehydrationTimestamp: number;                     // The last time the plant dehydrated.
   lastTrampleTimestamp: number;                         // The last time the plant was trampled.
   lastCoinGenTimestamp: number;                         // The last time the plant generated a coin.
-  coinCount: number;                                    // The number of coins the plant has generated that are not yet collected.
+  coin: Coin | null;                                    // Coins the plant has generated that are not yet collected.
 
   constructor(
     colliderId: number,
@@ -49,7 +50,7 @@ export class Plant {
     this.growthStage = size;
     this.lastTrampleTimestamp = lastTrampleTimestamp;
     this.lastCoinGenTimestamp = 0;
-    this.coinCount = 0;
+    this.coin = null;
   }
 
   growPlant(state: IGlobalState): Plant {
@@ -88,7 +89,13 @@ export class Plant {
     }
     if(this.growthStage == 4){
       this.lastCoinGenTimestamp = computeCurrentFrame();
-      this.coinCount++;
+      if(this.coin == null){
+        this.coin = new Coin(this.pos.plus(0,8), this.lastCoinGenTimestamp);
+      }
+      else {
+        this.coin.count++;
+        this.coin.lastCoinGenTimestamp = this.lastCoinGenTimestamp
+      }
     }
     var h = this.health + WATERING_HEALTH_INCREMENT;
     this.health = Math.min(h, MAX_PLANT_HEALTH);
@@ -99,6 +106,10 @@ export class Plant {
     return this.growthStage * this.growthStage * this.health * 0.01;
   }
 
+  // Should the plant draw a coin?
+  shouldDrawCoin(state: IGlobalState) : boolean { 
+    return this.coin != null && (this.coin.count > 1 || this.coin.count == 1 && state.currentFrame - this.lastCoinGenTimestamp > 15);
+  }
   // Paint the plant on the canvas.
   paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
     // Determine where, on the canvas, the plant should be painted.
@@ -127,7 +138,10 @@ export class Plant {
     }
 
     // Paint coin.
-    if(this.coinCount > 1 || this.coinCount == 1 && state.currentFrame - this.lastCoinGenTimestamp > 15){
+    if(this.coin != null && this.shouldDrawCoin(state)){
+      this.coin.paint(canvas, state);
+
+      /*
       let coinFrame = Math.floor((state.currentFrame - this.lastCoinGenTimestamp) / 4) % 8;
       canvas.drawImage(
         state.coinImage,                            // Plant base image
@@ -135,6 +149,7 @@ export class Plant {
         16, 16,                                     // Size of frame in source
         newPos.x-2, newPos.y -2,                   // Position of sprite on canvas. +8px on the y axis to fall below plant
         16, 16);                                    // Sprite size on canvas
+        */
     }
 
     // Extra debug displays.

@@ -10,6 +10,7 @@ import { Tile } from '../scene';
 import { CausaMortis, Death, paintSkeletonDeath } from './skeleton';
 import { NonPlayer } from './nonplayer';
 import { drawText } from '../utils/drawtext';
+import { Plant } from './plant';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
@@ -337,7 +338,19 @@ export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
       if (bumpedNPCs.has(npc.colliderId)) newNPCs = [...newNPCs, npc.startAvoidingGardener()];
       else newNPCs = [...newNPCs, npc]; 
     }
-  
+    let statusBar = state.statusBar
+    let score = state.score;
+    let plants : Plant[] = [];
+    for (let i = 0; i < state.plants.length; i++){
+        let plant = state.plants[i];
+        if(plant.coin != null && rectanglesOverlap(plant.coin.collisionRect(), newGar.collisionRect())){
+            console.log("Collecting coin!");
+            score += plant.coin.count;
+            statusBar.newCoins += plant.coin.count;
+            plant.coin = null;
+        }
+        plants = [...plants, plant];
+    }
     // If new gardener is in collision with anything, we abort the move.
     if (colliders.length > 0) {
       console.log("Bump!");
@@ -355,5 +368,8 @@ export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
       // Watering can moves with gardener if the item is equipped.
       wateringCan: state.wateringCan.isEquipped ? state.wateringCan.moveWithGardener(newGar) : state.wateringCan,
       colliderMap: allColliders,
+      plants: plants,
+      score: score,
+      statusBar: statusBar,
     }
 }

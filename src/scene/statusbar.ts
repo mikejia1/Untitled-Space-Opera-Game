@@ -1,21 +1,25 @@
 import { NonPlayer } from "../entities";
+import { Coin } from "../entities/coin";
 import { Paintable, IGlobalState } from "../store/classes";
-import { Coord } from "../utils";
+import { Coord, computeCurrentFrame } from "../utils";
 import { drawText } from "../utils/drawtext";
 
 export const FLASH_SPEED = 16;
 
 export class StatusBar implements Paintable {
-    coin: Coord;
+    coin: Coin;
     pos: Coord;
     totalCoins: number;
     flashPosX: number;
+    // Coins that have yet to be added to the total.
+    newCoins: number;
 
     constructor() {
         this.pos = new Coord(0, 0);
-        this.coin = new Coord(20, 8);
+        this.coin = new Coin (new Coord(20, 8) , computeCurrentFrame());
         this.totalCoins = 0;
         this.flashPosX = 0;
+        this.newCoins = 0;
     }
 
     getMeterColor(state: IGlobalState) : string {
@@ -86,16 +90,24 @@ export class StatusBar implements Paintable {
         canvas.fill();
         canvas.restore();
 
-        // Paint oxymeter bar
+        // Paint status bar
         canvas.drawImage(state.uiImages.oxymeter, 0, 0);
 
+        // Paint coin sprite
+        this.coin.paintAtPos(canvas, state, new Coord(3, 24));
 
+        // Paint coin count
+        drawText(canvas, new Coord(18, 15), this.totalCoins.toString());
     }
     
     updateStatusBarState(state : IGlobalState) : IGlobalState {
         this.flashPosX += FLASH_SPEED;
         if(this.flashPosX > 270){
             this.flashPosX = - FLASH_SPEED * 24 * 4;
+        }
+        if(state.currentFrame % 2 == 0 && this.newCoins > 0){
+            this.totalCoins++;
+            this.newCoins--;
         }
         return {...state, statusBar: this };
     }
