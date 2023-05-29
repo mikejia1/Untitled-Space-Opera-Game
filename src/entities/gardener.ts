@@ -262,8 +262,8 @@ export class Gardener implements Lifeform, Collider, Interactable {
     // Return the invisible rectangle that determines collision behaviour for the gardener.
     collisionRect(): Rect {
         return {
-            a: this.pos.plus(0, -ENTITY_RECT_HEIGHT),
-            b: this.pos.plus(ENTITY_RECT_WIDTH, 0),
+            a: this.pos.plus(3, -ENTITY_RECT_HEIGHT),
+            b: this.pos.plus(ENTITY_RECT_WIDTH+3, 0),
         }
     }
 
