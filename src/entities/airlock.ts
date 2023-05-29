@@ -97,13 +97,11 @@ export class Airlock implements Paintable {
                     b: this.centre().plus(18, 18),
                 }
             case AirlockState.OPENING:
-                console.log("Opening, offset = " + offset);
                 return {
                     a: this.centre().plus(-offset, -18),
                     b: this.centre().plus(offset, 18),
                 }
             case AirlockState.CLOSING:  // No change if door is closing.
-            console.log("Closing, offset = " + offset);
                 return {
                     a: this.centre().plus(-offset, -18),
                     b: this.centre().plus(offset, 18),
