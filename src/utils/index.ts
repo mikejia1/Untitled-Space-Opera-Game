@@ -295,8 +295,8 @@ export function randomDir8(): Dir8 {
   return ALL_DIR8S[randomInt(0, ALL_DIR8S.length - 1)];
 }
 
-export function randLeftOrRight(): Direction {
-  return (randomInt(0, 99) < 50) ? Direction.Left : Direction.Right;
+export function randLeftOrRight(): Dir8 {
+  return (randomInt(0, 99) < 50) ? Dir8.Left : Dir8.Right;
 }
 
 // Return an [x,y] deltas array for a given Dir8, horizontal speed, and vertical speed.
@@ -332,6 +332,21 @@ function directionToDir8(direction: Direction): Dir8 {
     case Direction.Left:  return Dir8.Left;
     case Direction.Right: return Dir8.Right;
   };
+}
+
+// Return the index of a Dir8 in the ALL_DIR8S array.
+export function dir8ToIndex(d: Dir8): number {
+  //[Dir8.Up, Dir8.UpRight, Dir8.Right, Dir8.DownRight, Dir8.Down, Dir8.DownLeft, Dir8.Left, Dir8.UpLeft];
+  switch (d) {
+    case Dir8.Up:         return 0;
+    case Dir8.UpRight:    return 1;
+    case Dir8.Right:      return 2;
+    case Dir8.DownRight:  return 3;
+    case Dir8.Down:       return 4;
+    case Dir8.DownLeft:   return 5;
+    case Dir8.Left:       return 6;
+    case Dir8.UpLeft:     return 7;
+  }
 }
 
 // Check if an array of 2 Direction values includes two given Direction values, regardless of order.
