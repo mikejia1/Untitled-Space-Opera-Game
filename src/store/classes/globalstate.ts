@@ -111,9 +111,9 @@ export interface IGlobalState {
     muted: boolean;                     // Enable / disable sounds.
     screenShaker: Shaker;               // For causing the screen to shake at key moments.
     blackHole: BlackHole | null;        // The black hole in view, or null if none in view.
-    planet1: Planet | null;             // One of the planets drifting by. Null if none.
-    planet2: Planet | null;             // One of the planets drifting by. Null if none.
-    planet3: Planet | null;             // One of the planets drifting by. Null if none.
+    backgroundPlanet: Planet | null;    // A planet drifting by. Distance range: far.
+    midgroundPlanet: Planet | null;     // A planet drifting by. Distance range: medium.
+    foregroundPlanet: Planet | null;    // A planet drifting by. Distance range: near.
     planets: Planet[];                  // The full list of available drifting planets.
     randomCabinFeverAllowed: boolean;   // Whether or not NPCs can now develop cabin fever at random.
     lastNPCDeath: number;               // Frame number of the last time an NPC died.
@@ -231,9 +231,9 @@ export function initialGameState(): IGlobalState {
     muted: true,
     screenShaker:     SHAKER_NO_SHAKE,  // Initially, the screen is not shaking.
     blackHole:        null,             // Initially, there's no black hole in view.
-    planet1:          null,             // Start with no planets drifting by.
-    planet2:          null,
-    planet3:          null,
+    backgroundPlanet: null,             // No planet drifting by in the far distance.
+    midgroundPlanet:  null,             // No planet drifting by in the medium distance.
+    foregroundPlanet: null,             // No planet drifting by in the near distance.
     planets:          [
       makePlanet(256, 60, loadImage("Cratered planet", crateredPlanetImg)),   // Cratered planet.
       makePlanet(256, 60, loadImage("Dry planet",      dryPlanetImg)),        // Dry planet.
