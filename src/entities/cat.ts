@@ -11,6 +11,8 @@ export class Cat extends NonPlayer {
     // Initial cat rampage (they are charging at the player)
     rampage: boolean = true;
     startFrame: number = Math.floor(Math.random() * 15);
+    // Frame time of last attack
+    attackFrame: number;
     death: Death | null;
 
     constructor(params: any) {
@@ -20,6 +22,7 @@ export class Cat extends NonPlayer {
         this.facing = Dir8.Left;
         this.moving = true;
         this.death = null;
+        this.attackFrame = 0;
     }
 
     // Compute sprite size and shift values for air lock ejection. (40 and 0, respectively, when not being ejected)
@@ -53,10 +56,21 @@ export class Cat extends NonPlayer {
         let ejection = this.ejectionScaleAndShift();
         let scaledSize = ejection.scaledSize;
         let shiftToCentre = ejection.shiftToCentre;
+
+        let image = state.catImages.run;
+        if(state.currentFrame - this.attackFrame < 8){
+            frame = Math.floor(( state.currentFrame - this.attackFrame ) / 2);
+            image = state.catImages.attack;
+        }
+
+        if(this.death !== null && this.death.cause === CausaMortis.Liquification){
+            image = state.catImages.death;
+            frame = Math.min(11, Math.floor(( state.currentFrame - this.death.time ) / 2));
+        }
         
         // Paint gardener sprite for current frame.
         canvas.drawImage(
-            state.catImages.run,                                             // Walking base source image
+            image,                                            // Walking base source image
             frame * 40, this.color * 40,                                // Top-left corner of frame in source
             40, 40,                                                     // Size of frame in source
             dest.x + (shiftToCentre * xScale), dest.y + shiftToCentre,  // Position of sprite on canvas
@@ -76,8 +90,8 @@ export class Cat extends NonPlayer {
 
     deathRect(): Rect {
         return {
-            a: this.pos.plus(0, -ENTITY_RECT_HEIGHT*3),
-            b: this.pos.plus(ENTITY_RECT_WIDTH*2, 0),
+            a: this.pos.plus(0, -ENTITY_RECT_HEIGHT),
+            b: this.pos.plus(ENTITY_RECT_WIDTH, 0),
         };
     }
 
@@ -122,15 +136,21 @@ export function updateCatState(state: IGlobalState): IGlobalState {
             continue;
         }
         if (rectanglesOverlap(cat.deathRect(), gardener.collisionRect())) {
+            // If previous attack frame has expired
+            if (state.currentFrame - cat.attackFrame > 8) 
+                cat.attackFrame = state.currentFrame;
             gardener.dieOf(CausaMortis.Laceration, state.currentFrame);
         }
-        cats = [...cats, state.cats[i].move()]
+        cats = [...cats, cat.move()]
     }
     let newLastNPCDeath = state.lastNPCDeath;
     state.npcs.forEach(npc => {
         for (let i = 0; i < state.cats.length; i++) {
             let cat = state.cats[i];
             if (rectanglesOverlap(cat.deathRect(), npc.collisionRect())) {
+                // If previous attack frame has expired
+                if (state.currentFrame - cat.attackFrame > 8) 
+                    cat.attackFrame = state.currentFrame;
                 npc.dieOf(CausaMortis.Laceration, state.currentFrame);
                 newLastNPCDeath = state.currentFrame;
                 break;

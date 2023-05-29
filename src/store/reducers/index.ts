@@ -4,7 +4,7 @@
 import { Direction, computeCurrentFrame, rectanglesOverlap } from "../../utils";
 import { GAMEOVER_RESTART_TIME, IGlobalState, activateAirlockButton, allCollidersFromState, initialGameState, updateAnimEventState } from "../classes";
 import { Airlock, AirlockState, MentalState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
-import { updateCatState } from "../../entities/cat";
+import { Cat, updateCatState } from "../../entities/cat";
 import { updateHeavenlyBodyState } from "../../entities/heavenlybody";
 import {
   DOWN,
@@ -34,6 +34,7 @@ import {
 } from "../actions";
 import { updateOxygenState } from "../../entities/oxygen";
 import { Dialog, isDialogCurrentlyDisplayed, updateDialogState } from "../../scene/dialog";
+import { CausaMortis } from "../../entities/skeleton";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -307,6 +308,17 @@ function utiliseItem(state: IGlobalState): IGlobalState {
       newNPCs = [...newNPCs, npc.cureCabinFever()];
     } else newNPCs = [...newNPCs, npc];
   }
+
+  // Melt a single cat if close enough.
+  let cats : Cat[] = [];
+  let alreadyMelted = false;
+  state.cats.forEach(cat => {
+    if (!alreadyMelted && rectanglesOverlap(faceRect, cat.collisionRect())) {
+      console.log("die kitty!");
+      cat.dieOf(CausaMortis.Liquification, state.currentFrame);
+    }
+    cats = [...cats, cat];
+  });
 
   let s = {
     ...state,

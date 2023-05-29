@@ -150,7 +150,7 @@ export function initialGameState(): IGlobalState {
   colliderId += npcs.length;
 
   // Create a bunch of cats. 
-  let cats = gridOfCats(colliderId, new Coord(200, 300), 25, 2, 2);
+  let cats = gridOfCats(colliderId, new Coord(200, 290), 30, 2, 2);
   colliderId += cats.length;
 
   // Create the buttons that activate the sections of the blast shield.
@@ -174,7 +174,7 @@ export function initialGameState(): IGlobalState {
     wateringCan: initialWateringCan(),
     plants: allPlants,
     npcs: npcs,
-    cats: [],
+    cats: cats,
     shieldButtons: shieldButtons,
     airlockButton: airlockButton,
     shieldDoors: initialShieldDoor(),

@@ -6,6 +6,7 @@ export enum CausaMortis {
     Laceration,   // Cat attack
     Incineration, // Black hole or explosion
     Ejection,     // Airlock opened
+    Liquification, // Cat melts when watered
 }
 
 export interface Death {
