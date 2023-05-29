@@ -170,7 +170,7 @@ export function initialGameState(): IGlobalState {
     wateringCan: initialWateringCan(),
     plants: allPlants,
     npcs: npcs,
-    cats: [],
+    cats: cats,
     shieldButtons: shieldButtons,
     airlockButton: airlockButton,
     shieldDoors: initialShieldDoor(),

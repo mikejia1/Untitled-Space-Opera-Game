@@ -1,4 +1,4 @@
-import { shiftForTile, computeBackgroundShift, Coord, Rect, AIRLOCK_PIXEL_SPEED, rectanglesOverlap, AIRLOCK_PULL_SCALE } from '../utils';
+import { shiftForTile, computeBackgroundShift, Coord, Rect, AIRLOCK_PIXEL_SPEED, rectanglesOverlap, AIRLOCK_PULL_SCALE, rectangleContained } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState, collisionDetected, ColliderType, allCollidersFromState, Collider } from '../store/classes';
 import { Tile } from '../scene';
@@ -83,10 +83,31 @@ export class Airlock implements Paintable {
         return unitVec.times(pull);
     }
 
-    deathRect(): Rect {
-        return {
-            a: this.centre().plus(-18, -18),
-            b: this.centre().plus(18, 18),
+    deathRect(state: IGlobalState): Rect {
+        let offset = Math.min(this.doorOffset(state), 18);
+        switch (this.state) {
+            case AirlockState.CLOSED:
+                return {
+                    a: this.centre().plus(0, 0),
+                    b: this.centre().plus(0, 0),
+                }
+            case AirlockState.OPEN:
+                return {
+                    a: this.centre().plus(-18, -18),
+                    b: this.centre().plus(18, 18),
+                }
+            case AirlockState.OPENING:
+                console.log("Opening, offset = " + offset);
+                return {
+                    a: this.centre().plus(-offset, -18),
+                    b: this.centre().plus(offset, 18),
+                }
+            case AirlockState.CLOSING:  // No change if door is closing.
+            console.log("Closing, offset = " + offset);
+                return {
+                    a: this.centre().plus(-offset, -18),
+                    b: this.centre().plus(offset, 18),
+                }
         }
     }
 
@@ -179,8 +200,9 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
     for (let i = 0; i < state.cats.length; i++) {
         let cat = state.cats[i];
         airlockShiftEntity(state, cat, cat);
-        if (rectanglesOverlap(state.airlock.deathRect(), cat.collisionRect())) {
+        if (rectangleContained(state.airlock.deathRect(state), cat.collisionRect())) {
             cat.dieOf(CausaMortis.Ejection, state.currentFrame);
+            console.log("cat ejected!");
         }
         cats = [...cats, cat];
     }
@@ -194,7 +216,8 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
             continue;
         }
         airlockShiftEntity(state, npc, npc);
-        if (rectanglesOverlap(state.airlock.deathRect(), npc.collisionRect())) {
+        if (rectangleContained(state.airlock.deathRect(state), npc.collisionRect())) {
+            console.log("NPC ejected!");
             npc.dieOf(CausaMortis.Ejection, state.currentFrame);
             newLastNPCDeath = state.currentFrame;
         }
@@ -202,7 +225,8 @@ export function updateAirlockState(state: IGlobalState): IGlobalState {
     }
     let gardener = state.gardener;
     airlockShiftEntity(state, gardener, gardener);
-    if (rectanglesOverlap(state.airlock.deathRect(), gardener.collisionRect())) {
+    if (rectangleContained(state.airlock.deathRect(state), gardener.collisionRect())) {
+        console.log("Gardener ejected!");
         gardener.dieOf(CausaMortis.Ejection, state.currentFrame);
     }
     let newState = {

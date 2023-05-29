@@ -114,13 +114,15 @@ export function updateCatState(state: IGlobalState): IGlobalState {
     let gardener : Gardener = state.gardener;
     for (let i = 0; i < state.cats.length; i++) {
         let cat = state.cats[i];
-        if (rectanglesOverlap(cat.deathRect(), gardener.collisionRect())) {
-            gardener.dieOf(CausaMortis.Laceration, state.currentFrame);
-        }
         if (cat.death !== null) {
             if (cat.death.ejectionScaleFactor !== null) {
                 cat.death.ejectionScaleFactor *= EJECTION_SHRINK_RATE;
             }
+            cats = [...cats, cat];
+            continue;
+        }
+        if (rectanglesOverlap(cat.deathRect(), gardener.collisionRect())) {
+            gardener.dieOf(CausaMortis.Laceration, state.currentFrame);
         }
         cats = [...cats, state.cats[i].move()]
     }

@@ -214,6 +214,11 @@ export function shiftForTile(tile: Tile, state: IGlobalState, shift: Coord): Coo
   }
 }
 
+// Returns true if the second rectangle is completely contained within the first rectangle.
+export function rectangleContained(outer: Rect, inner: Rect): boolean {
+  return (outer.a.x <= inner.a.x) && (outer.a.y <= inner.a.y) && (outer.b.x >= inner.b.x) && (outer.b.y >= inner.b.y);
+}
+
 // Given two rectangles, check if they overlap.
 export function rectanglesOverlap(rect1: any, rect2: any): boolean {
   let a = rect1.a;
