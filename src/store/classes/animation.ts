@@ -27,6 +27,8 @@ export enum AnimEventType {
     BH_PULSE_LEVEL_2,       // Bring black hole pulse magnitude to level 2.
     BH_PULSE_LEVEL_3,       // Bring black hole pulse magnitude to level 3.
     BH_PULSE_LEVEL_4,       // Bring black hole pulse magnitude to level 4 (strongest).
+    SLINGSHOT_ALLOWED,      // Allow planetary slingshot events to initiate.
+    SLINGSHOT_FORBIDDEN,    // Prevent planetary slingshot events from initiating.
 }
 
 // Interface for one-off event animations.
@@ -51,6 +53,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newShield = state.shieldDoors;
   let newShaker = state.screenShaker;
   let newLastNPCDeath = state.lastNPCDeath;
+  let newSlingshotAllowed = state.slingshotAllowed;
   let gardener = state.gardener;
   let npcs = state.npcs;
   let newBlackHole: BlackHole | null = state.blackHole;
@@ -63,6 +66,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let gameover: boolean = state.gameover;
   let newShieldButtons: ShieldButton[] = state.shieldButtons;
   let gameoverFrame = state.gameoverFrame;
+
   // Process active events
   for (let i = 0; i < state.pendingEvents.length; i++){
     const event = state.pendingEvents[i];
@@ -176,8 +180,16 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         event.finished = true;
       }
     }
+    if (event.event === AnimEventType.SLINGSHOT_ALLOWED) {
+        newSlingshotAllowed = true;
+        event.finished = true;
+    }
+    if (event.event === AnimEventType.SLINGSHOT_FORBIDDEN) {
+        newSlingshotAllowed = false;
+        event.finished = true;
+    }
     // This event should only ever triggered via the Gardener update method.
-    if(event.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
+    if (event.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
         console.log("GAME OVER");
         gameover = true;
         gameoverFrame = state.currentFrame;
@@ -200,6 +212,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     gameoverFrame: gameoverFrame,
     shieldButtons: newShieldButtons,
     lastNPCDeath: newLastNPCDeath,
+    slingshotAllowed: newSlingshotAllowed,
   };
 }
 

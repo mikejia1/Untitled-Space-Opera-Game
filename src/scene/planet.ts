@@ -99,13 +99,17 @@ export class Planet implements Paintable {
 
         canvas.restore();
 
-        // Extra debug displays.
-        if (state.debugSettings.showPositionRects) {
-            outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
+        // TODO: Remove this - this is just for debugging - to see which planets are meant to be slingshotting.
+        if (this.isSlingshotting) {
+            let r = {
+                a: dest.minus(3, 3),
+                b: dest.plus(3, 3),
+            };
+            outlineRect(canvas, r, Colour.COLLISION_RECT);
         }
     }
 
-    // Position of the centre of the planet in space. Does not include background shift.
+    // Position of the centre of the planet in space. Does not include background shift. (i.e. relative to background, not canvas).
     spaceCentre(state: IGlobalState): Coord {
         const RADIAL_CENTRE: Coord = new Coord(BACKGROUND_WIDTH / 2, ((STARFIELD_RECT.a.y + STARFIELD_RECT.b.y) / 2) * 1.5);
         let t = state.currentFrame - this.startFrame;

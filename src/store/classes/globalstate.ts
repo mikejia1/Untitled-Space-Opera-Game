@@ -406,6 +406,7 @@ function getEvents(): AnimEvent[] {
 // Setup the timed schedule of all events associated with a dangerous supernova encounter.
 function createSupernovaEvents(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
+    let noSling:    AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_FORBIDDEN,  f + delay - (24 * FPS));  // Slingshotting not allowed ahead of black hole.
     let enterBH:    AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_APPEARS,   f + delay - (16 * FPS));
     let pulse1:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay - (16 * FPS));
     let alarm1:     AnimEvent = new AnimEvent(AnimEventType.ALARM_1,              f + delay - (15 * FPS));
@@ -427,13 +428,15 @@ function createSupernovaEvents(delay: number): AnimEvent[] {
     let pulse7:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay + (3 * FPS));
     let shakeStop:  AnimEvent = new AnimEvent(AnimEventType.SHAKE_STOP,           f + delay + (3 * FPS));
     let pulseStop:  AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_STOP,        f + delay + (4 * FPS));
+    let yesSling:   AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_ALLOWED,    f + delay + (4 * FPS));   // Slingshotting allowed after black hole is done.
 
     return [
-      enterBH,
-      alarm1, alarm2, alarm3,
-      supernova,
-      shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop,
-      pulse1, pulse2, pulse3, pulse4, pulse5, pulse6, pulse7, pulseStop,
+      enterBH,                                                            // Black hole instantiation.
+      alarm1, alarm2, alarm3,                                             // Shield button alarms going off.
+      supernova,                                                          // The lethal moment.
+      shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop,  // Shaking intensity changes.
+      pulse1, pulse2, pulse3, pulse4, pulse5, pulse6, pulse7, pulseStop,  // Black hole pulsing intensity changes.
+      noSling, yesSling,                                                  // Preventing overlap with planet slingshotting.
     ];
 }
 
