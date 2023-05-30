@@ -285,6 +285,7 @@ function drawSpaceObjects(state: IGlobalState, canvas: CanvasRenderingContext2D)
   // They'll come out sorted by decreasing start frame.
   let pq = new TypedPriorityQueue<Planet>(
     function (a: Planet, b: Planet) {
+      if (a.startFrame === b.startFrame) return a.angle > b.angle;  // Break ties, otherwise ordering can change randomly.
       return a.startFrame > b.startFrame;
     }
   );

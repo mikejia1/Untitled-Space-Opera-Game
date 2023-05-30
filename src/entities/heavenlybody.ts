@@ -1,5 +1,5 @@
 import { BlackHole } from "../scene";
-import { Planet } from "../scene/planet";
+import { Planet, currentlySlingshottingPlanet } from "../scene/planet";
 import { IGlobalState } from "../store/classes";
 import { DRIFTER_COUNT, randomInt } from "../utils";
 
@@ -14,8 +14,12 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     if ((newBlackHole !== null) && ((f - newBlackHole.startFrame) > 1000)) newBlackHole = null;
 
     // Maybe it's time for another planet to drift by.
+    // No spawning if black hole has moved some distance.
+    // No spawning if an existing planet is slingshotting and has started orbit diversion.
     let blackHoleFarAlready = (state.blackHole !== null) && (state.blackHole.driftDistance() > 400);
-    if (!blackHoleFarAlready) {
+    let sling = currentlySlingshottingPlanet(state);
+    let orbitDiversionHappening = (sling !== null) && (sling.orbitDiversionHasBegun(state.currentFrame));
+    if ((!blackHoleFarAlready) && (!orbitDiversionHappening)) {
         for (let i = 0; i < DRIFTER_COUNT; i++) {
             let p = newDrifters[i];
             let spawnNow = (randomInt(0, 9999) < 200);
@@ -29,9 +33,26 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
         }
     }
 
+    // Let the planets rotate.
+    for (let i = 0; i < DRIFTER_COUNT; i++) {
+        let d = newDrifters[i];
+        if (d === null) continue;
+        newDrifters[i] = d.update(state);
+    }
+
+    // Starfield drift.
+    let newDriftSpeed = state.starfield.driftSpeed;
+    if ((sling !== null) && orbitDiversionHappening) {
+        newDriftSpeed = 4.5 * sling.orbitPositioningProgress(state);
+    }
+
     return {
         ...state,
         blackHole:  newBlackHole,
         drifters:   newDrifters,
+        starfield: {
+            ...state.starfield,
+            driftSpeed: newDriftSpeed,
+        },
     };
 }

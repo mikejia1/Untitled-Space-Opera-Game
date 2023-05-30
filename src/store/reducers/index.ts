@@ -160,6 +160,7 @@ function updateStarfieldDisplacement(state: IGlobalState): IGlobalState {
     starfield: {
       ...state.starfield,
       pos: state.starfield.pos.plus(delta.x, delta.y),
+      //driftAngle: state.starfield.driftAngle + ((Math.random() - 0.5) * 0.4),
     },
   };
 }

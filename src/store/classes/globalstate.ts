@@ -271,8 +271,8 @@ export function initialGameState(): IGlobalState {
     slingshotAllowed: true,                         // Whether or not slingshotting is currenty allowed. Initially true.
     starfield: {                    // Information about the background starfield.
       pos:        new Coord(0, 0),  // Game begins with no accumulated starfield displacement.
-      driftAngle: 0.9,              // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).
-      driftSpeed: 0.5,              // Initial drift speed (pixels per frame).
+      driftAngle: 0.0,              // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).
+      driftSpeed: 0.0,              // Initial drift speed (pixels per frame).
     },
   }
 }
