@@ -9,6 +9,7 @@ import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
 import { Cat } from '../../entities/cat';
 import { Dialog } from '../../scene/dialog';
 import { Railing } from '../../scene/railing';
+import { StatusBar } from '../../scene/statusbar';
 
 // Gardener images.
 import basewalkstrip             from "../../entities/images/gardener/base_walk_strip8.png";
@@ -71,7 +72,6 @@ import islandPlanetImg from   "../images/drifting_planets/planet_island_256px_60
 import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.png";
 import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
-import { StatusBar } from '../../scene/statusbar';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -122,6 +122,7 @@ export interface IGlobalState {
     debugSettings: any;                 // For configuring extra debug info and visualizations.
     colliderMap: Map<number, Collider>; // Map of collider IDs to colliders.
     slingshotAllowed: boolean;          // Whether or not slingshotting can be initiated right now.
+    starfield: any;                     // Information pertaining to the background starfield.
   }
 
  // Generate the game starting state.
@@ -264,6 +265,11 @@ export function initialGameState(): IGlobalState {
     },
     colliderMap:      new Map<number, Collider>(),  // Initialize collider map.
     slingshotAllowed: true,                         // Whether or not slingshotting is currenty allowed. Initially true.
+    starfield: {                    // Information about the background starfield.
+      pos:        new Coord(0, 0),  // Game begins with no accumulated starfield displacement.
+      driftAngle: 0.9,              // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).
+      driftSpeed: 0.5,              // Initial drift speed (pixels per frame).
+    },
   }
 }
 

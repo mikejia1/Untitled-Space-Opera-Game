@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, rectanglesOverlap } from "../../utils";
+import { Direction, computeCurrentFrame, rectanglesOverlap, unitVector } from "../../utils";
 import { GAMEOVER_RESTART_TIME, IGlobalState, activateAirlockButton, allCollidersFromState, initialGameState, updateAnimEventState } from "../classes";
 import { Airlock, AirlockState, MentalState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
 import { Cat, updateCatState } from "../../entities/cat";
@@ -144,9 +144,22 @@ function updateFrame(state: IGlobalState): IGlobalState {
 
   state = state.statusBar.updateStatusBarState(state);
 
+  state = updateStarfieldDisplacement(state);
+
   return state;
 }
 
+// Update the displacement of the starfield.
+function updateStarfieldDisplacement(state: IGlobalState): IGlobalState {
+  let delta = unitVector(state.starfield.driftAngle).times(state.starfield.driftSpeed);
+  return {
+    ...state,
+    starfield: {
+      ...state.starfield,
+      pos: state.starfield.pos.plus(delta.x, delta.y),
+    },
+  };
+}
 
 // Toggle debug control showCollisionRects from False to True or vice versa.
 function toggleDebugControlCollisionRects(state: IGlobalState): IGlobalState {

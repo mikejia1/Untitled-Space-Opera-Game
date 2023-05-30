@@ -28,6 +28,10 @@ export class Coord {
       return new Coord(this.x * factor, this.y * factor);
     }
 
+    mod(n: number, m: number): Coord {
+      return new Coord(((this.x % n) + n) % n, ((this.y % m) + m) % m);
+    }
+
     toString(): string {
       return "( " + this.x.toPrecision(4) + ", " + this.y.toPrecision(4) + " )";
     }
@@ -35,4 +39,13 @@ export class Coord {
     toIntegers(): Coord {
       return new Coord(Math.floor(this.x), Math.floor(this.y));
     }
+}
+
+// Return a length 1 vector pointing in a given direction (angle in radians).
+// Zero  degrees: to the right.
+// Pi/2  degrees: up.
+// Pi    degrees: to the left.
+// 3Pi/4 degrees: down.
+export function unitVector(angle: number): Coord {
+  return new Coord(Math.cos(angle), Math.sin(angle));
 }

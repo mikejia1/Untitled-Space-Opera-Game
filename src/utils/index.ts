@@ -294,14 +294,42 @@ function drawSpaceObjects(state: IGlobalState, canvas: CanvasRenderingContext2D)
 
 // Draw the starfield seen through the window of the ship.
 function drawStarfield(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord) {
+  let h = H_TILE_COUNT*MAP_TILE_SIZE;
+  let v = V_TILE_COUNT*MAP_TILE_SIZE;
   let deepSpaceFrame = Math.floor(state.currentFrame % 24 / 6);
+  let dest = state.starfield.pos.mod(h, v).plus(shift.x, shift.y);
+  // Starfield southeast of drifted position of top-left corner.
   canvas.drawImage(
-    state.backgroundImages.deepSpace,                         // Sprite source image
-    deepSpaceFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,         // Top-left corner of frame in source
-    H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE,   // Size of frame in source
-    shift.x,                                                  // X position of top-left corner on canvas
-    shift.y,                                                  // Y position of top-left corner on canvas
-    H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
+    state.backgroundImages.deepSpace, // Sprite source image
+    deepSpaceFrame * h, 0,            // Top-left corner of frame in source
+    h, v,                             // Size of frame in source
+    dest.x,                           // X position of top-left corner on canvas
+    dest.y,                           // Y position of top-left corner on canvas
+    h, v);                            // Sprite size on canvas
+  // Starfield southwest of drifted position of top-left corner.
+  canvas.drawImage(
+    state.backgroundImages.deepSpace, // Sprite source image
+    deepSpaceFrame * h, 0,            // Top-left corner of frame in source
+    h, v,                             // Size of frame in source
+    dest.x - h,                       // X position of top-left corner on canvas
+    dest.y,                           // Y position of top-left corner on canvas
+    h, v);                            // Sprite size on canvas
+  // Starfield northeast of drifted position of top-left corner.
+  canvas.drawImage(
+    state.backgroundImages.deepSpace, // Sprite source image
+    deepSpaceFrame * h, 0,            // Top-left corner of frame in source
+    h, v,                             // Size of frame in source
+    dest.x,                           // X position of top-left corner on canvas
+    dest.y - v,                       // Y position of top-left corner on canvas
+    h, v);                            // Sprite size on canvas
+  // Starfield northwest of drifted position of top-left corner.
+  canvas.drawImage(
+    state.backgroundImages.deepSpace, // Sprite source image
+    deepSpaceFrame * h, 0,            // Top-left corner of frame in source
+    h, v,                             // Size of frame in source
+    dest.x - h,                       // X position of top-left corner on canvas
+    dest.y - v,                       // Y position of top-left corner on canvas
+    h, v);                            // Sprite size on canvas  
 }
 
 export function randomInt(min: number, max: number): number {
