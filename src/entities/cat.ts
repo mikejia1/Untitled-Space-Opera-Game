@@ -147,6 +147,7 @@ export function updateCatState(state: IGlobalState): IGlobalState {
     state.npcs.forEach(npc => {
         for (let i = 0; i < state.cats.length; i++) {
             let cat = state.cats[i];
+            if (cat.death !== null) continue;
             if (rectanglesOverlap(cat.deathRect(), npc.collisionRect())) {
                 // If previous attack frame has expired
                 if (state.currentFrame - cat.attackFrame > 8) 
