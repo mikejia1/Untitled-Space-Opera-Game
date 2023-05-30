@@ -124,6 +124,11 @@ export const drawState = (
 
   let shift = computeBackgroundShift(state, 0); // A no-delta shift.
   drawBackground(state, shift, canvas);
+  
+  // Draw portal.
+  if(state.portal !== null) {
+    state.portal.paint(canvas, state);
+  }
 
   drawPaintablesNotBehindShip(canvas, state);
 

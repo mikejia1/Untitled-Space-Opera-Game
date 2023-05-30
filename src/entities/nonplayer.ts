@@ -321,7 +321,7 @@ export class NonPlayer implements Lifeform, Collider {
     }
 
     // Let the NPC move. Returns new updated version of the NPC.
-    move(): NonPlayer {
+    moveAndUpdate(): NonPlayer {
         // An NPC that is "gone" off-screen doesn't need to move.
         if (this.isOffScreen) return this;
     
@@ -767,7 +767,7 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         stationeryCountdown: Math.max(0, npc.stationeryCountdown - 1),
       });
     }
-    return npc.move();
+    return npc.moveAndUpdate();
   }
 
   // Choose a random off-screen position for an NPC so it can enter the garden area from off-screen.

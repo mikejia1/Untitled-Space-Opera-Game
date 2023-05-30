@@ -38,6 +38,7 @@ import npcchokestrip        from "../../entities/images/nonplayer/npc_choke.png"
 import catswalkcycle        from "../../entities/images/cats/cat_walk_cycle_40p_15f.png";
 import catattack            from "../../entities/images/cats/cats_attack_40p_4f.png";
 import catdeath             from "../../entities/images/cats/cats_melt_40p_12f.png";
+import portal               from "../../entities/images/cats/portal_128px_120f.png";
 
 // Ship interior images.
 import spacegarden          from "../images/space_garden.png";
@@ -72,6 +73,7 @@ import islandPlanetImg from   "../images/drifting_planets/planet_island_256px_60
 import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.png";
 import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
+import { Portal } from '../../entities/portal';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -89,6 +91,7 @@ export interface IGlobalState {
     shieldDoors: ShieldDoor;            // The blast shield that protects the garden
     airlock: Airlock;                   // The airlock that opens up into the void
     railing: Railing;                   // The railing right above the air lock
+    portal: Portal | null;              // Portal for cats to enter the garden
     currentFrame: number;               // The current animation frame number (current epoch quarter second number)
     gameoverFrame: number;              // The frame number when the game ended
     pendingEvents: AnimEvent[];         // Queue of one-off event animations to draw
@@ -98,6 +101,7 @@ export interface IGlobalState {
     skeleton: any;                      // The skeleton death animation.
     ghost: any;                         // The ghost animation.
     catImages: any;                     // Source images for cat sprites.
+    portalImage: any        ;            // Source image of the portal.
     gardenerImages: any;                // Source images for gardener sprites.
     shieldImages: any;                  // Source images for the blast shield image.
     shieldButtonImage: any;             // Source image for the shield button animation.
@@ -112,6 +116,7 @@ export interface IGlobalState {
     blackHoleImage: any,                // Images containing animation frames for the black hole
     uiImages: any,                      // Images containing UI elements
     invisibleColliders: Collider[];     // All Colliders that aren't visible.
+    nextColliderId: number;             // The next collider ID that is unassigned.
     muted: boolean;                     // Enable / disable sounds.
     screenShaker: Shaker;               // For causing the screen to shake at key moments.
     blackHole: BlackHole | null;        // The black hole in view, or null if none in view.
@@ -149,10 +154,6 @@ export function initialGameState(): IGlobalState {
   let npcs = gridOfNPCs(colliderId, new Coord(200, 250), 25, 2, 2, 6);
   colliderId += npcs.length;
 
-  // Create a bunch of cats. 
-  let cats = gridOfCats(colliderId, new Coord(200, 290), 30, 2, 2);
-  colliderId += cats.length;
-
   // Create the buttons that activate the sections of the blast shield.
   let shieldButtons = createShieldButtons();
   let airlockButton = new ShieldButton(0, new Coord(148, 234), 0, false);
@@ -174,7 +175,9 @@ export function initialGameState(): IGlobalState {
     wateringCan: initialWateringCan(),
     plants: allPlants,
     npcs: npcs,
-    cats: cats,
+    cats: [],
+    portal: null,
+    nextColliderId: colliderId,
     shieldButtons: shieldButtons,
     airlockButton: airlockButton,
     shieldDoors: initialShieldDoor(),
@@ -200,6 +203,7 @@ export function initialGameState(): IGlobalState {
       death:    loadImage("Cat death strip", catdeath),
       attack:   loadImage("Cat attack strip", catattack),
     },
+    portalImage: loadImage("Portal", portal),
     npcImages:       {
       normalWalkCycle:    loadImage("Normal NPC walk cycle", npcwalkcycle),
       frazzledWalkCycle:  loadImage("Frazzled NPC walk cycle", frazzlednpcwalkcycle),
@@ -378,23 +382,6 @@ function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: numbe
   return all;
 }
 
-// Create a grid of NPCs with top-left one at given position, and with given spacing.
-function gridOfCats(colliderId: number, pos: Coord, spacing: number, cols: number, rows: number): Cat[] {
-  let all: Cat[] = [];
-  for (let col = 0; col < cols; col++) {
-    for (let row = 0; row < rows; row++) {
-      let cat = new Cat({
-        colliderId: colliderId + (rows * col) + row,
-        pos: pos.plus(col * spacing, row * spacing), 
-        color: ( col * cols + row ) % 5,
-        id: (rows * col) + row,
-      });
-      all = [...all, cat];
-    }
-  }
-  return all;
-}
-
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
   return new Gardener(colliderId, new Coord(200, 220), GardenerDirection.Right, false, false, false, null);
@@ -406,7 +393,15 @@ function initialWateringCan(): WateringCan {
 }
 
 function getEvents(): AnimEvent[] {
-  return [...createSupernovaEvents(SUPERNOVA_DELAY)];
+  return [...creatCatInvasionLevel3(3*FPS), ...createSupernovaEvents(SUPERNOVA_DELAY)];
+}
+
+// Set up the timed schedule for cat invasion event. 
+function creatCatInvasionLevel3(delay: number): AnimEvent[] {
+  let f = computeCurrentFrame();
+  let enterPortal: AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL, f + delay);
+  let enterCats: AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION_3, f + delay + (1.2 * FPS));
+  return [enterPortal, enterCats];
 }
 
 // Setup the timed schedule of all events associated with a dangerous supernova encounter.

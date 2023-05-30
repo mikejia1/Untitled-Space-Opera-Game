@@ -1,3 +1,5 @@
+import { gridOfCats } from "../../entities/cat";
+import { Portal } from "../../entities/portal";
 import { ShieldButton } from "../../entities/shieldbutton";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
 import { CausaMortis } from "../../entities/skeleton";
@@ -9,10 +11,12 @@ import { IGlobalState } from "./globalstate";
 // An enum for event types.
 export enum AnimEventType {
     IMPACT,                 // Supernova impact event.
-    GAMEOVER_REPLAY_FRAME,               // End the game.
+    GAMEOVER_REPLAY_FRAME,  // End the game.
     ALARM_1,                // Trigger leftmost shield button alarm.
     ALARM_2,                // Trigger middle shield button alarm.
     ALARM_3,                // Trigger rightmost shield button alarm.
+    OPEN_CAT_PORTAL,      // Open the cat portal for 30 cats. 
+    CAT_INVASION_3,         // 30 cat invasion.
     EARLY_OPEN_SHIELD_1,    // Open leftmost shield early.
     EARLY_OPEN_SHIELD_2,    // Open middle shield early.
     EARLY_OPEN_SHIELD_3,    // Open rightmost shield early.
@@ -66,6 +70,9 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let gameover: boolean = state.gameover;
   let newShieldButtons: ShieldButton[] = state.shieldButtons;
   let gameoverFrame = state.gameoverFrame;
+  let portal = state.portal;
+  let cats = state.cats;
+  let colliderId = state.nextColliderId;
 
   // Process active events
   for (let i = 0; i < state.pendingEvents.length; i++){
@@ -95,6 +102,15 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
           new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_3, event.startTime + 30 + (INTER_SLAT_DELAY * 8)),
         ];
       }
+    }
+    if(event.event == AnimEventType.OPEN_CAT_PORTAL){
+      portal = new Portal(state.currentFrame, 160);
+      event.finished = true;
+    }
+    if(event.event == AnimEventType.CAT_INVASION_3){
+      cats = gridOfCats(colliderId, new Coord(380, 245), 20, 10, 3);
+      colliderId += 30;
+      event.finished = true;
     }
     if(event.event == AnimEventType.ALARM_1){
       newShieldButtons[0] = newShieldButtons[0].startAlarm(state);
@@ -202,6 +218,9 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     ...state, 
     gardener : gardener,
     npcs: npcs,
+    cats: cats,
+    portal: portal,
+    nextColliderId: colliderId,
     plants: newPlants, 
     shieldDoors: newShield, 
     screenShaker: newShaker, 
