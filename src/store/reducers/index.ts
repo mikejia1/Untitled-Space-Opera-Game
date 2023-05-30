@@ -35,6 +35,7 @@ import {
 import { updateOxygenState } from "../../entities/oxygen";
 import { Dialog, isDialogCurrentlyDisplayed, updateDialogState } from "../../scene/dialog";
 import { CausaMortis } from "../../entities/skeleton";
+import { updatePortalState } from "../../entities/portal";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -127,6 +128,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
   state = updateNPCState(state);
 
   state = updateCatState(state);
+
+  state = updatePortalState(state);
   
   state = updateAirlockState(state);
 
@@ -314,7 +317,6 @@ function utiliseItem(state: IGlobalState): IGlobalState {
   let alreadyMelted = false;
   state.cats.forEach(cat => {
     if (!alreadyMelted && rectanglesOverlap(faceRect, cat.collisionRect())) {
-      console.log("die kitty!");
       cat.dieOf(CausaMortis.Liquification, state.currentFrame);
     }
     cats = [...cats, cat];

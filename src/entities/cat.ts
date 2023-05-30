@@ -11,6 +11,7 @@ export class Cat extends NonPlayer {
     // Initial cat rampage (they are charging at the player)
     rampage: boolean = true;
     startFrame: number = Math.floor(Math.random() * 15);
+    invisible: boolean = false;
     // Frame time of last attack
     attackFrame: number;
     death: Death | null;
@@ -36,6 +37,7 @@ export class Cat extends NonPlayer {
 
     // Paint the NPC on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
+        if(this.invisible)  return;
         // The walking animation has 15 frames.
         let frameCount = 15;
         let frame = this.moving ? Math.floor((state.currentFrame + this.startFrame) % (2 * frameCount) / 2) : 0;
@@ -100,8 +102,8 @@ export class Cat extends NonPlayer {
         // Add directional deltas to NPC position and keep it within the background rectangle.
         var delta = dir8ToDeltas(this.facing, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED);
         let newPos = new Coord(
-            (this.pos.x + delta[0] + BACKGROUND_WIDTH) % BACKGROUND_WIDTH,
-            (this.pos.y + delta[1] + BACKGROUND_HEIGHT) % BACKGROUND_HEIGHT);
+            (this.pos.x + delta[0]),
+            (this.pos.y + delta[1]));
         // Return a clone of this NPC, but with a the new position.
         this.pos = newPos;
         return this;
@@ -128,6 +130,7 @@ export function updateCatState(state: IGlobalState): IGlobalState {
     let gardener : Gardener = state.gardener;
     for (let i = 0; i < state.cats.length; i++) {
         let cat = state.cats[i];
+        // Skip update if cat is dead
         if (cat.death !== null) {
             if (cat.death.ejectionScaleFactor !== null) {
                 cat.death.ejectionScaleFactor *= EJECTION_SHRINK_RATE;
@@ -135,13 +138,17 @@ export function updateCatState(state: IGlobalState): IGlobalState {
             cats = [...cats, cat];
             continue;
         }
+        // Kill gardener if cat is attacking
         if (rectanglesOverlap(cat.deathRect(), gardener.collisionRect())) {
             // If previous attack frame has expired
             if (state.currentFrame - cat.attackFrame > 8) 
                 cat.attackFrame = state.currentFrame;
             gardener.dieOf(CausaMortis.Laceration, state.currentFrame);
         }
-        cats = [...cats, cat.move()]
+        cat = cat.move();
+        // Hide cat if in portal
+        cat.invisible = state.portal!= null && rectanglesOverlap(state.portal.collisionRect(), cat.collisionRect()); 
+        cats = [...cats, cat]
     }
     let newLastNPCDeath = state.lastNPCDeath;
     state.npcs.forEach(npc => {
@@ -160,4 +167,26 @@ export function updateCatState(state: IGlobalState): IGlobalState {
         npcs = [...npcs, npc];
     });
     return {...state, cats: cats, npcs: npcs, lastNPCDeath: newLastNPCDeath, gardener: gardener};
+}
+
+
+// Create a grid of NPCs with top-left one at given position, and with given spacing.
+export function gridOfCats(colliderId: number, pos: Coord, spacing: number, cols: number, rows: number): Cat[] {
+    let all: Cat[] = [];
+    for (let col = 0; col < cols; col++) {
+      for (let row = 0; row < rows; row++) {
+        let randX = Math.floor(Math.random() * 8);
+        let randY = Math.floor(Math.random() * 8);
+        let deltaX = col * spacing;
+        let deltaY = (col % 2 == 1) ? row * spacing : row * spacing + Math.floor (spacing /2);
+        let cat = new Cat({
+          colliderId: colliderId + (rows * col) + row,
+          pos: pos.plus(deltaX + randX, deltaY + randY), 
+          color: Math.floor(Math.random() * 5),
+          id: (rows * col) + row,
+        });
+        all = [...all, cat];
+      }
+    }
+    return all;
 }
