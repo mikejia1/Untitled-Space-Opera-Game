@@ -126,6 +126,7 @@ export interface IGlobalState {
     lastNPCDeath: number;               // Frame number of the last time an NPC died.
     debugSettings: any;                 // For configuring extra debug info and visualizations.
     colliderMap: Map<number, Collider>; // Map of collider IDs to colliders.
+    slingshotAllowed: boolean;          // Whether or not slingshotting can be initiated right now.
   }
 
  // Generate the game starting state.
@@ -231,10 +232,10 @@ export function initialGameState(): IGlobalState {
     shieldButtonImage:  loadImage("Shield button", shieldButton),
     airlockDoorImage:   loadImage("Airlock doors", airlockDoors),
     plantImages:  {
-      base: loadImage("Plant image", plantimage),
+      base:           loadImage("Plant image", plantimage),
       coinGeneration: loadImage("Coin generation", plantcoinsprite),
     },
-    coinImage: loadImage("Coin image", coinimage),
+    coinImage:          loadImage("Coin image", coinimage),
     gameOverImage:      loadImage("Game over", gameoverImg),
     replayImage:        loadImage("Replay prompt", replayPrompt),
     blackHoleImage:     loadImage("Black hole", blackHoleImg),
@@ -242,16 +243,16 @@ export function initialGameState(): IGlobalState {
     muted: true,
     screenShaker:     SHAKER_NO_SHAKE,      // Initially, the screen is not shaking.
     blackHole:        null,                 // Initially, there's no black hole in view.
-    drifters:         emptyDrifterArray(),  // Drifting planets.
+    drifters:         emptyDrifterArray(),  // Drifting planets. All initially null.
     planets:          [
-      makePlanet(256, 60, loadImage("Cratered planet", crateredPlanetImg)),   // Cratered planet.
-      makePlanet(256, 60, loadImage("Dry planet",      dryPlanetImg)),        // Dry planet.
-      makePlanet(384, 40, loadImage("Gas ring planet", gasRingPlanetImg)),    // Gas ring planet. (actually 384 pixels).
-      makePlanet(256, 60, loadImage("Ice planet",      icePlanetImg)),        // Ice planet.
-      makePlanet(256, 60, loadImage("Island planet",   islandPlanetImg)),     // Island planet.
-      makePlanet(256, 60, loadImage("Lava planet",     lavaPlanetImg)),       // Lava planet.
-      makePlanet(512, 30, loadImage("Star planet",     starPlanetImg)),       // Star planet (yes, a star - actually 512 pixels).
-      makePlanet(256, 60, loadImage("Wet planet",      wetPlanetImg)),        // Wet planet.
+      makePlanet(256, 60, loadImage("Cratered planet", crateredPlanetImg), true),   // Cratered planet. Can slingshot.
+      makePlanet(256, 60, loadImage("Dry planet",      dryPlanetImg),      false),  // Dry planet. Cannot slingshot.
+      makePlanet(384, 40, loadImage("Gas ring planet", gasRingPlanetImg),  false),  // Gas ring planet. (actually 384 pixels). Cannot slingshot.
+      makePlanet(256, 60, loadImage("Ice planet",      icePlanetImg),      false),  // Ice planet. Cannot slingshot.
+      makePlanet(256, 60, loadImage("Island planet",   islandPlanetImg),   false),  // Island planet. Cannot slingshot.
+      makePlanet(256, 60, loadImage("Lava planet",     lavaPlanetImg),     false),  // Lava planet. Cannot slingshot.
+      makePlanet(512, 30, loadImage("Star planet",     starPlanetImg),     false),  // Star planet (yes, a star - actually 512 pixels). Cannot slingshot.
+      makePlanet(256, 60, loadImage("Wet planet",      wetPlanetImg),      false),  // Wet planet. Cannot slingshot.
     ],
     randomCabinFeverAllowed: false, // No random cabin fever, initially.
     lastNPCDeath: 0,                // Dummy value for initialization.
@@ -265,7 +266,8 @@ export function initialGameState(): IGlobalState {
       collisionsDisabled: false,    // Disable collision checks - Gardener can walk through anything.
       freeze: false,                // When true, drawState becomes a no-opp.
     },
-    colliderMap: new Map<number, Collider>(),
+    colliderMap:      new Map<number, Collider>(),  // Initialize collider map.
+    slingshotAllowed: true,                         // Whether or not slingshotting is currenty allowed. Initially true.
   }
 }
 
@@ -399,34 +401,37 @@ function creatCatInvasionLevel3(delay: number): AnimEvent[] {
 // Setup the timed schedule of all events associated with a dangerous supernova encounter.
 function createSupernovaEvents(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
-    let enterBH: AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_APPEARS,  f + delay - (16 * FPS));
-    let alarm1: AnimEvent = new AnimEvent(AnimEventType.ALARM_1,              f + delay - (15 * FPS));
-    let alarm2: AnimEvent = new AnimEvent(AnimEventType.ALARM_2,              f + delay - (15 * FPS));
-    let alarm3: AnimEvent = new AnimEvent(AnimEventType.ALARM_3,              f + delay - (15 * FPS));
-    let supernova: AnimEvent = new AnimEvent(AnimEventType.IMPACT,            f + delay);
-    let pulse1: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay - (16 * FPS))
-    let shake1: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay - (15 * FPS));
-    let pulse2: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_2,     f + delay - (12 * FPS));
-    let shake2: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay - (11 * FPS));
-    let pulse3: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (8 * FPS));
-    let shake3: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay - (7 * FPS));
-    let pulse4: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_4,     f + delay - (1.15 * FPS));
-    let shake4: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_4,        f + delay - (3 * FPS));
-    let pulse5: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (0.2 * FPS));
-    let shake5: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay);
-    let pulse6: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_2,     f + delay + (2 * FPS));
-    let shake6: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay + (1 * FPS));
-    let pulse7: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay + (3 * FPS));
-    let shake7: AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay + (2 * FPS));
-    let pulseStop: AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_STOP,     f + delay + (4 * FPS));
-    let shakeStop: AnimEvent = new AnimEvent(AnimEventType.SHAKE_STOP,        f + delay + (3 * FPS));
+    let noSling:    AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_FORBIDDEN,  f + delay - (24 * FPS));  // Slingshotting not allowed ahead of black hole.
+    let enterBH:    AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_APPEARS,   f + delay - (16 * FPS));
+    let pulse1:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay - (16 * FPS));
+    let alarm1:     AnimEvent = new AnimEvent(AnimEventType.ALARM_1,              f + delay - (15 * FPS));
+    let alarm2:     AnimEvent = new AnimEvent(AnimEventType.ALARM_2,              f + delay - (15 * FPS));
+    let alarm3:     AnimEvent = new AnimEvent(AnimEventType.ALARM_3,              f + delay - (15 * FPS));
+    let shake1:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay - (15 * FPS));
+    let pulse2:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_2,     f + delay - (12 * FPS));
+    let shake2:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay - (11 * FPS));
+    let pulse3:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (8 * FPS));
+    let shake3:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay - (7 * FPS));
+    let shake4:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_4,        f + delay - (3 * FPS));
+    let pulse5:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (0.2 * FPS));
+    let pulse4:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_4,     f + delay - (1.15 * FPS));
+    let supernova:  AnimEvent = new AnimEvent(AnimEventType.IMPACT,               f + delay);
+    let shake5:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay);
+    let shake6:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay + (1 * FPS));
+    let pulse6:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_2,     f + delay + (2 * FPS));
+    let shake7:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay + (2 * FPS));
+    let pulse7:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay + (3 * FPS));
+    let shakeStop:  AnimEvent = new AnimEvent(AnimEventType.SHAKE_STOP,           f + delay + (3 * FPS));
+    let pulseStop:  AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_STOP,        f + delay + (4 * FPS));
+    let yesSling:   AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_ALLOWED,    f + delay + (4 * FPS));   // Slingshotting allowed after black hole is done.
 
     return [
-      enterBH,
-      alarm1, alarm2, alarm3,
-      supernova,
-      shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop,
-      pulse1, pulse2, pulse3, pulse4, pulse5, pulse6, pulse7, pulseStop,
+      enterBH,                                                            // Black hole instantiation.
+      alarm1, alarm2, alarm3,                                             // Shield button alarms going off.
+      supernova,                                                          // The lethal moment.
+      shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop,  // Shaking intensity changes.
+      pulse1, pulse2, pulse3, pulse4, pulse5, pulse6, pulse7, pulseStop,  // Black hole pulsing intensity changes.
+      noSling, yesSling,                                                  // Preventing overlap with planet slingshotting.
     ];
 }
 

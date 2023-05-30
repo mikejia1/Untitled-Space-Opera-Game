@@ -1,6 +1,6 @@
 import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, 
     computeBackgroundShift, drawClippedImage, Coord,
-    CANVAS_RECT, randomInt, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, STARFIELD_RECT, FPS } from '../utils';
+    CANVAS_RECT, randomInt, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, STARFIELD_RECT, FPS, DRIFTER_COUNT } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Tile } from '../scene';
@@ -9,20 +9,22 @@ const SCALE_CAP = 1.5;
 
 // A rotating planet that can drift by.
 export class Planet implements Paintable {
-    pos: Coord;             // To comply with paintable, though it is not used.
-    startFrame: number;     // The frame when the planet first appeared.
-    size: number;           // Width and height of the planet in source image.
-    frames: number;         // The number of frames in the planet animation.
-    scale: number;          // Scaling factor for sizing the planet.
-    spinRate: number;       // Number of animation frames between sprite frames.
-    flipped: boolean;       // Whether or not the planet is flipped horizontally.
-    image: any;             // The sprite sheet source image.
-    angle: number;          // 0 to 2*PI. Angle that planet moves away from radial centre.
+    pos: Coord;                 // To comply with paintable, though it is not used.
+    startFrame: number;         // The frame when the planet first appeared.
+    size: number;               // Width and height of the planet in source image.
+    frames: number;             // The number of frames in the planet animation.
+    scale: number;              // Scaling factor for sizing the planet.
+    spinRate: number;           // Number of animation frames between sprite frames.
+    flipped: boolean;           // Whether or not the planet is flipped horizontally.
+    image: any;                 // The sprite sheet source image.
+    angle: number;              // 0 to 2*PI. Angle that planet moves away from radial centre.
+    canSlingshot: boolean;      // Whether or not this type of planet is eligible for slingshot.
+    isSlingshotting: boolean;   // Whether or not this instance will actually slingshot.
   
     constructor(
-        startFrame: number, size: number,
-        frames: number, scale: number,
-        spinRate: number, flipped: boolean, image: any, angle: number) {
+        startFrame: number, size: number, frames: number, scale: number,
+        spinRate: number, flipped: boolean, image: any, angle: number,
+        canSlingshot: boolean, isSlingshotting: boolean) {
         this.pos = new Coord(0,0);
         this.startFrame = startFrame;
         this.size = size;
@@ -32,6 +34,8 @@ export class Planet implements Paintable {
         this.flipped = flipped;
         this.image = image;
         this.angle = angle;
+        this.canSlingshot = canSlingshot;
+        this.isSlingshotting = isSlingshotting;
     }
 
     // Pick some random values for angle, scale, spin rate, etc.
@@ -41,12 +45,17 @@ export class Planet implements Paintable {
         let startFrame = state.currentFrame;                // Spawning time of the planet.
         let angle = Math.random() * Math.PI * 2;            // Angle of recession from vanishing point.
         let flipped = ((randomInt(0, 99) % 2) === 0);       // 50-50 chance of being flipped horizontally.
+        let isSlingshotting = this.canSlingshot && ((randomInt(0, 99) < 10));       // Chance of doing a slingshot.
+        if (currentlySlingshottingPlanet(state) !== null) isSlingshotting = false;  // One slingshot at a time.
+        if (!state.slingshotAllowed) isSlingshotting = false;                       // Sometimes it's outright forbidden.
         return new Planet(
             startFrame,                         // Expected frame lifetime of planet.
             this.size, this.frames,             // Source image size and number of frames.
             scale,                              // Scale multiplier.
             spinRate, flipped, this.image,      // Rotation speed, left-right flip, image.
-            angle);                             // Direction to recede from vanishing point.
+            angle,                              // Direction to recede from vanishing point.
+            this.canSlingshot,                  // Slingshot eligibility is preserved from template planet.
+            isSlingshotting);                   // Whether or not this instance will slingshot.
     }
 
     // Paint the planet on the canvas.
@@ -90,13 +99,17 @@ export class Planet implements Paintable {
 
         canvas.restore();
 
-        // Extra debug displays.
-        if (state.debugSettings.showPositionRects) {
-            outlineRect(canvas, shiftRect(positionRect(this), shift.x, shift.y), Colour.POSITION_RECT);
+        // TODO: Remove this - this is just for debugging - to see which planets are meant to be slingshotting.
+        if (this.isSlingshotting) {
+            let r = {
+                a: dest.minus(3, 3),
+                b: dest.plus(3, 3),
+            };
+            outlineRect(canvas, r, Colour.COLLISION_RECT);
         }
     }
 
-    // Position of the centre of the planet in space. Does not include background shift.
+    // Position of the centre of the planet in space. Does not include background shift. (i.e. relative to background, not canvas).
     spaceCentre(state: IGlobalState): Coord {
         const RADIAL_CENTRE: Coord = new Coord(BACKGROUND_WIDTH / 2, ((STARFIELD_RECT.a.y + STARFIELD_RECT.b.y) / 2) * 1.5);
         let t = state.currentFrame - this.startFrame;
@@ -192,6 +205,16 @@ export class Planet implements Paintable {
 }
 
 // Make a new planet. Takes all constructor arguments that don't have a default.
-export function makePlanet(size: number, frames: number, image: any): Planet {
-    return new Planet(0, size, frames, 1, 1, false, image, 0);
+export function makePlanet(size: number, frames: number, image: any, canSlingshot: boolean): Planet {
+    return new Planet(0, size, frames, 1, 1, false, image, 0, canSlingshot, false);
+}
+
+// Return the planet that is currently slingshotting, or null if no plant is currently slingshotting.
+function currentlySlingshottingPlanet(state: IGlobalState): (Planet | null) {
+    for (let i = 0; i < DRIFTER_COUNT; i++) {
+        let p = state.drifters[i];
+        if (p === null) continue;
+        if (p.isSlingshotting) return p;
+    }
+    return null;
 }
