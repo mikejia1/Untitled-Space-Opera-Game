@@ -21,11 +21,12 @@ export function updateOxygenState(state : IGlobalState): IGlobalState {
     if (oxy < 0){
         gardener.dieOf(CausaMortis.Asphyxiation, state.currentFrame);        
         state.npcs.forEach(npc => {
-            npc.dieOf(CausaMortis.Asphyxiation, state.currentFrame);
+            npc.dieOf(CausaMortis.Asphyxiation, state.currentFrame + Math.floor(Math.random() * 2));
             newLastNPCDeath = state.currentFrame;
             npcs = [...npcs, npc];
         });
     }
+    oxy = Math.min(oxy, 100);
     return {...state, oxygen: oxy, lastNPCDeath: newLastNPCDeath};
 }
 
@@ -38,7 +39,7 @@ function oxygenConsumption(npc : NonPlayer): number {
         return 0.05;
     }
     if(npc.mentalState == MentalState.Scared){
-        return 0.12;
+        return 0.13;
     }
-    return 0.1;
+    return 0.11;
 }
