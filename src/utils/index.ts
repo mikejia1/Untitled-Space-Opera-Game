@@ -302,7 +302,7 @@ function drawStarfield(state: IGlobalState, canvas: CanvasRenderingContext2D, sh
   let h = H_TILE_COUNT*MAP_TILE_SIZE;
   let v = V_TILE_COUNT*MAP_TILE_SIZE;
   let deepSpaceFrame = Math.floor(state.currentFrame % 24 / 6);
-  let dest = state.starfield.pos.mod(h, v).plus(shift.x, shift.y);
+  let dest = state.starfield.pos.mod(h, v).plus(shift.x, shift.y).toIntegers();
   // Starfield southeast of drifted position of top-left corner.
   canvas.drawImage(
     state.backgroundImages.deepSpace, // Sprite source image
