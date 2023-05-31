@@ -541,7 +541,10 @@ function dangerIsImpending(state: IGlobalState): boolean {
         // A present black hole is an impending danger, unless it has already blasted the ship.
         ((state.blackHole !== null) && ((computeCurrentFrame() - state.blackHole.startFrame) < (30 * FPS))) || 
         // A non-airtight air lock is an impending danger.
-        (!state.airlock.isAirtight(state)));
+        (!state.airlock.isAirtight(state)) ||
+        // Cats are onboard ship.
+        (state.cats.length > 0) 
+        );
 }
 
 export function updateNPCState(state: IGlobalState) : IGlobalState {

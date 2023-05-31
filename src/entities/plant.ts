@@ -190,8 +190,8 @@ export class Plant {
     let span = Math.max(ENTITY_RECT_WIDTH, ENTITY_RECT_HEIGHT) * 0.6;
     let base = this.pos.plus(ENTITY_RECT_WIDTH / 2, -ENTITY_RECT_HEIGHT / 2);
     return {
-      a: base.plus(-span * 2, -span * 2),
-      b: base.plus(span * 2, span * 2),
+      a: base.plus(-span * 2 + 2, -span * 2 - 1),
+      b: base.plus(span * 2 + 3, span * 2 - 1),
     }
   }
 
