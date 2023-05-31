@@ -43,7 +43,7 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     // Starfield drift.
     let newDriftSpeed = state.starfield.driftSpeed;
     if ((sling !== null) && orbitDiversionHappening) {
-        newDriftSpeed = 4.5 * sling.orbitPositioningProgress(state);
+        newDriftSpeed = (sling.flipped ? -1 : 1) * 9 * Math.pow(sling.orbitPositioningProgress(state), 2);
     }
 
     return {
