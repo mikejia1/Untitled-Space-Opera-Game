@@ -16,11 +16,12 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     // Maybe it's time for another planet to drift by.
     // No spawning if black hole has moved some distance.
     // No spawning if an existing planet is slingshotting and has started orbit diversion.
+    // No spawning if state.planetSpawnAllowed is false.
     let blackHoleFarAlready = (state.blackHole !== null) && (state.blackHole.driftDistance() > 400);
     let sling = currentlySlingshottingPlanet(state);
     let orbitDiversionHappening = (sling !== null) && (sling.orbitDiversionHasBegun(state.currentFrame));
     //console.log("BH far already: " + blackHoleFarAlready + " orbit diversion happening: " + orbitDiversionHappening);
-    if ((!blackHoleFarAlready) && (!orbitDiversionHappening)) {
+    if ((!blackHoleFarAlready) && (!orbitDiversionHappening) && (state.planetSpawnAllowed)) {
         let slingshotPlanetAlreadyPresent = false;
         for (let i = 0; i < DRIFTER_COUNT; i++) {
             let p = newDrifters[i];

@@ -127,6 +127,7 @@ export interface IGlobalState {
     debugSettings: any;                 // For configuring extra debug info and visualizations.
     colliderMap: Map<number, Collider>; // Map of collider IDs to colliders.
     slingshotAllowed: boolean;          // Whether or not slingshotting can be initiated right now.
+    planetSpawnAllowed: boolean;        // Whether or not new drifting planets can be spawned right now.
     starfield: any;                     // Information pertaining to the background starfield.
   }
 
@@ -269,6 +270,7 @@ export function initialGameState(): IGlobalState {
     },
     colliderMap:      new Map<number, Collider>(),  // Initialize collider map.
     slingshotAllowed: true,                         // Whether or not slingshotting is currenty allowed. Initially true.
+    planetSpawnAllowed: true,                       // Whether or not new drifting planets can currently be spawned. Initially true.
     starfield: {                                    // Information about the background starfield.
       pos:        new Coord(0, 0),                  // Game begins with no accumulated starfield displacement.
       driftAngle: 3 * Math.PI / 4,                  // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).

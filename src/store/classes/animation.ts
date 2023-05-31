@@ -35,6 +35,8 @@ export enum AnimEventType {
     BH_PULSE_LEVEL_4,       // Bring black hole pulse magnitude to level 4 (strongest).
     SLINGSHOT_ALLOWED,      // Allow planetary slingshot events to initiate.
     SLINGSHOT_FORBIDDEN,    // Prevent planetary slingshot events from initiating.
+    PLANET_SPAWN_ALLOWED,   // Allow new drifting planets to be spawned.
+    PLANET_SPAWN_FORBIDDEN, // Prevent new drifting planets from being spawned.
 }
 
 // Interface for one-off event animations.
@@ -60,6 +62,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newShaker = state.screenShaker;
   let newLastNPCDeath = state.lastNPCDeath;
   let newSlingshotAllowed = state.slingshotAllowed;
+  let newPlanetSpawnAllowed = state.planetSpawnAllowed;
   let gardener = state.gardener;
   let npcs = state.npcs;
   let newBlackHole: BlackHole | null = state.blackHole;
@@ -216,6 +219,14 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         newSlingshotAllowed = false;
         event.finished = true;
     }
+    if (event.event === AnimEventType.PLANET_SPAWN_ALLOWED) {
+        newPlanetSpawnAllowed = true;
+        event.finished = true;
+    }
+    if (event.event === AnimEventType.PLANET_SPAWN_FORBIDDEN) {
+        newPlanetSpawnAllowed = false;
+        event.finished = true;
+    }
     // This event should only ever triggered via the Gardener update method.
     if (event.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
         console.log("GAME OVER");
@@ -244,6 +255,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     shieldButtons: newShieldButtons,
     lastNPCDeath: newLastNPCDeath,
     slingshotAllowed: newSlingshotAllowed,
+    planetSpawnAllowed: newPlanetSpawnAllowed,
   };
 }
 
