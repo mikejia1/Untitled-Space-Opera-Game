@@ -393,15 +393,48 @@ function initialWateringCan(): WateringCan {
 }
 
 function getEvents(): AnimEvent[] {
-  return [...creatCatInvasionLevel3(3*FPS), ...createSupernovaEvents(SUPERNOVA_DELAY)];
+  return [...creatCatInvasionLevel3(7*FPS), ...createSupernovaEvents(SUPERNOVA_DELAY)];
+}
+
+// Set up the timed schedule for cat invasion event. 
+function creatCatInvasionLevel1(delay: number): AnimEvent[] {
+  let f = computeCurrentFrame();
+  let time = f + delay;
+  let shake1:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (3 * FPS));
+  let shake2:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_2,    time - (2.5 * FPS));
+  let shake3:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (0.5 * FPS));
+  let shakeStop:  AnimEvent =   new AnimEvent(AnimEventType.SHAKE_STOP,       time);
+  let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
+  let enterCats: AnimEvent =    new AnimEvent(AnimEventType.CAT_INVASION_1,   time + (1.2 * FPS));
+  return [shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
+}
+
+// Set up the timed schedule for cat invasion event. 
+function creatCatInvasionLevel2(delay: number): AnimEvent[] {
+  let f = computeCurrentFrame();
+  let time = f + delay;
+  let shake1:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (4 * FPS));
+  let shake2:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_2,    time - (3 * FPS));
+  let shake3:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (0.5 * FPS));
+  let shakeStop:  AnimEvent =   new AnimEvent(AnimEventType.SHAKE_STOP,       time);
+  let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
+  let enterCats: AnimEvent =    new AnimEvent(AnimEventType.CAT_INVASION_2,   time + (1.2 * FPS));
+  return [shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
 }
 
 // Set up the timed schedule for cat invasion event. 
 function creatCatInvasionLevel3(delay: number): AnimEvent[] {
   let f = computeCurrentFrame();
-  let enterPortal: AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL, f + delay);
-  let enterCats: AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION_3, f + delay + (1.2 * FPS));
-  return [enterPortal, enterCats];
+  let time = f + delay;
+  let shake1:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (5 * FPS));
+  let shake2:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_2,    time - (4 * FPS));
+  let shake3:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_3,    time - (3 * FPS));
+  let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
+  let shake4:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_2,    time + 1);
+  let enterCats: AnimEvent =    new AnimEvent(AnimEventType.CAT_INVASION_3,   time + (1.2 * FPS));
+  let shake5:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time + 1.5);
+  let shakeStop:  AnimEvent =   new AnimEvent(AnimEventType.SHAKE_STOP,       time + 2);
+  return [shake1, shake2, shake3, enterPortal, shake4, enterCats, shake5, shakeStop ];
 }
 
 // Setup the timed schedule of all events associated with a dangerous supernova encounter.

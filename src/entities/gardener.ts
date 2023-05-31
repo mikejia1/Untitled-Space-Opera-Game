@@ -54,7 +54,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
     move(state: IGlobalState, directions: Direction[]): Gardener {
         var slowFactor = 1;
         if (this.isOnAPlant(state)) slowFactor = 0.66;
-        if ((state.currentFrame - state.lastNPCDeath) < (FPS * 3)) slowFactor = 0.66;
+        if ((state.currentFrame - state.lastNPCDeath) < (FPS * 3)) slowFactor = 1;
         var dir8 = directionsToDir8(directions); // Convert 1 or more Direction values to a single Dir8.
         var delta = dir8ToDeltas(dir8, GARDENER_DH_PIXEL_SPEED * slowFactor, GARDENER_DV_PIXEL_SPEED * slowFactor);
         // Add deltas to gardener position.

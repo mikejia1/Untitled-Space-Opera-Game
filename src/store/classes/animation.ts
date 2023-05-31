@@ -16,6 +16,8 @@ export enum AnimEventType {
     ALARM_2,                // Trigger middle shield button alarm.
     ALARM_3,                // Trigger rightmost shield button alarm.
     OPEN_CAT_PORTAL,      // Open the cat portal for 30 cats. 
+    CAT_INVASION_1,         // 2 cat invasion.
+    CAT_INVASION_2,         // 5 cat invasion.
     CAT_INVASION_3,         // 30 cat invasion.
     EARLY_OPEN_SHIELD_1,    // Open leftmost shield early.
     EARLY_OPEN_SHIELD_2,    // Open middle shield early.
@@ -104,7 +106,17 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
       }
     }
     if(event.event == AnimEventType.OPEN_CAT_PORTAL){
-      portal = new Portal(state.currentFrame, 160);
+      portal = new Portal(state.currentFrame, 140);
+      event.finished = true;
+    }    
+    if(event.event == AnimEventType.CAT_INVASION_1){
+      cats = gridOfCats(colliderId, new Coord(380, 245), 20, 2, 1);
+      colliderId += 2;
+      event.finished = true;
+    }
+    if(event.event == AnimEventType.CAT_INVASION_2){
+      cats = gridOfCats(colliderId, new Coord(380, 245), 20, 3, 2);
+      colliderId += 6;
       event.finished = true;
     }
     if(event.event == AnimEventType.CAT_INVASION_3){

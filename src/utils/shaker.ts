@@ -25,7 +25,7 @@ export class Shaker {
 }
 
 export const SHAKER_NO_SHAKE = new Shaker(0, 0);
-export const SHAKER_SUBTLE   = new Shaker(0.005, 0.008);
-export const SHAKER_MILD     = new Shaker(0.05, 0.03);
-export const SHAKER_MEDIUM   = new Shaker(1.8, 0.09);
-export const SHAKER_INTENSE  = new Shaker(5, 1);
+export const SHAKER_SUBTLE   = new Shaker(0.05, 0.03); // Level 1
+export const SHAKER_MILD     = new Shaker(0.5, 0.06);  // Level 2
+export const SHAKER_MEDIUM   = new Shaker(1.8, 0.09);  // Level 3
+export const SHAKER_INTENSE  = new Shaker(5, 1);       // Level 4

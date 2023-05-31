@@ -1,7 +1,7 @@
 import { ColliderType, IGlobalState } from "../store/classes";
 import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, Rect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, rectanglesOverlap, EJECTION_SHRINK_RATE, dir8ToDeltas, directionCloseToDir8, Dir8, FPS, randomDir8, adjacentRandomDir8, ALL_DIR8S, rectangleContained } from "../utils";
 import { Gardener } from "./gardener";
-import { NonPlayer } from "./nonplayer";
+import { NonPlayer, RESPAWN_DELAY } from "./nonplayer";
 import { CausaMortis, Death } from "./skeleton";
 
 // Murderous space cat
@@ -162,7 +162,9 @@ export function updateCatState(state: IGlobalState): IGlobalState {
             if (cat.death.ejectionScaleFactor !== null) {
                 cat.death.ejectionScaleFactor *= EJECTION_SHRINK_RATE;
             }
-            cats = [...cats, cat];
+            if(state.currentFrame < cat.death.time + RESPAWN_DELAY) {
+                cats = [...cats, cat];
+            }
             continue;
         }
         // Kill gardener if cat is attacking
