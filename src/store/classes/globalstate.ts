@@ -247,13 +247,13 @@ export function initialGameState(): IGlobalState {
     drifters:         emptyDrifterArray(),  // Drifting planets. All initially null.
     planets:          [
       makePlanet(256, 60, loadImage("Cratered planet", crateredPlanetImg), true),   // Cratered planet. Can slingshot.
-      makePlanet(256, 60, loadImage("Dry planet",      dryPlanetImg),      false),  // Dry planet. Cannot slingshot.
+      makePlanet(256, 60, loadImage("Dry planet",      dryPlanetImg),      true),   // Dry planet. Can slingshot.
       makePlanet(384, 40, loadImage("Gas ring planet", gasRingPlanetImg),  false),  // Gas ring planet. (actually 384 pixels). Cannot slingshot.
-      makePlanet(256, 60, loadImage("Ice planet",      icePlanetImg),      false),  // Ice planet. Cannot slingshot.
-      makePlanet(256, 60, loadImage("Island planet",   islandPlanetImg),   false),  // Island planet. Cannot slingshot.
-      makePlanet(256, 60, loadImage("Lava planet",     lavaPlanetImg),     false),  // Lava planet. Cannot slingshot.
+      makePlanet(256, 60, loadImage("Ice planet",      icePlanetImg),      true),   // Ice planet. Can slingshot.
+      makePlanet(256, 60, loadImage("Island planet",   islandPlanetImg),   true),   // Island planet. Can slingshot.
+      makePlanet(256, 60, loadImage("Lava planet",     lavaPlanetImg),     true),   // Lava planet. Can slingshot.
       makePlanet(512, 30, loadImage("Star planet",     starPlanetImg),     false),  // Star planet (yes, a star - actually 512 pixels). Cannot slingshot.
-      makePlanet(256, 60, loadImage("Wet planet",      wetPlanetImg),      false),  // Wet planet. Cannot slingshot.
+      makePlanet(256, 60, loadImage("Wet planet",      wetPlanetImg),      true),   // Wet planet. Can slingshot.
     ],
     randomCabinFeverAllowed: false, // No random cabin fever, initially.
     lastNPCDeath: 0,                // Dummy value for initialization.
