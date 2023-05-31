@@ -167,7 +167,7 @@ function drawAmbientShade(state: IGlobalState, canvas: CanvasRenderingContext2D)
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle. This includes any screen shake.
 export function computeBackgroundShift(state: IGlobalState, deltaCap: number): Coord {
-  let shift = new Coord(0,0);
+  let shift = computeBackgroundShiftWithoutShake(state);
 
   // Let the screenShaker do its thing.
   let shake = state.screenShaker.shake(state.currentFrame, deltaCap);
@@ -179,6 +179,8 @@ export function computeBackgroundShift(state: IGlobalState, deltaCap: number): C
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle. This is without any screen shake.
 export function computeBackgroundShiftWithoutShake(state: IGlobalState): Coord {
+  return new Coord(0,0);
+  /*
   let shift = CANVAS_CENTRE.minus(state.gardener.pos.x, state.gardener.pos.y);
 
   // Make an adjustment to the vertical shift so that as the gardener climbs the ladder and heads to the base of the
@@ -204,6 +206,7 @@ export function computeBackgroundShiftWithoutShake(state: IGlobalState): Coord {
   // Prevent right edge of background image from moving farther left than the padding amount.
   if ((shift.x + BACKGROUND_WIDTH) < (CANVAS_WIDTH - padding)) shift = shift.plus((CANVAS_WIDTH - padding) - (shift.x + BACKGROUND_WIDTH), 0);
   return shift.toIntegers();
+  */
 }
 
 // Given a value (val), if it falls within the range [inA, inB] then linearly remap it to the range [outA, outB].
