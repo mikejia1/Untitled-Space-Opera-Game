@@ -1,7 +1,7 @@
 import { BlackHole } from "../scene";
 import { Planet, currentlySlingshottingPlanet } from "../scene/planet";
 import { IGlobalState } from "../store/classes";
-import { DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, randomInt } from "../utils";
+import { DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, SHAKER_NO_SHAKE, SHAKER_SUBTLE, randomInt } from "../utils";
 
 export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     const f = state.currentFrame;
@@ -79,10 +79,19 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
         // Plants could be updated here, depending on the light intensity and shield doors.
     }
 
+    // If we're currently doing a slingshot maneuver, let's shake the ship. Just a little.
+    let newShaker = state.screenShaker;
+    if (sling !== null) {
+        let intensity = sling.orbitPositioningProgress(state) - sling.deorbitProgress(state);
+        if (intensity > 0.75) newShaker = SHAKER_SUBTLE;
+        else newShaker = SHAKER_NO_SHAKE;
+    }
+
     return {
         ...state,
-        blackHole:  newBlackHole,
-        drifters:   newDrifters,
+        blackHole:    newBlackHole,
+        drifters:     newDrifters,
+        screenShaker: newShaker,
         starfield: {
             ...state.starfield,
             driftSpeed: newDriftSpeed,
