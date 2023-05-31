@@ -13,6 +13,7 @@ import {
     SHAKE_CAP,
     ALL_DIR8S,
     dir8ToIndex,
+    adjacentDir8Indicies,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -28,7 +29,7 @@ const CONTEMPLATE_DEATH_DELAY = 200;
 
 // Number of frames before NPC respawns after death, and number of frames to fade body away.
 const RESPAWN_DELAY = 96;
-const CORPSE_FADE_DELAY = 40;
+const CORPSE_FADE_DELAY = 72;
 
 // Complete set of possible NPC mental states.
 export enum MentalState {
@@ -321,7 +322,7 @@ export class NonPlayer implements Lifeform, Collider {
     }
 
     // Let the NPC move. Returns new updated version of the NPC.
-    moveAndUpdate(): NonPlayer {
+    move(): NonPlayer {
         // An NPC that is "gone" off-screen doesn't need to move.
         if (this.isOffScreen) return this;
     
@@ -669,13 +670,9 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         if (npc.gardenerAvoidanceCountdown > 0) choice = gardenerAvoidingDirectionChoice(state, npc);
         else {
             let choices: number[] = [];
-            for (let i = 0; i < ALL_DIR8S.length; i++) {
-                choices = [...choices, i];
-                // The bias direction appears extra times in the choice list to make it a more likely choice.
-                if (ALL_DIR8S[i] === npc.biasDirection) choices = [...choices, i, i, i, i];
-            }
+            let biasDirIdx = ALL_DIR8S.indexOf(npc.biasDirection);
             // Standing still is also in the list (value is 8).
-            choices = [...choices, 8, 8];
+            choices = [ ...adjacentDir8Indicies(npc.facing), biasDirIdx, biasDirIdx, 8, 8];
             choice = choices[randomInt(0, choices.length - 1)];
         }
         break;
@@ -767,7 +764,7 @@ function considerNewNPCMovement(state: IGlobalState, npc: NonPlayer, forced: boo
         stationeryCountdown: Math.max(0, npc.stationeryCountdown - 1),
       });
     }
-    return npc.moveAndUpdate();
+    return npc.move();
   }
 
   // Choose a random off-screen position for an NPC so it can enter the garden area from off-screen.
