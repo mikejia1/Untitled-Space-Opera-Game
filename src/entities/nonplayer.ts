@@ -28,8 +28,8 @@ const SUICIDAL_DELAY = 200;
 const CONTEMPLATE_DEATH_DELAY = 200;
 
 // Number of frames before NPC respawns after death, and number of frames to fade body away.
-const RESPAWN_DELAY = 96;
-const CORPSE_FADE_DELAY = 72;
+export const RESPAWN_DELAY = 96;
+const CORPSE_FADE_DELAY = 40;
 
 // Complete set of possible NPC mental states.
 export enum MentalState {
