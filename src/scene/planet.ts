@@ -1,10 +1,9 @@
 import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, 
     computeBackgroundShift, drawClippedImage, Coord,
-    CANVAS_RECT, randomInt, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, STARFIELD_RECT, FPS, DRIFTER_COUNT } from '../utils';
+    CANVAS_RECT, randomInt, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, STARFIELD_RECT, FPS, DRIFTER_COUNT, CANVAS_WIDTH } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { Tile } from '../scene';
-import { act } from 'react-dom/test-utils';
 
 // An upper bound on planet scale multipliers.
 const SCALE_CAP = 1.5;
@@ -79,8 +78,8 @@ export class Planet implements Paintable {
         let slingPos = this.slingshotTargetPos;
         let slingSiz = this.slingshotTargetSize;
         if (isSlingshotting) {
-            slingPos = new Coord(-20, 80);      // Intended location for orbiting.
-            slingSiz = 200;                     // Intended size for orbiting.
+            slingPos = new Coord(flipped ? CANVAS_WIDTH + 20 : -20, 80);      // Intended location for orbiting.
+            slingSiz = 200;                                                   // Intended size for orbiting.
         }
         return new Planet(
             new Coord(0, 0),                    // Dummy position value (relative to slingshoter).
@@ -329,13 +328,15 @@ export class Planet implements Paintable {
     slingshotAdjacentSpaceCentre(state: IGlobalState, sling: Planet): Coord {
         // If the orbit diversion has started, move planet together with sling.
         if (sling.orbitDiversionHasBegun(state.currentFrame)) {
-            if (sling.diversionStartScale !== null && sling.diversionStartPos) {
+            if (sling.diversionStartScale !== null && sling.diversionStartPos != null) {
                 let actualSlingScale = sling.currentScale(state);
                 let wouldHaveBeenSlingScale = sling.diversionStartScale;
                 let scaleFactor = actualSlingScale / wouldHaveBeenSlingScale;
                 let rel = this.pos.times(scaleFactor);
                 let delta = sling.orbitDiversionDelta(state);
-                return sling.diversionStartPos.plus(delta.x, delta.y).plus(rel.x, rel.y);
+                let away = sling.orbitPositioningProgress(state) * CANVAS_WIDTH * 2;
+                if (this.startFrame < sling.startFrame) away = away * -1;
+                return sling.diversionStartPos.plus(delta.x, delta.y).plus(rel.x, rel.y).plus(away, 0);
             }
         }
 
@@ -367,7 +368,11 @@ export class Planet implements Paintable {
         let spin = this.spinSpeed;
         t = (state.currentFrame - this.startFrame);
         let diversionStarted = this.orbitDiversionHasBegun(state.currentFrame);
-        if (diversionStarted) spin = Math.max(1, Math.floor(this.originalSpinSpeed * 0.1));
+        //if (diversionStarted) spin = Math.max(1, Math.floor(this.originalSpinSpeed * 0.1));
+        if (diversionStarted) {
+            let prog = this.orbitPositioningProgress(state);
+            spin = Math.max(1, this.originalSpinSpeed * (1 - prog));
+        }
 
         // If orbit diversion just started, record current position and scale as starting position and scale.
         let dsp: (Coord | null) = this.diversionStartPos;
