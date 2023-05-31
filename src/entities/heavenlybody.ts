@@ -1,7 +1,7 @@
 import { BlackHole } from "../scene";
 import { Planet, currentlySlingshottingPlanet } from "../scene/planet";
 import { IGlobalState } from "../store/classes";
-import { DRIFTER_COUNT, randomInt } from "../utils";
+import { DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, randomInt } from "../utils";
 
 export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     const f = state.currentFrame;
@@ -52,9 +52,31 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
 
     // Starfield drift.
     let newDriftSpeed = state.starfield.driftSpeed;
+    let newDriftAngle = state.starfield.driftAngle;
     if ((sling !== null) && orbitDiversionHappening) {
-        let prog = sling.orbitPositioningProgress(state) - sling.deorbitProgress(state);
-        newDriftSpeed = (sling.flipped ? -1 : 1) * 4.5 * Math.pow(prog, 2);
+       let prog = sling.orbitPositioningProgress(state) - sling.deorbitProgress(state);
+       let downward = DOWNWARD_STARFIELD_DRIFT;
+       let sideways = (sling.flipped ? -1 : 1) * 4.5 * Math.pow(prog, 2);
+       let angle = Math.atan2(downward, sideways);
+       let len = Math.sqrt((downward * downward) + (sideways * sideways));
+       newDriftSpeed = len;
+       newDriftAngle = angle;
+    }
+
+    // If we're currently slingshotting around a star, the light can get so intense that it shrivels the plants.
+    if ((sling != null) && (sling.planetType === 6)) {
+        // Current progress getting into orbit around the star. Range [0.0, 1.0].
+        // 0 --> we haven't started moving into orbit position.
+        // 1 --> we are fully in orbit position.
+        let progressMovingIntoOrbit = sling.orbitPositioningProgress(state);
+
+        // Current progress getting out of orbit around the star. Range [0.0, 1.0];
+        // 0 --> we haven't started moving out of orbit yet.
+        // 1 --> we are fully out of orbit. Slingshot maneuver is done.
+        let progressMovingOutOfOrbit = sling.deorbitProgress(state);
+
+        // Light intensity could be a function of (progressMovingIntoOrbit - progressMovingOutOfOrbit), for example.
+        // Plants could be updated here, depending on the light intensity and shield doors.
     }
 
     return {
@@ -64,6 +86,7 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
         starfield: {
             ...state.starfield,
             driftSpeed: newDriftSpeed,
+            driftAngle: newDriftAngle,
         },
     };
 }

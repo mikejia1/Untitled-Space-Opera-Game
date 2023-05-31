@@ -1,6 +1,6 @@
 import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
-import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT } from '../../utils';
+import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, DOWNWARD_STARFIELD_DRIFT } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { BlackHole, InvisibleCollider } from "../../scene";
 import { Planet, makePlanet } from '../../scene/planet';
@@ -246,14 +246,14 @@ export function initialGameState(): IGlobalState {
     blackHole:        null,                 // Initially, there's no black hole in view.
     drifters:         emptyDrifterArray(),  // Drifting planets. All initially null.
     planets:          [
-      makePlanet(256, 60, loadImage("Cratered planet", crateredPlanetImg), true),   // Cratered planet. Can slingshot.
-      makePlanet(256, 60, loadImage("Dry planet",      dryPlanetImg),      true),   // Dry planet. Can slingshot.
-      makePlanet(384, 40, loadImage("Gas ring planet", gasRingPlanetImg),  false),  // Gas ring planet. (actually 384 pixels). Cannot slingshot.
-      makePlanet(256, 60, loadImage("Ice planet",      icePlanetImg),      true),   // Ice planet. Can slingshot.
-      makePlanet(256, 60, loadImage("Island planet",   islandPlanetImg),   true),   // Island planet. Can slingshot.
-      makePlanet(256, 60, loadImage("Lava planet",     lavaPlanetImg),     true),   // Lava planet. Can slingshot.
-      makePlanet(512, 30, loadImage("Star planet",     starPlanetImg),     false),  // Star planet (yes, a star - actually 512 pixels). Cannot slingshot.
-      makePlanet(256, 60, loadImage("Wet planet",      wetPlanetImg),      true),   // Wet planet. Can slingshot.
+      makePlanet(0, 256, 60, loadImage("Cratered planet", crateredPlanetImg), true),   // Cratered planet. Can slingshot.
+      makePlanet(1, 256, 60, loadImage("Dry planet",      dryPlanetImg),      true),   // Dry planet. Can slingshot.
+      makePlanet(2, 384, 40, loadImage("Gas ring planet", gasRingPlanetImg),  false),  // Gas ring planet. (actually 384 pixels). Cannot slingshot.
+      makePlanet(3, 256, 60, loadImage("Ice planet",      icePlanetImg),      true),   // Ice planet. Can slingshot.
+      makePlanet(4, 256, 60, loadImage("Island planet",   islandPlanetImg),   true),   // Island planet. Can slingshot.
+      makePlanet(5, 256, 60, loadImage("Lava planet",     lavaPlanetImg),     true),   // Lava planet. Can slingshot.
+      makePlanet(6, 512, 30, loadImage("Star planet",     starPlanetImg),     false),  // Star planet (yes, a star - actually 512 pixels). Cannot slingshot.
+      makePlanet(7, 256, 60, loadImage("Wet planet",      wetPlanetImg),      true),   // Wet planet. Can slingshot.
     ],
     randomCabinFeverAllowed: false, // No random cabin fever, initially.
     lastNPCDeath: 0,                // Dummy value for initialization.
@@ -269,10 +269,10 @@ export function initialGameState(): IGlobalState {
     },
     colliderMap:      new Map<number, Collider>(),  // Initialize collider map.
     slingshotAllowed: true,                         // Whether or not slingshotting is currenty allowed. Initially true.
-    starfield: {                    // Information about the background starfield.
-      pos:        new Coord(0, 0),  // Game begins with no accumulated starfield displacement.
-      driftAngle: 0.0,              // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).
-      driftSpeed: 0.0,              // Initial drift speed (pixels per frame).
+    starfield: {                                    // Information about the background starfield.
+      pos:        new Coord(0, 0),                  // Game begins with no accumulated starfield displacement.
+      driftAngle: 3 * Math.PI / 4,                  // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).
+      driftSpeed: DOWNWARD_STARFIELD_DRIFT,         // Initial drift speed (pixels per frame).
     },
   }
 }

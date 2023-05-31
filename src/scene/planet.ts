@@ -22,6 +22,7 @@ const DEORBIT_END_TIME = DEORBIT_START_TIME + 50;
 
 // A rotating planet that can drift by.
 export class Planet implements Paintable {
+    planetType: number;                     // Uniquely identifies the type of planet. (Star planet, for example, is 6).
     pos: Coord;                             // Only used when planet is in presence of a slingshotting planet. Position relative to slingshotting planet.
     relativeToSlingshotter: boolean;        // Whether or not this planet's motion is now to be computed relative to a slingshotting planet.
     startFrame: number;                     // The frame when the planet first appeared.
@@ -43,6 +44,7 @@ export class Planet implements Paintable {
     slingshotTargetSize: number;            // On-canvas size we want to expand the planet to so we can orbit it.
   
     constructor(
+        planetType: number,
         pos: Coord, relativeToSlingshotter: boolean,
         startFrame: number, size: number, frames: number, scale: number, animationFrame: number,
         lastPaintFrame: number, spinSpeed: number, originalSpinSpeed: number, flipped: boolean,
@@ -50,6 +52,7 @@ export class Planet implements Paintable {
         diversionStartPos: (Coord | null), diversionStartScale: (number | null),
         slingshotTargetPos: Coord, slingshotTargetSize: number
         ) {
+        this.planetType = planetType;
         this.pos = pos;
         this.relativeToSlingshotter = relativeToSlingshotter;
         this.startFrame = startFrame;
@@ -89,6 +92,7 @@ export class Planet implements Paintable {
             slingSiz = 200;                                                   // Intended size for orbiting.
         }
         return new Planet(
+            this.planetType,                    // Planet type from template is preserved. (Type 6 is the star planet).
             new Coord(0, 0),                    // Dummy position value (relative to slingshoter).
             false,                              // This planet is not initially moving relative to a slingshotting planet.
             startFrame,                         // Expected frame lifetime of planet.
@@ -428,6 +432,7 @@ export class Planet implements Paintable {
 
         // Updated version of planet.
         return new Planet(
+            this.planetType,
             newPos, newRelative,
             this.startFrame, this.size, this.frames, newScale, animationFrame, lastFrameUpdate, spin, this.originalSpinSpeed,
             this.flipped, this.image, this.angle, this.canSlingshot, this.isSlingshotting,
@@ -465,8 +470,9 @@ export class Planet implements Paintable {
 }
 
 // Make a new planet. Used for making a "template". Create instances using randomizeClone.
-export function makePlanet(size: number, frames: number, image: any, canSlingshot: boolean): Planet {
+export function makePlanet(planetType: number, size: number, frames: number, image: any, canSlingshot: boolean): Planet {
     return new Planet(
+        planetType,         // Identifies the type of planet (0, 1, 2, etc).
         new Coord(0, 0),    // Dummy position value.
         false,              // Not realtive to a slingshotter.
         0,                  // Start frame
