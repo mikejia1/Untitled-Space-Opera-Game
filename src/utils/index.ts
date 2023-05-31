@@ -132,10 +132,11 @@ export const drawState = (
 
   drawPaintablesNotBehindShip(canvas, state);
 
-  // Shield shadows and shade.
+  // Shield shadows and shade. Light from scorching star.
   state.shieldDoors.paintShadows(canvas, state);
+  state.shieldDoors.paintScorchingStarLight(canvas, state);
   drawAmbientShade(state, canvas);
-
+  
   // Draw dialog.
   if (state.dialogs.length > 0) {
     state.dialogs[0].paint(canvas, state);

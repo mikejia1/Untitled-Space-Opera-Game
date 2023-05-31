@@ -1,4 +1,5 @@
 import { Tile } from "../scene";
+import { currentlySlingshottingPlanet } from "../scene/planet";
 import { IGlobalState } from "../store/classes";
 import { Paintable } from "../store/classes/paintable";
 import { BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Coord, Rect, SHIP_INTERIOR_RECT, STARFIELD_RECT, computeBackgroundShift, computeCurrentFrame, drawClippedImage, shiftForTile } from "../utils";
@@ -50,6 +51,9 @@ const SLAT_SHADOW_ALPHA = 0.3;
 
 // A small adjustment to make slat shadows travel a bit faster.
 const SHADOW_GAP_ADJUSTMENT = 1.08;
+
+// Peak alpha value when painting a white rectangle for scorching star light.
+const SCORCH_LIGHT_ALPHA = 0.7;
 
 enum ShieldDoorState {OPENING, CLOSING, OPEN, CLOSED}
 
@@ -113,6 +117,19 @@ export class ShieldDoor implements Paintable {
         }
     }
 
+    // Paint the light from a scorching start (if there is one).
+    paintScorchingStarLight(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
+        let sling = currentlySlingshottingPlanet(state);
+        if (sling === null) return;                 // Abort if there's no slingshotter.
+        if (sling.planetType !== 6) return;         // Abort if slingshotter is not a scorching star.
+        let intensity = sling.orbitPositioningProgress(state) - sling.deorbitProgress(state);
+        if (intensity <= 0) return;                 // Abort if light intensity isn't yet elevated.
+        let shift = this.computeShift(state);
+        for (let i = 0; i < 3; i++) {
+            this.paintSingleStripOfScorchingStarLight(i, canvas, state.currentFrame, shift, intensity);
+        }
+    }
+
     // Paint one of the three blast shield doors.
     paintShieldDoor(i: number, canvas: CanvasRenderingContext2D, state: IGlobalState, currentFrame: number, shift: Coord, clipRect: Rect): void {
         switch (this.shieldDoorStates[i]) {
@@ -131,6 +148,46 @@ export class ShieldDoor implements Paintable {
             case ShieldDoorState.CLOSING:   return this.paintClosingDoorShadows(i, canvas, state, currentFrame, shift, clipRect);
             case ShieldDoorState.CLOSED:    return this.paintClosedDoorShadows(i, canvas, state, currentFrame, shift, clipRect);
         }
+    }
+
+    // Paint a single
+    paintSingleStripOfScorchingStarLight(
+        i: number, canvas: CanvasRenderingContext2D,
+        currentFrame: number, shift: Coord, intensity: number): void {
+            if (this.shieldDoorStates[i] === ShieldDoorState.CLOSED) return;  // No light gets through a closed door.
+            canvas.save();
+            for (let j = 0; j < 4; j++) {
+                let op = this.getOpenAmount(i, j, currentFrame);
+                let alpha = intensity * op * SCORCH_LIGHT_ALPHA;
+                console.log("Slat alpha " + alpha);
+                let x = this.slatX(i, j);
+                let y = 0; //SHIP_INTERIOR_RECT.a.y;
+                let w = 32;
+                let h = BACKGROUND_HEIGHT - y + 1;
+                let slatPos = new Coord(x + shift.x, y + shift.y);
+                slatPos = slatPos.toIntegers();
+                canvas.fillStyle = `rgba(255,255,255,${alpha})`;
+                canvas.fillRect(slatPos.x, slatPos.y, w, h);
+            }
+            canvas.restore();
+    }
+
+    // A number between 0 and 1 reflecting how open a given slat is.
+    getOpenAmount(door: number, slat: number, currentFrame: number): number {
+        let st = 0;
+        switch (this.shieldDoorStates[door]) {
+            case ShieldDoorState.OPEN:      return 1;       // Fully open.
+            case ShieldDoorState.OPENING:
+                st = this.slatTime(door, slat, currentFrame);
+                if (this.openingEarly[door]) st = Math.max(st, 0);
+                else st = Math.max(st - (SLAT_CLOSING_DUR + SLAT_CLOSED_DUR + (INTER_SLAT_DELAY * 6)), 0);
+                return Math.min(st / SLAT_OPENING_DUR, 1);
+            case ShieldDoorState.CLOSING:
+                st = this.slatTime(door, slat, currentFrame);
+                st = Math.max(st, 0);
+                return Math.min(st / SLAT_CLOSING_DUR, 1);    
+            case ShieldDoorState.CLOSED:    return 0;       // Fully closed.
+        }        
     }
 
     // Paint one of the three blast shield doors while it is opening.
