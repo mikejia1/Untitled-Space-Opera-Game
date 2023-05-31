@@ -1,4 +1,4 @@
-import { Colour, positionRect, outlineRect, shiftRect, shiftForTile, 
+import { shiftForTile, 
     computeBackgroundShift, drawClippedImage, Coord,
     CANVAS_RECT, randomInt, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, STARFIELD_RECT, FPS, DRIFTER_COUNT, CANVAS_WIDTH } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
@@ -13,6 +13,12 @@ const ORBIT_DIVERSION_START_TIME = 60;
 
 // Number of frames after planet start frame when the planet is in position for orbiting to begin.
 const ORBIT_POSITION_REACH_TIME = ORBIT_DIVERSION_START_TIME + 450;
+
+// Number of frames after planet start frame when the planet starts to come out of orbit.
+const DEORBIT_START_TIME = ORBIT_POSITION_REACH_TIME + 200;
+
+// Number of frames after planet start frame when the planet is fully deorbited (i.e. slingshot is done).
+const DEORBIT_END_TIME = DEORBIT_START_TIME + 50;
 
 // A rotating planet that can drift by.
 export class Planet implements Paintable {
@@ -66,7 +72,7 @@ export class Planet implements Paintable {
     }
 
     // Pick some random values for angle, scale, spin rate, etc.
-    randomizedClone(state: IGlobalState) {
+    randomizedClone(state: IGlobalState, slingshotOkay: boolean) {
         let scale: number = randomInt(1500, 3500) / 1000;                           // Planet scale multiplier.
         let spinSpeed = randomInt(10, 30);                                          // Planet rotation speed.
         let startFrame = state.currentFrame;                                        // Spawning time of the planet.
@@ -75,6 +81,7 @@ export class Planet implements Paintable {
         let isSlingshotting = this.canSlingshot && ((randomInt(0, 99) < 50));       // Chance of doing a slingshot.
         if (currentlySlingshottingPlanet(state) !== null) isSlingshotting = false;  // One slingshot at a time.
         if (!state.slingshotAllowed) isSlingshotting = false;                       // Sometimes it's outright forbidden.
+        if (!slingshotOkay) isSlingshotting = false;                                // Sometimes the caller forbids it.
         let slingPos = this.slingshotTargetPos;
         let slingSiz = this.slingshotTargetSize;
         if (isSlingshotting) {
@@ -163,7 +170,6 @@ export class Planet implements Paintable {
         */
 
         canvas.restore();
-
     }
 
     // Get the position where the centre of the planet should be painted on the canvas (before black hole adjustment).
@@ -196,22 +202,26 @@ export class Planet implements Paintable {
     // Check to see if the planet has drifted far enough that we can stop painting it.
     isFinished(state: IGlobalState): boolean {
         if (state.blackHole !== null) return false;
+        if (this.isSlingshotting) {
+            //console.log("Deorb prog: " + this.deorbitProgress(state) + " age " + (state.currentFrame - this.startFrame));
+            return this.deorbitProgress(state) >= 1;
+        }
         let p = this.spaceCentre(state);
         let sz = this.currentSize(state);
         if (p.x < -(sz/2)) {
-            console.log("Off to the left p.x " + p.x + " sz " + sz);
+            //console.log("Off to the left p.x " + p.x + " sz " + sz);
             return true;
         }
         if (p.x > (BACKGROUND_WIDTH + (sz/2))) {
-            console.log("Off to the right p.x " + p.x + " sz " + sz);
+            //console.log("Off to the right p.x " + p.x + " sz " + sz);
             return true;
         }
         if (p.y < -(sz/2)) {
-            console.log("Off the top p.y " + p.y + " sz " + sz);
+            //console.log("Off the top p.y " + p.y + " sz " + sz);
             return true;
         }
         if (p.y > (BACKGROUND_HEIGHT + (sz/2))) {
-            console.log("Off the bottom p.y " + p.y + " sz " + sz);
+            //console.log("Off the bottom p.y " + p.y + " sz " + sz);
             return true;
         }
         return false;
@@ -285,9 +295,14 @@ export class Planet implements Paintable {
         return RADIAL_CENTRE.plus(x,y);
     }
 
+    /*
     // Modify a value in range [0, 1] so that it eases in and out - i.e. an S-shaped curve.
     easeInAndOut(val: number): number {
         return 1 / (1 + Math.pow(val / (1 - val), -3));
+    }
+    */
+    easeOut(val: number): number {
+        return Math.sqrt(val);
     }
 
     // A measure of progress toward moving from diversionStartPos to slingshotTargetPos, in range [0, 1].
@@ -295,7 +310,15 @@ export class Planet implements Paintable {
         let a = this.startFrame + ORBIT_DIVERSION_START_TIME;
         let b = this.startFrame + ORBIT_POSITION_REACH_TIME;
         let prog = (state.currentFrame - a) / (b - a);
-        return this.easeInAndOut(Math.max(0, Math.min(1, prog)));
+        return /*this.easeOut(*/Math.max(0, Math.min(1, prog))/*)*/;
+    }
+
+    // A measure of progress in the deorbit phase of the slingshot. Range [0, 1].
+    deorbitProgress(state: IGlobalState): number {
+        let a = this.startFrame + DEORBIT_START_TIME;
+        let b = this.startFrame + DEORBIT_END_TIME;
+        let prog = (state.currentFrame - a) / (b - a);
+        return Math.max(0, Math.min(1, prog));
     }
 
     // The current position delta of the planet since orbit diversion began.
@@ -316,8 +339,13 @@ export class Planet implements Paintable {
     currentSlingshotterSpaceCentre(state: IGlobalState): Coord {
         // If the orbit diversion has started the planet's location shifts to the orbit position.
         if (this.orbitDiversionHasBegun(state.currentFrame) && (this.diversionStartPos !== null)) {
+            let deorbitBackAway = 0;
+            if (this.deorbitHasBegun(state.currentFrame)) {
+                deorbitBackAway = Math.pow(this.deorbitProgress(state), 2) * -CANVAS_WIDTH;
+                if (this.flipped) deorbitBackAway *= -1;
+            }
             let delta = this.orbitDiversionDelta(state);
-            return this.diversionStartPos.plus(delta.x, delta.y);
+            return this.diversionStartPos.plus(delta.x + deorbitBackAway, delta.y);
         }
 
         // Before orbit diversion has started, stick with standard space centre calculation.
@@ -334,7 +362,7 @@ export class Planet implements Paintable {
                 let scaleFactor = actualSlingScale / wouldHaveBeenSlingScale;
                 let rel = this.pos.times(scaleFactor);
                 let delta = sling.orbitDiversionDelta(state);
-                let away = sling.orbitPositioningProgress(state) * CANVAS_WIDTH * 2;
+                let away = Math.pow(sling.orbitPositioningProgress(state), 2) * CANVAS_WIDTH * 3;
                 if (this.startFrame < sling.startFrame) away = away * -1;
                 return sling.diversionStartPos.plus(delta.x, delta.y).plus(rel.x, rel.y).plus(away, 0);
             }
@@ -368,10 +396,9 @@ export class Planet implements Paintable {
         let spin = this.spinSpeed;
         t = (state.currentFrame - this.startFrame);
         let diversionStarted = this.orbitDiversionHasBegun(state.currentFrame);
-        //if (diversionStarted) spin = Math.max(1, Math.floor(this.originalSpinSpeed * 0.1));
         if (diversionStarted) {
             let prog = this.orbitPositioningProgress(state);
-            spin = Math.max(1, this.originalSpinSpeed * (1 - prog));
+            spin = Math.max(3, this.originalSpinSpeed * (1 - prog));
         }
 
         // If orbit diversion just started, record current position and scale as starting position and scale.
@@ -413,6 +440,14 @@ export class Planet implements Paintable {
         if (!this.isSlingshotting) return false;
         let t = (frame - this.startFrame);
         return t > ORBIT_DIVERSION_START_TIME;
+    }
+
+    // Check whether the ship has started to deorbit (or should start to deorbit).
+    // This where the ship slingshots away from the planet.
+    deorbitHasBegun(frame: number): boolean {
+        if (!this.isSlingshotting) return false;
+        let t = (frame - this.startFrame);
+        return t > DEORBIT_START_TIME;
     }
 
     // Compute a displacement that will place the planet at the correct place on the canvas.
