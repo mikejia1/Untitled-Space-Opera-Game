@@ -66,14 +66,14 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
             canvas.drawImage(
                 state.gameOverImage,                                      // Sprite source image
                 Math.floor((CANVAS_WIDTH - state.gameOverImage.width)/2), // X position of top-left corner on canvas
-                100,                                                      // Y position of top-left corner on canvas
+                170,                                                      // Y position of top-left corner on canvas
             );
         }
         if (frameCount > 5*FPS){
             canvas.drawImage(
                 state.replayImage,                                      // Sprite source image
                 Math.floor((CANVAS_WIDTH - state.replayImage.width)/2), // X position of top-left corner on canvas
-                ((frameCount % 30) > 15) ? 130 : 132,                   // Y position of top-left corner on canvas
+                ((frameCount % 30) > 15) ? 200 : 202,                   // Y position of top-left corner on canvas
             );
         }
 
