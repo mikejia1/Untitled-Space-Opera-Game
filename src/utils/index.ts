@@ -350,6 +350,32 @@ export function randomDir8(): Dir8 {
   return ALL_DIR8S[randomInt(0, ALL_DIR8S.length - 1)];
 }
 
+export function adjacentRandomDir8(d: Dir8): Dir8 {
+  switch (d) {
+    case Dir8.Up:         return Math.random() < 0.5 ? Dir8.UpLeft : Dir8.UpRight;
+    case Dir8.UpRight:    return Math.random() < 0.5 ? Dir8.Up : Dir8.Right;
+    case Dir8.Right:      return Math.random() < 0.5 ? Dir8.UpRight : Dir8.DownRight;
+    case Dir8.DownRight:  return Math.random() < 0.5 ? Dir8.Right : Dir8.Down;
+    case Dir8.Down:       return Math.random() < 0.5 ? Dir8.DownRight : Dir8.DownLeft;
+    case Dir8.DownLeft:   return Math.random() < 0.5 ? Dir8.Down : Dir8.Left;
+    case Dir8.Left:       return Math.random() < 0.5 ? Dir8.DownLeft : Dir8.UpLeft;
+    case Dir8.UpLeft:     return Math.random() < 0.5 ? Dir8.Left : Dir8.Up;
+  };
+}
+
+export function adjacentDir8Indicies(d: Dir8): number[] {
+  switch (d) {
+    case Dir8.Up:         return [7,1];
+    case Dir8.UpRight:    return [0,2];
+    case Dir8.Right:      return [1,3];
+    case Dir8.DownRight:  return [2,4];
+    case Dir8.Down:       return [3,5];
+    case Dir8.DownLeft:   return [4,6];
+    case Dir8.Left:       return [5,7];
+    case Dir8.UpLeft:     return [6,0];
+  };
+}
+
 export function randLeftOrRight(): Dir8 {
   return (randomInt(0, 99) < 50) ? Dir8.Left : Dir8.Right;
 }

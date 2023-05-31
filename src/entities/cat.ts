@@ -1,5 +1,5 @@
 import { ColliderType, IGlobalState } from "../store/classes";
-import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, Rect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, rectanglesOverlap, EJECTION_SHRINK_RATE, dir8ToDeltas, directionCloseToDir8, Dir8 } from "../utils";
+import { Direction, Coord, outlineRect, shiftRect, Colour, positionRect, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED, Rect, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, rectanglesOverlap, EJECTION_SHRINK_RATE, dir8ToDeltas, directionCloseToDir8, Dir8, FPS, randomDir8, adjacentRandomDir8, ALL_DIR8S, rectangleContained } from "../utils";
 import { Gardener } from "./gardener";
 import { NonPlayer } from "./nonplayer";
 import { CausaMortis, Death } from "./skeleton";
@@ -9,9 +9,10 @@ export class Cat extends NonPlayer {
     // Cat colour
     color: number = 0;
     // Initial cat rampage (they are charging at the player)
-    rampage: boolean = true;
+    withinCatZone: boolean = false;
     startFrame: number = Math.floor(Math.random() * 15);
-    invisible: boolean = false;
+    // Cats are invisible before they exit the portal.
+    invisible: boolean = true;
     // Frame time of last attack
     attackFrame: number;
     death: Death | null;
@@ -70,6 +71,9 @@ export class Cat extends NonPlayer {
             frame = Math.min(11, Math.floor(( state.currentFrame - this.death.time ) / 2));
         }
         
+        //paint fade out if cat is dead.
+        canvas.globalAlpha = this.deathFadeAlpha(state);// * 0.75;
+
         // Paint gardener sprite for current frame.
         canvas.drawImage(
             image,                                            // Walking base source image
@@ -81,6 +85,8 @@ export class Cat extends NonPlayer {
         // Restore canvas transforms to normal.
         canvas.restore();
 
+        //Cat zone box
+        //outlineRect(canvas, shiftRect(catZone(), shift.x, shift.y), Colour.COLLISION_RECT);
         // Extra debug displays.
         if (state.debugSettings.showCollisionRects) {
             outlineRect(canvas, shiftRect(this.collisionRect(), shift.x, shift.y), Colour.COLLISION_RECT);
@@ -99,13 +105,26 @@ export class Cat extends NonPlayer {
 
     // Let the NPC move. Randomly (more or less). Returns new updated version of the NPC.
     move(): Cat {
+        let oldPos : Coord = this.pos;
+        // Select a new direction on average every 5 seconds.
+        if (this.withinCatZone && Math.random() < 1 / (3 * FPS)) {
+            this.facing = adjacentRandomDir8(this.facing);
+        }
         // Add directional deltas to NPC position and keep it within the background rectangle.
         var delta = dir8ToDeltas(this.facing, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED);
-        let newPos = new Coord(
+        this.pos = new Coord(
             (this.pos.x + delta[0]),
             (this.pos.y + delta[1]));
+        // Check to see if newPos is still within bounds. Change direction/movement if not.
+        while(this.withinCatZone && !rectangleContained(catZone(), this.collisionRect())){
+            this.pos = oldPos;
+            this.facing = ALL_DIR8S[Math.floor(Math.random()*8)];
+            delta = dir8ToDeltas(this.facing, CAT_H_PIXEL_SPEED, CAT_V_PIXEL_SPEED);
+            this.pos = new Coord(
+                (this.pos.x + delta[0]),
+                (this.pos.y + delta[1]));
+        }
         // Return a clone of this NPC, but with a the new position.
-        this.pos = newPos;
         return this;
     }
 
@@ -122,6 +141,14 @@ export class Cat extends NonPlayer {
             this.death.ejectionScaleFactor = 1;                     // Ejection scale factor starts at 1.
         }
     }
+}
+
+// Rect within which cats are allowed to roam.
+function catZone() : Rect {
+    return {
+        a: new Coord(20, 190),
+        b: new Coord(BACKGROUND_WIDTH-30, BACKGROUND_HEIGHT - 60),
+    };
 }
 
 export function updateCatState(state: IGlobalState): IGlobalState {
@@ -145,6 +172,7 @@ export function updateCatState(state: IGlobalState): IGlobalState {
                 cat.attackFrame = state.currentFrame;
             gardener.dieOf(CausaMortis.Laceration, state.currentFrame);
         }
+        cat.withinCatZone = rectangleContained(catZone(), cat.collisionRect());
         cat = cat.move();
         // Hide cat if in portal
         cat.invisible = state.portal!= null && rectanglesOverlap(state.portal.collisionRect(), cat.collisionRect()); 

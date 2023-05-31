@@ -230,19 +230,12 @@ export class Gardener implements Lifeform, Collider, Interactable {
             dest.x, dest.y,                     // Position of sprite on canvas
             w, 48);                            // Sprite size on canvas
     
-        // Where the water part of the sprite is.
-        // let testRect = {
-        //     a: flip ? dest.plus(30, 10) : dest.plus(17, 10),
-        //     b: flip ? dest.plus(17, 20) : dest.plus(30, 20),
-        // };
-
-        let pulse = this.currentWaterPulseFactor(state.currentFrame);
         canvas.drawImage(
             state.gardenerImages.waterPouring,  // Pouring water and watering can
             (frame * 96) + 40 + w, 20,          // Top-left corner of frame in source
             48 - w, 48,                         // Size of frame in source
             dest.x + w, dest.y,                     // Position of sprite on canvas
-            (48 - w) * pulse, 48);                            // Sprite size on canvas
+            (48 - w), 48);                            // Sprite size on canvas
 
         // Restore canvas transforms to normal.
         canvas.restore();
@@ -278,7 +271,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
     // Return a rectangle adjacent to the gardener in the direction it is facing.
     facingDetectionRect(pulseStretch: boolean, frame: number = 0): Rect {
         let rect = this.collisionRect();
-        let pulse = pulseStretch ? this.currentWaterPulseFactor(frame) : 1;
+        let pulse = 3.5;
         switch (this.facing) {
             case GardenerDirection.Left:  return stretchRect(shiftRect(rect, -ENTITY_RECT_WIDTH * pulse, 0), pulse, 1);
             case GardenerDirection.Right: return stretchRect(shiftRect(rect, ENTITY_RECT_WIDTH, 0), pulse, 1);
@@ -287,7 +280,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
 
     // Get current stretch factor for water pulsing.
     currentWaterPulseFactor(frame: number): number {
-        return ((1 + MAX_WATER_STRETCH) / 2) + (Math.sin(frame * WATER_PULSE_SPEED) * ((MAX_WATER_STRETCH - 1) / 2));
+        return 1;
     }
 
     // Have the gardener die.
