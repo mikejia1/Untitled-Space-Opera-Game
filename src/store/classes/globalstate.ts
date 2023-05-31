@@ -3,7 +3,7 @@ import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock,
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, DOWNWARD_STARFIELD_DRIFT } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { BlackHole, InvisibleCollider } from "../../scene";
-import { Planet, makePlanet } from '../../scene/planet';
+import { Planet, TOTAL_SLINGSHOT_DURATION, makePlanet } from '../../scene/planet';
 import { ShieldButton } from '../../entities/shieldbutton';
 import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
 import { Cat } from '../../entities/cat';
@@ -395,7 +395,23 @@ function initialWateringCan(): WateringCan {
 }
 
 function getEvents(): AnimEvent[] {
-  return [...creatCatInvasionLevel3(7*FPS), ...createSupernovaEvents(SUPERNOVA_DELAY)];
+  return [
+    ...createScorchedStarEvents(TOTAL_SLINGSHOT_DURATION),
+    //...creatCatInvasionLevel3(7*FPS),
+    ...createSupernovaEvents(SUPERNOVA_DELAY),
+  ];
+}
+
+// Set up the timed schedule for scorched star slingshot events.
+function createScorchedStarEvents(delay: number): AnimEvent[] {
+  let f = computeCurrentFrame();
+  let time = f + delay;
+  // Prevent spontaneous slingshots for a long enough period before the star slngshot, and re-enabled it immediately after.
+  let forbidSlingshots: AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_FORBIDDEN,      time - TOTAL_SLINGSHOT_DURATION);
+  let scorchedStar:     AnimEvent = new AnimEvent(AnimEventType.SCORCHING_STAR_SLINGSHOT, time);
+  let allowSlingshots:  AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_ALLOWED,        time + 1);
+  console.log("Created scorched start event");
+  return [forbidSlingshots, scorchedStar, allowSlingshots];
 }
 
 // Set up the timed schedule for cat invasion event. 

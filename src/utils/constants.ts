@@ -80,5 +80,8 @@ export const SHAKE_CAP = 2.5;
 // Size of "drifters" array in global state (max simultaneous drifting planets).
 export const DRIFTER_COUNT = 7;
 
+// Maximum number of drifters at once.
+export const MAX_DRIFTERS = 2;
+
 // Speed at which the starfield drifts downwards.
 export const DOWNWARD_STARFIELD_DRIFT = 0.1;

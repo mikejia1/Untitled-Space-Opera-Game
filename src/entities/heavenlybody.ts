@@ -1,7 +1,7 @@
 import { BlackHole } from "../scene";
 import { Planet, currentlySlingshottingPlanet } from "../scene/planet";
 import { IGlobalState } from "../store/classes";
-import { DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, SHAKER_NO_SHAKE, SHAKER_SUBTLE, randomInt } from "../utils";
+import { DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, MAX_DRIFTERS, SHAKER_NO_SHAKE, SHAKER_SUBTLE, randomInt } from "../utils";
 
 export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     const f = state.currentFrame;
@@ -23,16 +23,19 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     //console.log("BH far already: " + blackHoleFarAlready + " orbit diversion happening: " + orbitDiversionHappening);
     if ((!blackHoleFarAlready) && (!orbitDiversionHappening) && (state.planetSpawnAllowed)) {
         let slingshotPlanetAlreadyPresent = false;
+        let alreadyPresentCount = 0;
         for (let i = 0; i < DRIFTER_COUNT; i++) {
             let p = newDrifters[i];
+            let tooManyAlready = (alreadyPresentCount >= MAX_DRIFTERS);
             let spawnNow = (randomInt(0, 9999) < 200);
-            if (p === null && spawnNow) {
+            if (p === null && spawnNow && (!tooManyAlready)) {
                 let choice = randomInt(0, state.planets.length - 1);
                 p = state.planets[choice].randomizedClone(state, !slingshotPlanetAlreadyPresent);
+                alreadyPresentCount += 1;
                 newDrifters[i] = p;
                 // Avoids creating two slingshotters during this one pass through "drifters" array.
                 if (p.isSlingshotting) slingshotPlanetAlreadyPresent = true;
-            }
+            } else alreadyPresentCount += 1;
         }
     }
 

@@ -4,39 +4,41 @@ import { ShieldButton } from "../../entities/shieldbutton";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
 import { CausaMortis } from "../../entities/skeleton";
 import { BlackHole, PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_SUBTLE } from "../../scene";
+import { Planet } from "../../scene/planet";
 import { Coord, SHAKER_INTENSE, SHAKER_MEDIUM, SHAKER_MILD, SHAKER_NO_SHAKE, SHAKER_SUBTLE, computeCurrentFrame, randomInt } from "../../utils";
-import { CANVAS_WIDTH, FPS } from "../../utils/constants";
+import { CANVAS_WIDTH, DRIFTER_COUNT, FPS } from "../../utils/constants";
 import { IGlobalState } from "./globalstate";
 
 // An enum for event types.
 export enum AnimEventType {
-    IMPACT,                 // Supernova impact event.
-    GAMEOVER_REPLAY_FRAME,  // End the game.
-    ALARM_1,                // Trigger leftmost shield button alarm.
-    ALARM_2,                // Trigger middle shield button alarm.
-    ALARM_3,                // Trigger rightmost shield button alarm.
-    OPEN_CAT_PORTAL,      // Open the cat portal for 30 cats. 
-    CAT_INVASION_1,         // 2 cat invasion.
-    CAT_INVASION_2,         // 5 cat invasion.
-    CAT_INVASION_3,         // 30 cat invasion.
-    EARLY_OPEN_SHIELD_1,    // Open leftmost shield early.
-    EARLY_OPEN_SHIELD_2,    // Open middle shield early.
-    EARLY_OPEN_SHIELD_3,    // Open rightmost shield early.
-    SHAKE_STOP,             // Set screen shake back to zero/none.
-    SHAKE_LEVEL_1,          // Set screen shake to level 1 (weakest).
-    SHAKE_LEVEL_2,          // Set screen shake to level 2.
-    SHAKE_LEVEL_3,          // Set screen shake to level 3.
-    SHAKE_LEVEL_4,          // Set screen shake to level 4 (strongest).
-    BLACK_HOLE_APPEARS,     // Bring black hole into view.
-    BH_PULSE_STOP,          // Bring black hole pulse magnitude to zero.
-    BH_PULSE_LEVEL_1,       // Bring black hole pulse magnitude to level 1 (weakest).
-    BH_PULSE_LEVEL_2,       // Bring black hole pulse magnitude to level 2.
-    BH_PULSE_LEVEL_3,       // Bring black hole pulse magnitude to level 3.
-    BH_PULSE_LEVEL_4,       // Bring black hole pulse magnitude to level 4 (strongest).
-    SLINGSHOT_ALLOWED,      // Allow planetary slingshot events to initiate.
-    SLINGSHOT_FORBIDDEN,    // Prevent planetary slingshot events from initiating.
-    PLANET_SPAWN_ALLOWED,   // Allow new drifting planets to be spawned.
-    PLANET_SPAWN_FORBIDDEN, // Prevent new drifting planets from being spawned.
+    IMPACT,                     // Supernova impact event.
+    GAMEOVER_REPLAY_FRAME,      // End the game.
+    ALARM_1,                    // Trigger leftmost shield button alarm.
+    ALARM_2,                    // Trigger middle shield button alarm.
+    ALARM_3,                    // Trigger rightmost shield button alarm.
+    OPEN_CAT_PORTAL,            // Open the cat portal for 30 cats. 
+    CAT_INVASION_1,             // 2 cat invasion.
+    CAT_INVASION_2,             // 5 cat invasion.
+    CAT_INVASION_3,             // 30 cat invasion.
+    EARLY_OPEN_SHIELD_1,        // Open leftmost shield early.
+    EARLY_OPEN_SHIELD_2,        // Open middle shield early.
+    EARLY_OPEN_SHIELD_3,        // Open rightmost shield early.
+    SHAKE_STOP,                 // Set screen shake back to zero/none.
+    SHAKE_LEVEL_1,              // Set screen shake to level 1 (weakest).
+    SHAKE_LEVEL_2,              // Set screen shake to level 2.
+    SHAKE_LEVEL_3,              // Set screen shake to level 3.
+    SHAKE_LEVEL_4,              // Set screen shake to level 4 (strongest).
+    BLACK_HOLE_APPEARS,         // Bring black hole into view.
+    BH_PULSE_STOP,              // Bring black hole pulse magnitude to zero.
+    BH_PULSE_LEVEL_1,           // Bring black hole pulse magnitude to level 1 (weakest).
+    BH_PULSE_LEVEL_2,           // Bring black hole pulse magnitude to level 2.
+    BH_PULSE_LEVEL_3,           // Bring black hole pulse magnitude to level 3.
+    BH_PULSE_LEVEL_4,           // Bring black hole pulse magnitude to level 4 (strongest).
+    SLINGSHOT_ALLOWED,          // Allow planetary slingshot events to initiate.
+    SLINGSHOT_FORBIDDEN,        // Prevent planetary slingshot events from initiating.
+    PLANET_SPAWN_ALLOWED,       // Allow new drifting planets to be spawned.
+    PLANET_SPAWN_FORBIDDEN,     // Prevent new drifting planets from being spawned.
+    SCORCHING_STAR_SLINGSHOT,   // Introduce a "star" type drifting planet that we will slingshot around.
 }
 
 // Interface for one-off event animations.
@@ -63,6 +65,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newLastNPCDeath = state.lastNPCDeath;
   let newSlingshotAllowed = state.slingshotAllowed;
   let newPlanetSpawnAllowed = state.planetSpawnAllowed;
+  let newDrifters = state.drifters;
   let gardener = state.gardener;
   let npcs = state.npcs;
   let newBlackHole: BlackHole | null = state.blackHole;
@@ -227,6 +230,10 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         newPlanetSpawnAllowed = false;
         event.finished = true;
     }
+    if (event.event === AnimEventType.SCORCHING_STAR_SLINGSHOT) {
+        newDrifters = insertScorchedStarSlingshotter(state, newDrifters);
+        event.finished = true;
+    }
     // This event should only ever triggered via the Gardener update method.
     if (event.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
         console.log("GAME OVER");
@@ -244,7 +251,8 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     cats: cats,
     portal: portal,
     nextColliderId: colliderId,
-    plants: newPlants, 
+    plants: newPlants,
+    drifters: newDrifters,
     shieldDoors: newShield, 
     screenShaker: newShaker, 
     blackHole: newBlackHole, 
@@ -257,6 +265,19 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     slingshotAllowed: newSlingshotAllowed,
     planetSpawnAllowed: newPlanetSpawnAllowed,
   };
+}
+
+// Find an unused slot in the drifters array and insert a scorched start for slingshotting.
+function insertScorchedStarSlingshotter(state: IGlobalState, drifters: (Planet | null)[]): (Planet | null)[] {
+    for (let i = 0; i < DRIFTER_COUNT; i++) {
+        if (drifters[i] !== null) continue;
+        let ss = state.planets[6].randomizedClone(state, true);
+        ss.isSlingshotting = true;  // Star normally not slingshot eligible. Have to force it.
+        drifters[i] = ss;
+        console.log("Created scorched star");
+        break;
+    }
+    return drifters;
 }
 
 export const GAMEOVER_RESTART_TIME = 5*FPS;

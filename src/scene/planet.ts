@@ -19,6 +19,7 @@ const DEORBIT_START_TIME = ORBIT_POSITION_REACH_TIME + 200;
 
 // Number of frames after planet start frame when the planet is fully deorbited (i.e. slingshot is done).
 const DEORBIT_END_TIME = DEORBIT_START_TIME + 50;
+export const TOTAL_SLINGSHOT_DURATION = DEORBIT_END_TIME;   // Same value. Different way to look at it.
 
 // A rotating planet that can drift by.
 export class Planet implements Paintable {
@@ -87,15 +88,19 @@ export class Planet implements Paintable {
         if (!slingshotOkay) isSlingshotting = false;                                // Sometimes the caller forbids it.
         let slingPos = this.slingshotTargetPos;
         let slingSiz = this.slingshotTargetSize;
-        if (isSlingshotting) {
+        // Scorched stars always get a larger target size when slingshotting.
+        if (this.planetType === 6) {
+            slingPos = new Coord(flipped ? -40 : CANVAS_WIDTH + 40, 100);     // Intended location for orbiting.
+            slingSiz = 600;                                                   // Intended size for orbiting.
+        } else {
             slingPos = new Coord(flipped ? CANVAS_WIDTH + 20 : -20, 80);      // Intended location for orbiting.
-            slingSiz = 200;                                                   // Intended size for orbiting.
+            slingSiz = 200;                                                   // Intended size for orbiting.    
         }
         return new Planet(
             this.planetType,                    // Planet type from template is preserved. (Type 6 is the star planet).
-            new Coord(0, 0),                    // Dummy position value (relative to slingshoter).
+            new Coord(0, 0),                    // Dummy position value (relative to slingshotter).
             false,                              // This planet is not initially moving relative to a slingshotting planet.
-            startFrame,                         // Expected frame lifetime of planet.
+            startFrame,                         // Time when the planet was spawned.
             this.size, this.frames,             // Source image size and number of frames.
             scale,                              // Scale multiplier.
             randomInt(0, this.frames - 1),      // Random starting animation frame.
@@ -347,6 +352,7 @@ export class Planet implements Paintable {
             if (this.deorbitHasBegun(state.currentFrame)) {
                 deorbitBackAway = Math.pow(this.deorbitProgress(state), 2) * -CANVAS_WIDTH;
                 if (this.flipped) deorbitBackAway *= -1;
+                if (this.planetType === 6) deorbitBackAway *= -1;   // Type 6 (star) spins opposite the others.
             }
             let delta = this.orbitDiversionDelta(state);
             return this.diversionStartPos.plus(delta.x + deorbitBackAway, delta.y);
@@ -366,7 +372,7 @@ export class Planet implements Paintable {
                 let scaleFactor = actualSlingScale / wouldHaveBeenSlingScale;
                 let rel = this.pos.times(scaleFactor);
                 let delta = sling.orbitDiversionDelta(state);
-                let away = Math.pow(sling.orbitPositioningProgress(state), 2) * CANVAS_WIDTH * 3;
+                let away = Math.pow(sling.orbitPositioningProgress(state), 2) * CANVAS_WIDTH * 5;
                 if (this.startFrame < sling.startFrame) away = away * -1;
                 return sling.diversionStartPos.plus(delta.x, delta.y).plus(rel.x, rel.y).plus(away, 0);
             }
