@@ -1,9 +1,7 @@
 import { NonPlayer } from "../entities";
 import { IGlobalState, Paintable } from "../store/classes";
-import { MAP_TILE_SIZE } from "../store/data/positions";
-import { Coord, computeBackgroundShift, shiftForTile } from "../utils";
+import { Coord } from "../utils";
 import { drawText } from "../utils/drawtext";
-import { Tile } from "./tile";
 
 export class Dialog implements Paintable {
     avatar: Coord;
@@ -15,8 +13,8 @@ export class Dialog implements Paintable {
     npcId: number;
 
     constructor(text: string, startFrame: number, npcId: number) {
-        this.pos = new Coord(52, 184);
-        this.avatar = new Coord(60, 207);
+        this.pos = new Coord(52, 314);
+        this.avatar = new Coord(60, 337);
         this.lines = text.split('\n');
         this.totalChars = 0;
         this.lines.forEach((line) => this.totalChars += line.length);

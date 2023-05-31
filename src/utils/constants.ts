@@ -6,8 +6,8 @@ export const BACKGROUND_WIDTH = 384;//2000;
 export const BACKGROUND_HEIGHT = 384;//600;
 
 // Width and height of the 2D canvas.
-export const CANVAS_WIDTH = BACKGROUND_WIDTH//400;
-export const CANVAS_HEIGHT = 240;
+export const CANVAS_WIDTH = BACKGROUND_WIDTH;
+export const CANVAS_HEIGHT = BACKGROUND_HEIGHT;
 
 // The default collision/action rectangle width and height for visible colliders.
 export const ENTITY_RECT_WIDTH = 5;
