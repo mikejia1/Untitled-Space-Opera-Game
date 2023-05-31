@@ -1,4 +1,5 @@
-import { FPS, computeCurrentFrame } from "../../utils";
+import { FPS } from "../../utils/constants";
+import { computeCurrentFrame } from "../../utils";
 import { AnimEvent, AnimEventType } from "./animation";
 
 const CAT_INVASION_1 = FPS*100;
