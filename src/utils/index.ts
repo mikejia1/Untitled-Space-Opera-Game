@@ -167,7 +167,7 @@ function drawAmbientShade(state: IGlobalState, canvas: CanvasRenderingContext2D)
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle. This includes any screen shake.
 export function computeBackgroundShift(state: IGlobalState, deltaCap: number): Coord {
-  let shift = computeBackgroundShiftWithoutShake(state);
+  let shift = new Coord(0,0);
 
   // Let the screenShaker do its thing.
   let shake = state.screenShaker.shake(state.currentFrame, deltaCap);

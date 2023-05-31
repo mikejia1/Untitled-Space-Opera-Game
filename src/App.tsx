@@ -10,8 +10,7 @@ const App = () => {
     <Provider store={store}>
       <ChakraProvider>
         <Container maxW="container.lg" centerContent>
-          <Heading as="h1" size="xl">GARDEN TENDING GAME</Heading>
-          <ScoreCard />
+          <Heading as="h1" >GALACTIC GREENTHUMB</Heading>
           <CanvasBoard height={CANVAS_HEIGHT} width={CANVAS_WIDTH} />
         </Container>
       </ChakraProvider>
