@@ -311,6 +311,7 @@ export class Planet implements Paintable {
 
     // Standard calculation of planet's centre in space (i.e. relative to background). Ignores background shift and slingshotting.
     standardSpaceCentreCalculation(frame: number): Coord {
+        // Same RADIAL_CENTRE calculation that's used in asteroid.ts.
         const RADIAL_CENTRE: Coord = new Coord(BACKGROUND_WIDTH / 2, ((STARFIELD_RECT.a.y + STARFIELD_RECT.b.y) / 2) * 1.5);
         let t = frame - this.startFrame;
         t = t / (5 * FPS);

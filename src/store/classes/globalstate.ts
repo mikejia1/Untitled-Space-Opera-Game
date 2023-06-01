@@ -2,7 +2,7 @@ import { AnimEvent, Collider, ColliderType } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, DOWNWARD_STARFIELD_DRIFT } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
-import { BlackHole, InvisibleCollider } from "../../scene";
+import { Asteroid, BlackHole, InvisibleCollider, NUM_ASTEROIDS } from "../../scene";
 import { Planet, PlanetType, makePlanet } from '../../scene/planet';
 import { ShieldButton } from '../../entities/shieldbutton';
 import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
@@ -10,6 +10,8 @@ import { Cat } from '../../entities/cat';
 import { Dialog } from '../../scene/dialog';
 import { Railing } from '../../scene/railing';
 import { StatusBar } from '../../scene/statusbar';
+import { Portal } from '../../entities/portal';
+import { getEvents } from './eventschedule';
 
 // Gardener images.
 import basewalkstrip      from "../../entities/images/gardener/base_walk_strip8.png";
@@ -75,8 +77,19 @@ import islandPlanetImg from   "../images/drifting_planets/planet_island_256px_60
 import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.png";
 import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
-import { Portal } from '../../entities/portal';
-import { getEvents } from './eventschedule';
+
+// Asteroid images.
+import ast1  from "../images/drifting_planets/asteroid_01_256px_20f.png";
+import ast2  from "../images/drifting_planets/asteroid_02_256px_20f.png";
+import ast3  from "../images/drifting_planets/asteroid_03_256px_20f.png";
+import ast4  from "../images/drifting_planets/asteroid_04_256px_20f.png";
+import ast5  from "../images/drifting_planets/asteroid_05_256px_20f.png";
+import ast6  from "../images/drifting_planets/asteroid_06_256px_20f.png";
+import ast7  from "../images/drifting_planets/asteroid_07_256px_20f.png";
+import ast8  from "../images/drifting_planets/asteroid_08_256px_20f.png";
+import ast9  from "../images/drifting_planets/asteroid_09_256px_20f.png";
+import ast10 from "../images/drifting_planets/asteroid_10_256px_20f.png";
+import ast11 from "../images/drifting_planets/asteroid_11_256px_20f.png";
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -134,6 +147,9 @@ export interface IGlobalState {
     slingshotAllowed: boolean;          // Whether or not slingshotting can be initiated right now.
     planetSpawnAllowed: boolean;        // Whether or not new drifting planets can be spawned right now.
     starfield: any;                     // Information pertaining to the background starfield.
+    asteroids: Asteroid[];              // All the asteroids in the swarm.
+    asteroidImages: any[];              // Array of asteroid sprite sheet source images.
+    asteroidsStillGoing: boolean;       // Whether or not we're still in the asteroid swarm / field.
   }
 
  // Generate the game starting state.
@@ -250,7 +266,21 @@ export function initialGameState(): IGlobalState {
     gameOverImage:      loadImage("Game over", gameoverImg),
     replayImage:        loadImage("Replay prompt", replayPrompt),
     blackHoleImage:     loadImage("Black hole", blackHoleImg),
+    asteroidImages: [
+      loadImage("Asteroid 01", ast1),
+      loadImage("Asteroid 02", ast2),
+      loadImage("Asteroid 03", ast3),
+      loadImage("Asteroid 04", ast4),
+      loadImage("Asteroid 05", ast5),
+      loadImage("Asteroid 06", ast6),
+      loadImage("Asteroid 07", ast7),
+      loadImage("Asteroid 08", ast8),
+      loadImage("Asteroid 09", ast9),
+      loadImage("Asteroid 10", ast10),
+      loadImage("Asteroid 11", ast11),
+    ],
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
+    asteroidsStillGoing: false,             // No asteroid swam initially.
     muted: true,
     screenShaker:     SHAKER_NO_SHAKE,      // Initially, the screen is not shaking.
     blackHole:        null,                 // Initially, there's no black hole in view.
@@ -285,13 +315,28 @@ export function initialGameState(): IGlobalState {
       driftSpeed: DOWNWARD_STARFIELD_DRIFT,         // Initial drift speed (pixels per frame).
     },
     pendingEvents: [],  // No events yet. This is populated below.
+    asteroids:     [],  // No asteroids yet. This is populated below.
   };
 
-  // Populate the pending events and return it.
+  // Populate the pending events and the asteroids.
   return {
     ...withoutEvents,
     pendingEvents: getEvents(withoutEvents),
+    asteroids: initialAsteroids(withoutEvents, NUM_ASTEROIDS),
   };
+}
+
+// Initialze the asteroids in the asteroid field / swarm.
+function initialAsteroids(state: IGlobalState, count: number): Asteroid[] {
+  let asts: Asteroid[] = [];
+  for (let i = 0; i < count; i++) {
+    let index = i % state.asteroidImages.length;
+    asts = [
+      ...asts,
+      new Asteroid(state.asteroidImages[index]),
+    ];
+  }
+  return asts;
 }
 
 // Initial array of drifting planets. All null.

@@ -119,13 +119,15 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
   function creatCatInvasionLevel1(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
     let time = f + delay;
-    let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_SUBTLE);
-    let shake2:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (2.5 * FPS),       SHAKER_MILD);
-    let shake3:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),       SHAKER_SUBTLE);
-    let shakeStop:   AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time,                     SHAKER_NO_SHAKE);
-    let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
-    let enterCats:   AnimEvent =  new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 2, 1));
-    return [shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
+    let asteroidsStart: AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_BEGIN,  time - (5 * FPS));
+    let shake1:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_SUBTLE);
+    let shake2:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (2.5 * FPS),       SHAKER_MILD);
+    let shake3:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),       SHAKER_SUBTLE);
+    let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time,                     SHAKER_NO_SHAKE);
+    let enterPortal:    AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
+    let enterCats:      AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 2, 1));
+    let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (3 * FPS));
+    return [asteroidsStart, shake1, shake2, shake3, shakeStop, enterPortal, enterCats, asteroidsEnd ];
   }
   
   // Set up the timed schedule for cat invasion event. 

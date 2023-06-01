@@ -4,7 +4,7 @@ import { Portal } from "../../entities/portal";
 import { ShieldButton } from "../../entities/shieldbutton";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
 import { CausaMortis } from "../../entities/skeleton";
-import { BlackHole, PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_SUBTLE } from "../../scene";
+import { BlackHole, NUM_ASTEROIDS, PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_SUBTLE } from "../../scene";
 import { Planet, PlanetType } from "../../scene/planet";
 import { Coord, SHAKER_INTENSE, SHAKER_MEDIUM, SHAKER_MILD, SHAKER_NO_SHAKE, SHAKER_SUBTLE, computeCurrentFrame, randomInt } from "../../utils";
 import { CANVAS_WIDTH, DRIFTER_COUNT, FPS } from "../../utils/constants";
@@ -25,6 +25,8 @@ export enum AnimEventType {
     SCORCHING_STAR_SLINGSHOT,   // Introduce a "star" type drifting planet that we will slingshot around.
     DRIFT_PLANET,               // Schedule a specific planet to drift by at a specific time.
     MIND_FLAYER_PLANET,         // We orbit and slingshot around the mind-warping Cthulhu evil planet.
+    ASTEROIDS_BEGIN,            // Begin flying through an asteroid swarm / field.
+    ASTEROIDS_END,              // No more new asteroids - i.e. we start coming out of the swarm / field.
 }
 
 // Interface for one-off event animations.
@@ -55,6 +57,8 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newSlingshotAllowed = state.slingshotAllowed;
   let newPlanetSpawnAllowed = state.planetSpawnAllowed;
   let newDrifters = state.drifters;
+  let newAsteroids = state.asteroids;
+  let newAsteroidsStillGoing = state.asteroidsStillGoing;
   let gardener = state.gardener;
   let npcs = state.npcs;
   let newBlackHole: BlackHole | null = state.blackHole;
@@ -167,6 +171,20 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         }
         event.finished = true;
     }
+    if (event.event === AnimEventType.ASTEROIDS_BEGIN) {
+        newAsteroidsStillGoing = true;
+        for (let i = 0; i < NUM_ASTEROIDS; i++) {
+            newAsteroids[i] = newAsteroids[i].resetRandom(state);
+            newAsteroids[i].visible = true;
+        }
+        console.log("ASTEROIDS START");
+        event.finished = true;
+    }
+    if (event.event === AnimEventType.ASTEROIDS_END) {
+        newAsteroidsStillGoing = false;
+        console.log("ASTEROIDS END");
+        event.finished = true;
+    }
     // This event should only ever triggered via the Gardener update method.
     if (event.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
         console.log("GAME OVER");
@@ -198,6 +216,8 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     slingshotAllowed: newSlingshotAllowed,
     planetSpawnAllowed: newPlanetSpawnAllowed,
     randomCabinFeverAllowed: randomCabinFeverAllowed,
+    asteroids: newAsteroids,
+    asteroidsStillGoing: newAsteroidsStillGoing,
   };
 }
 

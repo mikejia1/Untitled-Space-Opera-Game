@@ -36,6 +36,7 @@ import { updateOxygenState } from "../../entities/oxygen";
 import { Dialog, isDialogCurrentlyDisplayed, updateDialogState } from "../../scene/dialog";
 import { CausaMortis } from "../../entities/skeleton";
 import { updatePortalState } from "../../entities/portal";
+import { updateAsteroids } from "../../scene";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -140,6 +141,8 @@ function updateFrame(state: IGlobalState): IGlobalState {
   state = updateAnimEventState(state);
 
   state = updateHeavenlyBodyState(state);
+
+  state = updateAsteroids(state);
 
   state = updateOxygenState(state);
 
