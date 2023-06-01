@@ -21,7 +21,6 @@ export const contemplatingDeathDialog : string[] = [
 ]
 
 export const catInvasionDialog : string[] = [
-    "Press 'e' to pick up the watering can and",
     "I hear the cats are planning an\n invasion...",
     "The only good cat is a wet cat!",
     "Don't pet the kitty!",
@@ -29,12 +28,17 @@ export const catInvasionDialog : string[] = [
     "Cats hate water, right?",
 ]
 
-export const scorchedStarDialog: string[] = [
+export const scorchingStarDialog: string[] = [
     "Someone close the blinds!",
-    "Too bright! Get the shutters!",
+    "Too hot! Get the shutters!",
     "Those plants don't look so good...",
-    "I'm going blind!",
+    "Who left the sauna open?",
     "Are those plants still alive?",
+]
+
+export const blackHoleDialog: string[] = [
+    "That can't be good.",
+    "We're dooooooomed!",
 ]
 
 export const welcomeDialog: string[] = [

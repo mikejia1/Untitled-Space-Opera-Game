@@ -97,7 +97,7 @@ export interface IGlobalState {
     gardener: Gardener;                 // The gardener tending the garden. Controlled by the player.
     keysPressed: Direction[];           // The movement keys currently pressed by the player.
     score: number;                      // The current game score
-    oxygen: number;                     // The current oxygen level
+    oxygen: any;                        // The current oxygen level
     wateringCan: WateringCan;           // The watering can that the gardener uses to water plants
     plants: Plant[];                    // All the plants currently living
     npcs: NonPlayer[];                  // The various crew people wandering around in the garden
@@ -113,6 +113,7 @@ export interface IGlobalState {
     pendingEvents: AnimEvent[];         // Queue of one-off event animations to draw
     activeEvents: AnimEvent[];          // Queue of one-off event animations to draw
     dialogs: Dialog[];                  // Dialogs to display
+    usedDialogs: Set<string>;           // Previously used dialogs
     lastDialogInteraction: number;      // The last time the player interacted with a dialog
     statusBar: StatusBar;               // The status bar at the top of the screen
     overlay: any;                       // Planet overlay images to display
@@ -193,7 +194,11 @@ export function initialGameState(): IGlobalState {
     gardener: gardener,
     keysPressed: [],
     score: 0,
-    oxygen: 100,
+    oxygen: {
+      level: 70,
+      consumptionRate: 0,
+      productionRate: 0,
+     },
     wateringCan: initialWateringCan(),
     plants: allPlants,
     npcs: npcs,
@@ -209,6 +214,7 @@ export function initialGameState(): IGlobalState {
     gameoverFrame: 0,
     activeEvents: [],
     dialogs: welcomeDialog(npcs),
+    usedDialogs: new Set<string>(),
     lastDialogInteraction: 0,
     statusBar: new StatusBar(),
     gardenerImages: {

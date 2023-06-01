@@ -1,18 +1,23 @@
 import { IGlobalState } from "../store/classes";
 import { MentalState, NonPlayer } from "./nonplayer";
-import { Plant } from "./plant";
+import { MAX_PLANT_HEALTH, Plant } from "./plant";
 import { CausaMortis } from "./skeleton";
 
 export function updateOxygenState(state : IGlobalState): IGlobalState {
-    let oxy = state.oxygen;
+    let oxy = state.oxygen.level;
+    let proR = 0;
+    let conR = 0;
     state.plants.forEach(plant => {
         oxy += oxygenOutput(plant);
+        proR += oxygenOutput(plant);
       });
     state.npcs.forEach(npc => {
         oxy -= oxygenConsumption(npc);
+        conR += oxygenConsumption(npc);
       });
     if(!state.airlock.isAirtight(state)){
-        oxy -= 0.5;
+        oxy -= 0.05;
+        conR += 0.05;
     }
 
     let gardener = state.gardener;
@@ -27,19 +32,25 @@ export function updateOxygenState(state : IGlobalState): IGlobalState {
         });
     }
     oxy = Math.min(oxy, 100);
-    return {...state, oxygen: oxy, lastNPCDeath: newLastNPCDeath};
+    return {...state, 
+        oxygen: {level: oxy, productionRate: proR, consumptionRate: conR}, 
+        lastNPCDeath: newLastNPCDeath};
 }
 
+// Max pp == 0.008, with 32 plants max output == 0.256, 
+// Realistically just max output is 0.18 since plants dehydrate after watering. 
 function oxygenOutput(plant : Plant): number {
-    return plant.growthStage * plant.growthStage * plant.health * 0.001;
+    let bonus = (plant.health == MAX_PLANT_HEALTH && plant.growthStage == 4) ? 3 : 0;
+    return (plant.growthStage + bonus) * 0.001;
 }
 
+// 10 npcs, max consumption == 0.25
 function oxygenConsumption(npc : NonPlayer): number {
     if(npc.mentalState == MentalState.Frazzled){
-        return 0.05;
+        return 0.02;
     }
     if(npc.mentalState == MentalState.Scared){
-        return 0.13;
+        return 0.02;
     }
-    return 0.11;
+    return 0.015;
 }

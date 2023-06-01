@@ -9,6 +9,8 @@ import { Planet, PlanetType } from "../../scene/planet";
 import { Coord, SHAKER_INTENSE, SHAKER_MEDIUM, SHAKER_MILD, SHAKER_NO_SHAKE, SHAKER_SUBTLE, computeCurrentFrame, randomInt } from "../../utils";
 import { CANVAS_WIDTH, DRIFTER_COUNT, FPS } from "../../utils/constants";
 import { IGlobalState } from "./globalstate";
+import { feedDialog } from "../../scene/dialog";
+import { catInvasionDialog } from "../../scene/npcscript";
 
 // An enum for event types.
 
@@ -16,6 +18,7 @@ export enum AnimEventType {
     IMPACT,                     // Supernova impact event.
     GAMEOVER_REPLAY_FRAME,      // End the game.
     ALARM,                      // Trigger one of the blast shield button alarms.
+    DIALOG,                     // Triggers dialog.
     OPEN_CAT_PORTAL,            // Open the cat portal for 30 cats. 
     CAT_INVASION,               // Initiate a cat invation.
     EARLY_OPEN_SHIELD,          // Open one of the blast shield doors early.
@@ -74,7 +77,8 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let portal = state.portal;
   let cats = state.cats;
   let colliderId = state.nextColliderId;
-  let randomCabinFeverAllowed = state.randomCabinFeverAllowed
+  let randomCabinFeverAllowed = state.randomCabinFeverAllowed;
+  let dialogs = state.dialogs;
 
   // Process active events
   for (let i = 0; i < state.pendingEvents.length; i++){
@@ -104,6 +108,10 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
           new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD, event.startTime + 30 + (INTER_SLAT_DELAY * 8),     2),
         ];
       }
+    }
+    if (event.event == AnimEventType.DIALOG) {
+      // payload is a list of potential npc strings.
+      dialogs = feedDialog(state, event.payload, state.npcs[0].id);
     }
     if (event.event == AnimEventType.MIND_FLAYER_PLANET) {
       newDrifters = slingshotMindFlayerPlanet(state, newDrifters);
@@ -204,6 +212,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     nextColliderId: colliderId,
     plants: newPlants,
     drifters: newDrifters,
+    dialogs: dialogs,
     shieldDoors: newShield, 
     screenShaker: newShaker, 
     blackHole: newBlackHole, 

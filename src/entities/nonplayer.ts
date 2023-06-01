@@ -20,7 +20,7 @@ import { Tile } from '../scene';
 import { CausaMortis, Death } from './skeleton';
 import { orbittingMindFlayerPlanet } from '../scene/planet';
 import { cabinFeverDialog, movingToAirlockDialog, contemplatingDeathDialog } from '../scene/npcscript';
-import { Dialog } from '../scene/dialog';
+import { Dialog, feedDialog } from '../scene/dialog';
 import { AirlockState } from './airlock';
 
 // Probability of cabin fever, per NPC, per frame. 5 in 10,000.
@@ -609,10 +609,8 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
             crazyNPCId = newNPC.id;
         }
         if(newNPC.hasReachedAirLockButton){
-            console.log("dialog: here its working");
             atLeastOneNPCAtAirlock =true;}
         if(newNPC.hasCabinFever && newNPC.suicideCountdown == 0) {
-            console.log("dialog: this is working too");
             atLeastOneNPCMovingToAirlock = true;}
 
         // If NPC is trying to push air lock button, and is close enough to do so, push it and head toward the air lock.
@@ -631,26 +629,18 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
     let dialog = state.dialogs;
     // Trigger crazy NPC dialog.
     if(atLeastOneNPCAtAirlock){
-        console.log("dialog: atLeastOneNPCAtAirlock");
         if(state.currentFrame > state.lastDialogInteraction + 2 * FPS){
-            let npcLine = contemplatingDeathDialog[Math.floor(Math.random() * contemplatingDeathDialog.length)];
-            dialog = [new Dialog(npcLine, state.currentFrame, crazyNPCId), ...dialog];
-            console.log("dialog: contemplating death" + npcLine);
+            dialog = feedDialog(state, contemplatingDeathDialog, crazyNPCId);
         }
     }
     else if(atLeastOneNPCMovingToAirlock){
-        console.log("dialog: atLeastOneNPCMovingToAirlock");
         if(state.currentFrame > state.lastDialogInteraction + 2 * FPS){
-            let npcLine = movingToAirlockDialog[Math.floor(Math.random() * movingToAirlockDialog.length)];
-            dialog = [new Dialog(npcLine, state.currentFrame, crazyNPCId), ...dialog];
-            console.log("dialog: going to airlock" + npcLine);
+            dialog = feedDialog(state, movingToAirlockDialog, crazyNPCId);
         }
     }
     else if(atLeastOneNPCFrazzled){
         if(state.currentFrame > state.lastDialogInteraction + 2 * FPS){
-            let npcLine = cabinFeverDialog[Math.floor(Math.random() * cabinFeverDialog.length)];
-            dialog = [new Dialog(npcLine, state.currentFrame, crazyNPCId), ...dialog];
-            console.log("dialog: cabin fever" + npcLine);
+            dialog = feedDialog(state, cabinFeverDialog, crazyNPCId);
         }
     }
 

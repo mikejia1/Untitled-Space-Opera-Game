@@ -1,7 +1,8 @@
 import { BlackHole } from "../scene";
-import { Planet, currentlySlingshottingPlanet } from "../scene/planet";
+import { Planet, currentlySlingshottingPlanet, orbittingScorchingStar } from "../scene/planet";
 import { IGlobalState } from "../store/classes";
-import { DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, MAX_DRIFTERS, SHAKER_NO_SHAKE, SHAKER_SUBTLE, randomInt } from "../utils";
+import { DEHYDRATION_TIME, DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, MAX_DRIFTERS, SHAKER_NO_SHAKE, SHAKER_SUBTLE, randomInt } from "../utils";
+import { Plant } from "./plant";
 
 export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     const f = state.currentFrame;
@@ -44,7 +45,6 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
        newDriftSpeed = len;
        newDriftAngle = angle;
     }
-
     // If we're currently slingshotting around a star, the light can get so intense that it shrivels the plants.
     if ((sling != null) && (sling.planetType === 6)) {
         // Current progress getting into orbit around the star. Range [0.0, 1.0].
@@ -58,7 +58,7 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
         let progressMovingOutOfOrbit = sling.deorbitProgress(state);
 
         // Light intensity could be a function of (progressMovingIntoOrbit - progressMovingOutOfOrbit), for example.
-        // Plants could be updated here, depending on the light intensity and shield doors.
+        //console.log(debug);   // When this was uncommented, I could see states transitioning properly.
     }
 
     // If we're currently doing a slingshot maneuver, let's shake the ship. Just a little.
@@ -68,7 +68,6 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
         if (intensity > 0.75) newShaker = SHAKER_SUBTLE;
         else newShaker = SHAKER_NO_SHAKE;
     }
-
     return {
         ...state,
         blackHole:    newBlackHole,
