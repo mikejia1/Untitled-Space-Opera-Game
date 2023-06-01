@@ -7,7 +7,7 @@ import {
  } from "./constants";
  import { Coord } from './coord';
  import { Rect } from './rect';
- import { Tile, WrapSector, InvisibleCollider } from '../scene';
+ import { Tile, WrapSector, InvisibleCollider, Asteroid } from '../scene';
 import { drawAnimationEvent } from "./drawevent";
 import { Dialog } from "../scene/dialog";
 import { Lifeform } from "../store/classes/lifeform";
@@ -336,6 +336,22 @@ function drawSpaceObjects(state: IGlobalState, canvas: CanvasRenderingContext2D)
   while (!pq.isEmpty()) {
     let d = pq.poll();
     d?.paint(canvas, state);
+  }
+
+  // Put all asteroids into a heap-based priority queue.
+  // They'll come out sorted by decreasing distance.
+  let q = new TypedPriorityQueue<Asteroid>(
+    function (a: Asteroid, b: Asteroid) {
+      if (a.distance === b.distance) return a.pos.x > b.pos.x;  // Break ties, otherwise ordering can change randomly.
+      return a.distance > b.distance;
+    }
+  );
+  state.asteroids.forEach(a => {
+    q.add(a);
+  });
+  while (!q.isEmpty()) {
+    let a = q.poll();
+    a?.paint(canvas, state);
   }
 }
 
