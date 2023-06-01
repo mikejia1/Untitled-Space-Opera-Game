@@ -13,6 +13,7 @@ const PULSE_SPEED = 0.005;
 const BASE_RADIUS = 55;
 
 // The four pulse magnitudes that the black hole transitions through.
+export const PULSE_STOP    = 0;
 export const PULSE_SUBTLE  = 0.2;
 export const PULSE_MILD    = 0.5;
 export const PULSE_MEDIUM  = 2.5;

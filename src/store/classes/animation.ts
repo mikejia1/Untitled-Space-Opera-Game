@@ -1,10 +1,11 @@
+import { monitorEventLoopDelay } from "perf_hooks";
 import { gridOfCats } from "../../entities/cat";
 import { Portal } from "../../entities/portal";
 import { ShieldButton } from "../../entities/shieldbutton";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
 import { CausaMortis } from "../../entities/skeleton";
 import { BlackHole, PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_SUBTLE } from "../../scene";
-import { Planet } from "../../scene/planet";
+import { Planet, PlanetType } from "../../scene/planet";
 import { Coord, SHAKER_INTENSE, SHAKER_MEDIUM, SHAKER_MILD, SHAKER_NO_SHAKE, SHAKER_SUBTLE, computeCurrentFrame, randomInt } from "../../utils";
 import { CANVAS_WIDTH, DRIFTER_COUNT, FPS } from "../../utils/constants";
 import { IGlobalState } from "./globalstate";
@@ -13,46 +14,32 @@ import { IGlobalState } from "./globalstate";
 export enum AnimEventType {
     IMPACT,                     // Supernova impact event.
     GAMEOVER_REPLAY_FRAME,      // End the game.
-    ALARM_1,                    // Trigger leftmost shield button alarm.
-    ALARM_2,                    // Trigger middle shield button alarm.
-    ALARM_3,                    // Trigger rightmost shield button alarm.
+    ALARM,                      // Trigger one of the blast shield button alarms.
     OPEN_CAT_PORTAL,            // Open the cat portal for 30 cats. 
-    CAT_INVASION_1,             // 2 cat invasion.
-    CAT_INVASION_2,             // 5 cat invasion.
-    CAT_INVASION_3,             // 30 cat invasion.
-    EARLY_OPEN_SHIELD_1,        // Open leftmost shield early.
-    EARLY_OPEN_SHIELD_2,        // Open middle shield early.
-    EARLY_OPEN_SHIELD_3,        // Open rightmost shield early.
-    SHAKE_STOP,                 // Set screen shake back to zero/none.
-    SHAKE_LEVEL_1,              // Set screen shake to level 1 (weakest).
-    SHAKE_LEVEL_2,              // Set screen shake to level 2.
-    SHAKE_LEVEL_3,              // Set screen shake to level 3.
-    SHAKE_LEVEL_4,              // Set screen shake to level 4 (strongest).
+    CAT_INVASION,               // Initiate a cat invation.
+    EARLY_OPEN_SHIELD,          // Open one of the blast shield doors early.
+    SHAKE,                      // Alter the setting for the screen shake.
     BLACK_HOLE_APPEARS,         // Bring black hole into view.
-    BH_PULSE_STOP,              // Bring black hole pulse magnitude to zero.
-    BH_PULSE_LEVEL_1,           // Bring black hole pulse magnitude to level 1 (weakest).
-    BH_PULSE_LEVEL_2,           // Bring black hole pulse magnitude to level 2.
-    BH_PULSE_LEVEL_3,           // Bring black hole pulse magnitude to level 3.
-    BH_PULSE_LEVEL_4,           // Bring black hole pulse magnitude to level 4 (strongest).
-    SLINGSHOT_ALLOWED,          // Allow planetary slingshot events to initiate.
-    SLINGSHOT_FORBIDDEN,        // Prevent planetary slingshot events from initiating.
-    PLANET_SPAWN_ALLOWED,       // Allow new drifting planets to be spawned.
-    PLANET_SPAWN_FORBIDDEN,     // Prevent new drifting planets from being spawned.
+    BLACK_HOLE_PULSE,           // Alter the pulse settings for the black hole.
     SCORCHING_STAR_SLINGSHOT,   // Introduce a "star" type drifting planet that we will slingshot around.
+    DRIFT_PLANET,               // Schedule a specific planet to drift by at a specific time.
 }
 
 // Interface for one-off event animations.
 export class AnimEvent {
     event: AnimEventType;
-    //The start time of the animation as frame number
+    // The start time of the animation as frame number
     startTime: number;
-    //Total number of frames in the animation
+    // Total number of frames in the animation
     finished: boolean;
+    // Arbitrary payload with extra info / parameters for the event.
+    payload: any;
 
-    constructor(event: AnimEventType, startTime: number) {
+    constructor(event: AnimEventType, startTime: number, payload: any = null) {
         this.event = event;
         this.startTime = startTime;
         this.finished = false;
+        this.payload = payload;
     }
 }
 
@@ -105,74 +92,43 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         // Otherwise, go ahead and tell all three shield doors to open early - the danger has passed.
         triggeredEvents = [
           ...triggeredEvents,
-          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_1, event.startTime + 30),
-          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_2, event.startTime + 30 + (INTER_SLAT_DELAY * 4)),
-          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_3, event.startTime + 30 + (INTER_SLAT_DELAY * 8)),
+          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD, event.startTime + 30,                              0),
+          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD, event.startTime + 30 + (INTER_SLAT_DELAY * 4),     1),
+          new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD, event.startTime + 30 + (INTER_SLAT_DELAY * 8),     2),
         ];
       }
     }
-    if(event.event == AnimEventType.OPEN_CAT_PORTAL){
+    if (event.event == AnimEventType.OPEN_CAT_PORTAL) {
       portal = new Portal(state.currentFrame, 140);
       event.finished = true;
-    }    
-    if(event.event == AnimEventType.CAT_INVASION_1){
-      cats = gridOfCats(colliderId, new Coord(380, 245), 20, 2, 1);
-      colliderId += 2;
-      event.finished = true;
     }
-    if(event.event == AnimEventType.CAT_INVASION_2){
-      cats = gridOfCats(colliderId, new Coord(380, 245), 20, 3, 2);
-      colliderId += 6;
-      event.finished = true;
+    if (event.event === AnimEventType.CAT_INVASION) {
+        if (event.payload != null) {
+            cats = event.payload;
+            for (let i = 0; i < cats.length; i++) {
+                cats[i].colliderId = colliderId;
+                colliderId += 1;
+            }
+        }
+        event.finished = true;
     }
-    if(event.event == AnimEventType.CAT_INVASION_3){
-      cats = gridOfCats(colliderId, new Coord(380, 245), 20, 10, 3);
-      colliderId += 30;
-      event.finished = true;
+    if (event.event == AnimEventType.ALARM) {
+        if (event.payload !== null) {
+            newShieldButtons[event.payload] = newShieldButtons[event.payload].startAlarm(state);
+        }
+        event.finished = true;
     }
-    if(event.event == AnimEventType.ALARM_1){
-      newShieldButtons[0] = newShieldButtons[0].startAlarm(state);
-      event.finished = true;
+    if (event.event == AnimEventType.EARLY_OPEN_SHIELD) {
+        if (event.payload !== null) {
+            newShield = newShield.openDoorEarly(event.payload);
+        }
+        event.finished = true;
     }
-    if(event.event == AnimEventType.ALARM_2){
-      newShieldButtons[1] = newShieldButtons[1].startAlarm(state);
-      event.finished = true;
-    }
-    if(event.event == AnimEventType.ALARM_3){
-      newShieldButtons[2] = newShieldButtons[2].startAlarm(state);
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.EARLY_OPEN_SHIELD_1) {
-      newShield = newShield.openDoorEarly(0);
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.EARLY_OPEN_SHIELD_2) {
-      newShield = newShield.openDoorEarly(1);
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.EARLY_OPEN_SHIELD_3) {
-      newShield = newShield.openDoorEarly(2);
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_STOP) {
-      newShaker = SHAKER_NO_SHAKE; // new Shaker(0, 0);
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_LEVEL_1) {
-      newShaker = SHAKER_SUBTLE; // new Shaker(0.005, 0.008);
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_LEVEL_2) {
-      newShaker = SHAKER_MILD; // new Shaker(0.05, 0.04);
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_LEVEL_3) {
-      newShaker = SHAKER_MEDIUM; // new Shaker(0.5, 0.2);
-      event.finished = true;
-    }
-    if (event.event == AnimEventType.SHAKE_LEVEL_4) {
-      newShaker = SHAKER_INTENSE; // new Shaker(5, 1);
-      event.finished = true;
+    if (event.event === AnimEventType.SHAKE) {
+        if (event.payload !== null) {
+            newShaker = event.payload;
+        }
+        event.finished = true;
     }
     if (event.event == AnimEventType.BLACK_HOLE_APPEARS) {
       console.log("Handling BLACK_HOLE_APPEARS event");
@@ -184,54 +140,23 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         0);                                                       // Target pulse magnitude.
       event.finished = true;
     }
-    if (event.event === AnimEventType.BH_PULSE_LEVEL_1) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_SUBTLE);
-        event.finished = true;
-      }
-    }
-    if (event.event === AnimEventType.BH_PULSE_LEVEL_2) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_MILD);
-        event.finished = true;
-      }
-    }
-    if (event.event === AnimEventType.BH_PULSE_LEVEL_3) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_MEDIUM);
-        event.finished = true;
-      }
-    }
-    if (event.event === AnimEventType.BH_PULSE_LEVEL_4) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(PULSE_INTENSE);
-        event.finished = true;
-      }
-    }
-    if (event.event === AnimEventType.BH_PULSE_STOP) {
-      if (newBlackHole !== null) {
-        newBlackHole = newBlackHole.setTargetPulseMagnitude(0);
-        event.finished = true;
-      }
-    }
-    if (event.event === AnimEventType.SLINGSHOT_ALLOWED) {
-        newSlingshotAllowed = true;
-        event.finished = true;
-    }
-    if (event.event === AnimEventType.SLINGSHOT_FORBIDDEN) {
-        newSlingshotAllowed = false;
-        event.finished = true;
-    }
-    if (event.event === AnimEventType.PLANET_SPAWN_ALLOWED) {
-        newPlanetSpawnAllowed = true;
-        event.finished = true;
-    }
-    if (event.event === AnimEventType.PLANET_SPAWN_FORBIDDEN) {
-        newPlanetSpawnAllowed = false;
+    if (event.event === AnimEventType.BLACK_HOLE_PULSE) {
+        if ((newBlackHole !== null) && (event.payload !== null)) {
+            newBlackHole = newBlackHole.setTargetPulseMagnitude(event.payload);
+        }
         event.finished = true;
     }
     if (event.event === AnimEventType.SCORCHING_STAR_SLINGSHOT) {
-        newDrifters = insertScorchedStarSlingshotter(state, newDrifters);
+        let ss = state.planets.get(PlanetType.STAR)?.instance(true, 3.5, 10, Math.PI/2, Math.random() < 0.5);
+        if (ss !== undefined) {
+            newDrifters = insertDrifter(state, newDrifters, ss);
+        }
+        event.finished = true;
+    }
+    if (event.event === AnimEventType.DRIFT_PLANET) {
+        if (event.payload !== null) {
+            newDrifters = insertDrifter(state, newDrifters, event.payload);
+        }
         event.finished = true;
     }
     // This event should only ever triggered via the Gardener update method.
@@ -239,7 +164,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         console.log("GAME OVER");
         gameover = true;
         gameoverFrame = state.currentFrame;
-        // clear remaining events.
+        // Clear remaining events.
         newPendingEvents = [];
         triggeredEvents = [];
     }
@@ -267,14 +192,12 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   };
 }
 
-// Find an unused slot in the drifters array and insert a scorched start for slingshotting.
-function insertScorchedStarSlingshotter(state: IGlobalState, drifters: (Planet | null)[]): (Planet | null)[] {
+// Find an unused slot in the drifters array and insert a given drifter.
+function insertDrifter(state: IGlobalState, drifters: (Planet | null)[], drifter: Planet): (Planet | null)[] {
     for (let i = 0; i < DRIFTER_COUNT; i++) {
         if (drifters[i] !== null) continue;
-        let ss = state.planets[6].randomizedClone(state, true);
-        ss.isSlingshotting = true;  // Star normally not slingshot eligible. Have to force it.
-        drifters[i] = ss;
-        console.log("Created scorched star");
+        drifter.start(state);
+        drifters[i] = drifter;
         break;
     }
     return drifters;

@@ -201,7 +201,7 @@ export function updateCatState(state: IGlobalState): IGlobalState {
 
 
 // Create a grid of NPCs with top-left one at given position, and with given spacing.
-export function gridOfCats(colliderId: number, pos: Coord, spacing: number, cols: number, rows: number): Cat[] {
+export function gridOfCats(pos: Coord, spacing: number, cols: number, rows: number): Cat[] {
     let all: Cat[] = [];
     for (let col = 0; col < cols; col++) {
       for (let row = 0; row < rows; row++) {
@@ -210,7 +210,7 @@ export function gridOfCats(colliderId: number, pos: Coord, spacing: number, cols
         let deltaX = col * spacing;
         let deltaY = (col % 2 == 1) ? row * spacing : row * spacing + Math.floor (spacing /2);
         let cat = new Cat({
-          colliderId: colliderId + (rows * col) + row,
+          colliderId: -1,                                   // Dummy value. Will assign proper value when cat invation actually begins.
           pos: pos.plus(deltaX + randX, deltaY + randY), 
           color: Math.floor(Math.random() * 5),
           id: (rows * col) + row,

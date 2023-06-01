@@ -1,7 +1,10 @@
 import { FPS } from "../../utils/constants";
-import { computeCurrentFrame } from "../../utils";
+import { Coord, SHAKER_INTENSE, SHAKER_MEDIUM, SHAKER_MILD, SHAKER_NO_SHAKE, SHAKER_SUBTLE, computeCurrentFrame } from "../../utils";
 import { AnimEvent, AnimEventType } from "./animation";
-import { TOTAL_SLINGSHOT_DURATION } from "../../scene/planet";
+import { Planet, PlanetType, TOTAL_SLINGSHOT_DURATION } from "../../scene/planet";
+import { IGlobalState } from "./globalstate";
+import { PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_STOP, PULSE_SUBTLE } from "../../scene";
+import { gridOfCats } from "../../entities/cat";
 
 const CAT_INVASION_1 = FPS*100;
 const SCORCHING_STAR_1 = FPS*200;
@@ -11,9 +14,9 @@ const SCORCHING_STAR_2 = FPS*500;
 const BLACKHOLE_SUPERNOVA = FPS*600;
 const CAT_INVASION_3 = FPS*700;
 
-export function getEvents(): AnimEvent[] {
+export function getEvents(state: IGlobalState): AnimEvent[] {
     return [
-        ...createScorchingStarEvent(TOTAL_SLINGSHOT_DURATION),
+        ...createDriftingPlanetEvents(state),
         ...creatCatInvasionLevel1(CAT_INVASION_1), 
         ...createScorchingStarEvent(SCORCHING_STAR_1),
         ...createMindFlayerEvent(MIND_FLAYER),
@@ -24,18 +27,89 @@ export function getEvents(): AnimEvent[] {
     ];
   }
   
+  // Schedule *all* the planets that will drift by.
+  function createDriftingPlanetEvents(state: IGlobalState): AnimEvent[] {
+    let t = computeCurrentFrame();
+    let dp = AnimEventType.DRIFT_PLANET;
+    let tmpls: Map<PlanetType, Planet> = state.planets;
+    // Planet spin speeds.
+    const FAST  = 10;
+    const MID   = 20;
+    const SLOW  = 30;
+    // Whether or not a planet slingshots.
+    const SLING   = true;
+    const NOSLING = false;
+    // Planet sizes.
+    const BIG     = 3.5;
+    const MEDIUM  = 2.5;
+    const SMALL   = 1.5;
+    // Planet angles.
+    const TWELVE  = Math.PI * ( 6 / 12);
+    const ONE     = Math.PI * ( 4 / 12);
+    const TWO     = Math.PI * ( 2 / 12);
+    const THREE   = Math.PI * ( 0 / 12);
+    const FOUR    = Math.PI * (22 / 12);
+    const FIVE    = Math.PI * (20 / 12);
+    const SIX     = Math.PI * (18 / 12);
+    const SEVEN   = Math.PI * (16 / 12);
+    const EIGHT   = Math.PI * (14 / 12);
+    const NINE    = Math.PI * (12 / 12);
+    const TEN     = Math.PI * (10 / 12);
+    const ELEVEN  = Math.PI * ( 8 / 12);
+    // Whether or not the planet sprites are horizontally flipped.
+    const FLIP = true;
+    const NOFLIP = false;
+    return [
+      new AnimEvent(dp, t + (FPS *   0), tmpls.get(PlanetType.CRATER )?.instance(NOSLING,  BIG,    MID,  TWO,    NOFLIP  )),
+      new AnimEvent(dp, t + (FPS *  10), tmpls.get(PlanetType.DRY    )?.instance(SLING,    MEDIUM, SLOW, ELEVEN, FLIP    )),
+
+      // Avoid planet drift overlap with the DRY planet slingshot, above.
+
+      new AnimEvent(dp, t + (FPS *  50), tmpls.get(PlanetType.RING   )?.instance(NOSLING,  SMALL,  SLOW, EIGHT,  FLIP    )),
+      new AnimEvent(dp, t + (FPS *  60), tmpls.get(PlanetType.STAR   )?.instance(NOSLING,  BIG,    FAST, ONE,    NOFLIP  )),
+      new AnimEvent(dp, t + (FPS *  70), tmpls.get(PlanetType.CRATER )?.instance(NOSLING,  MEDIUM, MID,  THREE,  FLIP    )),
+      new AnimEvent(dp, t + (FPS *  80), tmpls.get(PlanetType.RING   )?.instance(NOSLING,  MEDIUM, SLOW, ELEVEN, FLIP    )),
+      new AnimEvent(dp, t + (FPS *  90), tmpls.get(PlanetType.LAVA   )?.instance(NOSLING,  SMALL,  FAST, FOUR,   NOFLIP  )),
+
+      // Cat invation 1 at 100 seconds.
+
+      new AnimEvent(dp, t + (FPS * 130), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  MEDIUM, MID,  TEN,    NOFLIP  )),
+      new AnimEvent(dp, t + (FPS * 140), tmpls.get(PlanetType.DRY    )?.instance(NOSLING,  SMALL,  SLOW, NINE,   FLIP    )),
+      new AnimEvent(dp, t + (FPS * 150), tmpls.get(PlanetType.ISLAND )?.instance(NOSLING,  BIG,    FAST, TWELVE, NOFLIP  )),
+      new AnimEvent(dp, t + (FPS * 160), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  SMALL,  FAST, FOUR,   NOFLIP  )),
+      new AnimEvent(dp, t + (FPS * 170), tmpls.get(PlanetType.ISLAND )?.instance(NOSLING,  BIG,    MID,  SEVEN,  FLIP    )),
+      new AnimEvent(dp, t + (FPS * 180), tmpls.get(PlanetType.LAVA   )?.instance(NOSLING,  MEDIUM, MID,  TEN,    NOFLIP  )),
+      new AnimEvent(dp, t + (FPS * 190), tmpls.get(PlanetType.STAR   )?.instance(NOSLING,  BIG,    MID,  SIX,    FLIP    )),
+
+      // Scorching star 1 at 200 seconds.
+
+      new AnimEvent(dp, t + (FPS * 240), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  BIG,    SLOW,   ELEVEN, NOFLIP  )),
+      new AnimEvent(dp, t + (FPS * 250), tmpls.get(PlanetType.LAVA   )?.instance(SLING,    BIG,    FAST,   FOUR,   FLIP  )),
+      new AnimEvent(dp, t + (FPS * 260), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  SMALL,  SLOW,   NINE,   NOFLIP  )),
+      new AnimEvent(dp, t + (FPS * 270), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  BIG,    FAST,   ONE,    FLIP  )),
+      new AnimEvent(dp, t + (FPS * 280), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  MEDIUM, MEDIUM, FIVE,   NOFLIP  )),
+
+      // Mind flayer at 300 seconds.
+
+      // Cat invation 2 at 400 seconds.
+
+      // Scorching star 2 at 500 seconds.
+
+      // Black hole supernova at 600 seconds.
+
+      // Cat invation 3 at 700 seconds.
+
+    ];
+  }
+
+  // Technically, we don't need a special event type for this, but it's in line with having types for all the major events.
+  // i.e. this is equivalent to a DRIFT_PLANET event with the right payload.
   function createScorchingStarEvent(delay: number): AnimEvent[] {
     //Dialog: "Someone close the blinds!"
     //Dialog: "Too bright! Get the shutters!"
     //Dialog: "Those plants don't look so good..."
     //Dialog: "I'm going blind!"
-    let f = computeCurrentFrame();
-    let time = f + delay;
-    // Prevent spontaneous slingshots for a long enough period before the star slngshot, and re-enabled it immediately after.
-    let forbidSlingshots: AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_FORBIDDEN,      time - TOTAL_SLINGSHOT_DURATION);
-    let scorchedStar:     AnimEvent = new AnimEvent(AnimEventType.SCORCHING_STAR_SLINGSHOT, time);
-    let allowSlingshots:  AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_ALLOWED,        time + 1);
-    return [forbidSlingshots, scorchedStar, allowSlingshots];
+    return [new AnimEvent(AnimEventType.SCORCHING_STAR_SLINGSHOT, computeCurrentFrame() + delay)];
   }
 
   function createMindFlayerEvent(delay: number): AnimEvent[] {
@@ -53,12 +127,12 @@ export function getEvents(): AnimEvent[] {
     //Dialog: "The only good cat is a wet cat."
     let f = computeCurrentFrame();
     let time = f + delay;
-    let shake1:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (3 * FPS));
-    let shake2:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_2,    time - (2.5 * FPS));
-    let shake3:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (0.5 * FPS));
-    let shakeStop:  AnimEvent =   new AnimEvent(AnimEventType.SHAKE_STOP,       time);
+    let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_SUBTLE);
+    let shake2:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (2.5 * FPS),       SHAKER_MILD);
+    let shake3:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),       SHAKER_SUBTLE);
+    let shakeStop:   AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time,                     SHAKER_NO_SHAKE);
     let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
-    let enterCats: AnimEvent =    new AnimEvent(AnimEventType.CAT_INVASION_1,   time + (1.2 * FPS));
+    let enterCats:   AnimEvent =  new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 2, 1));
     return [shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
   }
   
@@ -66,12 +140,12 @@ export function getEvents(): AnimEvent[] {
   function creatCatInvasionLevel2(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
     let time = f + delay;
-    let shake1:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (4 * FPS));
-    let shake2:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_2,    time - (3 * FPS));
-    let shake3:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (0.5 * FPS));
-    let shakeStop:  AnimEvent =   new AnimEvent(AnimEventType.SHAKE_STOP,       time);
+    let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),           SHAKER_SUBTLE);
+    let shake2:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),           SHAKER_MILD);
+    let shake3:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),         SHAKER_SUBTLE);
+    let shakeStop:   AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time,                       SHAKER_NO_SHAKE);
     let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
-    let enterCats: AnimEvent =    new AnimEvent(AnimEventType.CAT_INVASION_2,   time + (1.2 * FPS));
+    let enterCats:   AnimEvent =  new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),         gridOfCats(new Coord(380, 245), 20, 3, 2));
     return [shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
   }
   
@@ -79,43 +153,41 @@ export function getEvents(): AnimEvent[] {
   function creatCatInvasionLevel3(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
     let time = f + delay;
-    let shake1:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (5 * FPS));
-    let shake2:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_2,    time - (4 * FPS));
-    let shake3:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_3,    time - (3 * FPS));
+    let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (5 * FPS),             SHAKER_SUBTLE);
+    let shake2:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),             SHAKER_MILD);
+    let shake3:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),             SHAKER_MEDIUM);
     let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
-    let shake4:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_2,    time + 1);
-    let enterCats: AnimEvent =    new AnimEvent(AnimEventType.CAT_INVASION_3,   time + (1.2 * FPS));
-    let shake5:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time + 1.5);
-    let shakeStop:  AnimEvent =   new AnimEvent(AnimEventType.SHAKE_STOP,       time + 2);
+    let shake4:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time + 1,                     SHAKER_MILD);
+    let enterCats:   AnimEvent =  new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),           gridOfCats(new Coord(380, 245), 20, 10, 3));
+    let shake5:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time + 1.5,                   SHAKER_MILD);
+    let shakeStop:   AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time + 2,                     SHAKER_NO_SHAKE);
     return [shake1, shake2, shake3, enterPortal, shake4, enterCats, shake5, shakeStop ];
   }
   
   // Setup the timed schedule of all events associated with a dangerous supernova encounter.
   function createSupernovaEvents(delay: number): AnimEvent[] {
       let f = computeCurrentFrame();
-      let noSling:    AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_FORBIDDEN,  f + delay - (24 * FPS));  // Slingshotting not allowed ahead of black hole.
       let enterBH:    AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_APPEARS,   f + delay - (16 * FPS));
-      let pulse1:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay - (16 * FPS));
-      let alarm1:     AnimEvent = new AnimEvent(AnimEventType.ALARM_1,              f + delay - (15 * FPS));
-      let alarm2:     AnimEvent = new AnimEvent(AnimEventType.ALARM_2,              f + delay - (15 * FPS));
-      let alarm3:     AnimEvent = new AnimEvent(AnimEventType.ALARM_3,              f + delay - (15 * FPS));
-      let shake1:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay - (15 * FPS));
-      let pulse2:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_2,     f + delay - (12 * FPS));
-      let shake2:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay - (11 * FPS));
-      let pulse3:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (8 * FPS));
-      let shake3:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay - (7 * FPS));
-      let shake4:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_4,        f + delay - (3 * FPS));
-      let pulse5:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_3,     f + delay - (0.2 * FPS));
-      let pulse4:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_4,     f + delay - (1.15 * FPS));
+      let pulse1:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (16 * FPS),     PULSE_SUBTLE);
+      let alarm1:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay - (15 * FPS),     0);
+      let alarm2:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay - (15 * FPS),     1);
+      let alarm3:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay - (15 * FPS),     2);
+      let shake1:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (15 * FPS),     SHAKER_SUBTLE);
+      let pulse2:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (12 * FPS),     PULSE_MILD);
+      let shake2:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (11 * FPS),     SHAKER_MILD);
+      let pulse3:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (8 * FPS),      PULSE_MEDIUM);
+      let shake3:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (7 * FPS),      SHAKER_MEDIUM);
+      let shake4:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (3 * FPS),      SHAKER_INTENSE);
+      let pulse5:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (0.2 * FPS),    PULSE_MEDIUM);
+      let pulse4:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (1.15 * FPS),   PULSE_INTENSE);
       let supernova:  AnimEvent = new AnimEvent(AnimEventType.IMPACT,               f + delay);
-      let shake5:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_3,        f + delay);
-      let shake6:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_2,        f + delay + (1 * FPS));
-      let pulse6:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_2,     f + delay + (2 * FPS));
-      let shake7:     AnimEvent = new AnimEvent(AnimEventType.SHAKE_LEVEL_1,        f + delay + (2 * FPS));
-      let pulse7:     AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_LEVEL_1,     f + delay + (3 * FPS));
-      let shakeStop:  AnimEvent = new AnimEvent(AnimEventType.SHAKE_STOP,           f + delay + (3 * FPS));
-      let pulseStop:  AnimEvent = new AnimEvent(AnimEventType.BH_PULSE_STOP,        f + delay + (4 * FPS));
-      let yesSling:   AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_ALLOWED,    f + delay + (4 * FPS));   // Slingshotting allowed after black hole is done.
+      let shake5:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay,                  SHAKER_MEDIUM);
+      let shake6:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (1 * FPS),      SHAKER_MILD);
+      let pulse6:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (2 * FPS),      PULSE_MILD);
+      let shake7:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (2 * FPS),      SHAKER_SUBTLE);
+      let pulse7:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (3 * FPS),      PULSE_SUBTLE);
+      let shakeStop:  AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (3 * FPS),      SHAKER_NO_SHAKE);
+      let pulseStop:  AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (4 * FPS),      PULSE_STOP);
   
       return [
         enterBH,                                                            // Black hole instantiation.
@@ -123,7 +195,6 @@ export function getEvents(): AnimEvent[] {
         supernova,                                                          // The lethal moment.
         shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop,  // Shaking intensity changes.
         pulse1, pulse2, pulse3, pulse4, pulse5, pulse6, pulse7, pulseStop,  // Black hole pulsing intensity changes.
-        noSling, yesSling,                                                  // Preventing overlap with planet slingshotting.
       ];
   }
   
