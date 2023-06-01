@@ -24,6 +24,7 @@ export enum AnimEventType {
     BLACK_HOLE_PULSE,           // Alter the pulse settings for the black hole.
     SCORCHING_STAR_SLINGSHOT,   // Introduce a "star" type drifting planet that we will slingshot around.
     DRIFT_PLANET,               // Schedule a specific planet to drift by at a specific time.
+    MIND_FLAYER_PLANET,         // We orbit and slingshot around the mind-warping Cthulhu evil planet.
 }
 
 // Interface for one-off event animations.

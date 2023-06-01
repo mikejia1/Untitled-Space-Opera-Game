@@ -75,19 +75,19 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
 
       new AnimEvent(dp, t + (FPS * 130), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  MEDIUM, MID,  TEN,    NOFLIP  )),
       new AnimEvent(dp, t + (FPS * 140), tmpls.get(PlanetType.DRY    )?.instance(NOSLING,  SMALL,  SLOW, NINE,   FLIP    )),
-      new AnimEvent(dp, t + (FPS * 150), tmpls.get(PlanetType.ISLAND )?.instance(NOSLING,  BIG,    FAST, TWELVE, NOFLIP  )),
+      new AnimEvent(dp, t + (FPS * 150), tmpls.get(PlanetType.WET    )?.instance(NOSLING,  BIG,    FAST, TWELVE, NOFLIP  )),
       new AnimEvent(dp, t + (FPS * 160), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  SMALL,  FAST, FOUR,   NOFLIP  )),
-      new AnimEvent(dp, t + (FPS * 170), tmpls.get(PlanetType.ISLAND )?.instance(NOSLING,  BIG,    MID,  SEVEN,  FLIP    )),
+      new AnimEvent(dp, t + (FPS * 170), tmpls.get(PlanetType.WET    )?.instance(NOSLING,  BIG,    MID,  SEVEN,  FLIP    )),
       new AnimEvent(dp, t + (FPS * 180), tmpls.get(PlanetType.LAVA   )?.instance(NOSLING,  MEDIUM, MID,  TEN,    NOFLIP  )),
       new AnimEvent(dp, t + (FPS * 190), tmpls.get(PlanetType.STAR   )?.instance(NOSLING,  BIG,    MID,  SIX,    FLIP    )),
 
       // Scorching star 1 at 200 seconds.
 
       new AnimEvent(dp, t + (FPS * 240), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  BIG,    SLOW,   ELEVEN, NOFLIP  )),
-      new AnimEvent(dp, t + (FPS * 250), tmpls.get(PlanetType.LAVA   )?.instance(SLING,    BIG,    FAST,   FOUR,   FLIP  )),
-      new AnimEvent(dp, t + (FPS * 260), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  SMALL,  SLOW,   NINE,   NOFLIP  )),
-      new AnimEvent(dp, t + (FPS * 270), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  BIG,    FAST,   ONE,    FLIP  )),
-      new AnimEvent(dp, t + (FPS * 280), tmpls.get(PlanetType.ICE    )?.instance(NOSLING,  MEDIUM, MEDIUM, FIVE,   NOFLIP  )),
+      new AnimEvent(dp, t + (FPS * 250), tmpls.get(PlanetType.LAVA   )?.instance(SLING,    BIG,    FAST,   FOUR,   FLIP    )),
+      new AnimEvent(dp, t + (FPS * 260), tmpls.get(PlanetType.RING   )?.instance(NOSLING,  BIG,    SLOW,   NINE,   NOFLIP  )),
+      new AnimEvent(dp, t + (FPS * 270), tmpls.get(PlanetType.STAR   )?.instance(NOSLING,  BIG,    FAST,   ONE,    FLIP    )),
+      new AnimEvent(dp, t + (FPS * 280), tmpls.get(PlanetType.CRATER )?.instance(NOSLING,  MEDIUM, MEDIUM, FIVE,   NOFLIP  )),
 
       // Mind flayer at 300 seconds.
 

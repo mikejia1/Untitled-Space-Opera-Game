@@ -116,41 +116,13 @@ export class Planet implements Paintable {
     // Number of frames after planet start frame when the planet is in position for orbiting to begin.
     get ORBIT_POSITION_REACH_TIME() : number {return this.ORBIT_DIVERSION_START_TIME + 450}; 
 
-    get ORBIT_DURATION() : number {return (this.planetType == 4) ? 720 :  200};
+    get ORBIT_DURATION() : number {return (this.planetType == PlanetType.ISLAND) ? 720 :  200};
+
     // Number of frames after planet start frame when the planet starts to come out of orbit.
-    get DEORBIT_START_TIME() : number {
-        
-        return this.ORBIT_POSITION_REACH_TIME + this.ORBIT_DURATION}; 
+    get DEORBIT_START_TIME() : number {return this.ORBIT_POSITION_REACH_TIME + this.ORBIT_DURATION};
 
     // Number of frames after planet start frame when the planet is fully deorbited (i.e. slingshot is done).
     get DEORBIT_END_TIME() : number {return this.DEORBIT_START_TIME + 50};
-
-
-    get TOTAL_SLINGSHOT_DURATION () : number {return this.DEORBIT_END_TIME};   // Same value. Different way to look at it.
-
-    get orbitStartTime(): number {
-        return this.startFrame + this.ORBIT_POSITION_REACH_TIME;
-    }
-
-    get deorbitStartTime(): number {
-        return this.startFrame + this.DEORBIT_START_TIME;
-    }
-
-    // Number of frames after planet start frame when the oribit diversion starts.
-    get ORBIT_DIVERSION_START_TIME() : number {return 60};
-
-    // Number of frames after planet start frame when the planet is in position for orbiting to begin.
-    get ORBIT_POSITION_REACH_TIME() : number {return this.ORBIT_DIVERSION_START_TIME + 450}; 
-
-    get ORBIT_DURATION() : number {return (this.planetType == 4) ? 720 :  200};
-    // Number of frames after planet start frame when the planet starts to come out of orbit.
-    get DEORBIT_START_TIME() : number {
-        
-        return this.ORBIT_POSITION_REACH_TIME + this.ORBIT_DURATION}; 
-
-    // Number of frames after planet start frame when the planet is fully deorbited (i.e. slingshot is done).
-    get DEORBIT_END_TIME() : number {return this.DEORBIT_START_TIME + 50};
-
 
     get TOTAL_SLINGSHOT_DURATION () : number {return this.DEORBIT_END_TIME};   // Same value. Different way to look at it.
 
@@ -556,7 +528,7 @@ export function currentlySlingshottingPlanet(state: IGlobalState): (Planet | nul
 
 export function orbittingMindFlayerPlanet(state : IGlobalState): boolean {
     let planet = currentlySlingshottingPlanet(state);
-    if(planet == null) return false;
-                // Planet type is Island
-    else return planet.planetType == 4 && planet.startFrame + planet.ORBIT_POSITION_REACH_TIME < state.currentFrame;
+    if (planet == null) return false;
+    // Planet type is ISLAND
+    else return (planet.planetType == PlanetType.ISLAND) && (planet.startFrame + planet.ORBIT_POSITION_REACH_TIME < state.currentFrame);
 }
