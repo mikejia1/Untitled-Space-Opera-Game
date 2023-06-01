@@ -122,6 +122,11 @@ export class Planet implements Paintable {
 
     get TOTAL_SLINGSHOT_DURATION () : number {return this.DEORBIT_END_TIME};   // Same value. Different way to look at it.
 
+    // Planet is in transit to orbit
+    get scorchStartTime(): number {
+        return this.startFrame + this.ORBIT_DIVERSION_START_TIME + 300;
+    }
+
     get orbitStartTime(): number {
         return this.startFrame + this.ORBIT_POSITION_REACH_TIME;
     }
@@ -528,4 +533,11 @@ export function orbittingMindFlayerPlanet(state : IGlobalState): boolean {
     if(planet == null) return false;
                 // Planet type is Island
     else return planet.planetType == 4 && planet.startFrame + planet.ORBIT_POSITION_REACH_TIME < state.currentFrame;
+}
+
+export function orbittingScorchingStar(state : IGlobalState): boolean {
+    let planet = currentlySlingshottingPlanet(state);
+    if(planet == null) return false;
+                // Planet type is Island
+    else return planet.planetType == 6 && planet.scorchStartTime < state.currentFrame;
 }

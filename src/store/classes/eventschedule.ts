@@ -3,7 +3,7 @@ import { computeCurrentFrame } from "../../utils";
 import { AnimEvent, AnimEventType } from "./animation";
 
 const CAT_INVASION_1 = FPS*100;
-const SCORCHING_STAR_1 = FPS*200;
+const SCORCHING_STAR_1 = FPS*0;
 export const MIND_FLAYER = FPS*1;
 const CAT_INVASION_2 = FPS*400;
 const SCORCHING_STAR_2 = FPS*500;
@@ -12,10 +12,9 @@ const CAT_INVASION_3 = FPS*700;
 
 export function getEvents(): AnimEvent[] {
     return [
-        //...createScorchingStarEvent(TOTAL_SLINGSHOT_DURATION),
         //...creatCatInvasionLevel1(CAT_INVASION_1), 
-        //...createScorchingStarEvent(SCORCHING_STAR_1),
-        ...createMindFlayerEvent(MIND_FLAYER),
+        ...createScorchingStarEvent(SCORCHING_STAR_1),
+        //...createMindFlayerEvent(MIND_FLAYER),
         ...creatCatInvasionLevel2(CAT_INVASION_2), 
         ...createScorchingStarEvent(SCORCHING_STAR_2),
         ...createSupernovaEvents(BLACKHOLE_SUPERNOVA),

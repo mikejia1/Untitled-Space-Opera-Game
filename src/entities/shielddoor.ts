@@ -1,8 +1,9 @@
 import { Tile } from "../scene";
-import { currentlySlingshottingPlanet } from "../scene/planet";
+import { currentlySlingshottingPlanet, orbittingScorchingStar } from "../scene/planet";
 import { IGlobalState } from "../store/classes";
 import { Paintable } from "../store/classes/paintable";
-import { BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Coord, Rect, SHIP_INTERIOR_RECT, STARFIELD_RECT, computeBackgroundShift, computeCurrentFrame, drawClippedImage, shiftForTile } from "../utils";
+import { BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Coord, DEHYDRATION_TIME, Rect, SHIP_INTERIOR_RECT, STARFIELD_RECT, computeBackgroundShift, computeCurrentFrame, drawClippedImage, shiftForTile } from "../utils";
+import { Plant } from "./plant";
 
 // Amount of lag, in animation frames, between adjacent slats in the blast shield.
 export const INTER_SLAT_DELAY = 10;
@@ -117,17 +118,41 @@ export class ShieldDoor implements Paintable {
         }
     }
 
+    getScorchingStarLightAlpha(currentFrame: number): number {
+        //If 12 slats are open, alpha = 1, If <= 4 slats are open, alpha = 0
+        let totalSlatsOpen = this.getTotalOpenAmount(currentFrame);
+        return Math.max(0, totalSlatsOpen - 4)/8;
+    }    
+
     // Paint the light from a scorching start (if there is one).
     paintScorchingStarLight(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
-        let sling = currentlySlingshottingPlanet(state);
-        if (sling === null) return;                 // Abort if there's no slingshotter.
-        if (sling.planetType !== 6) return;         // Abort if slingshotter is not a scorching star.
-        let intensity = sling.orbitPositioningProgress(state) - sling.deorbitProgress(state);
-        if (intensity <= 0) return;                 // Abort if light intensity isn't yet elevated.
-        let shift = this.computeShift(state);
-        for (let i = 0; i < 3; i++) {
-            this.paintSingleStripOfScorchingStarLight(i, canvas, state.currentFrame, shift, intensity);
-        }
+        let planet = currentlySlingshottingPlanet(state);
+        if (planet === null) return;                 // Abort if there's no slingshotter.
+        if (planet.planetType !== 6) return;         // Abort if slingshotter is not a scorching star.
+        let planetFrame = state.currentFrame - planet.scorchStartTime;
+        if(planetFrame < 0) return;
+        
+        //If 12 slats are open, alpha = 1, If <= 4 slats are open, alpha = 0
+        let slatAlpha = this.getScorchingStarLightAlpha(state.currentFrame);
+        if(planetFrame >= 0 && planetFrame < 30){
+            canvas.globalAlpha = slatAlpha * (state.currentFrame - planet.scorchStartTime) / 30;
+            console.log("scorching star entering orbit overlay alpha:" + canvas.globalAlpha);
+            canvas.drawImage(state.overlay.scorchingstar, 0,0);
+          }
+          else if(state.currentFrame > planet.deorbitStartTime){
+            canvas.globalAlpha = slatAlpha * (Math.max( 0, 30 - state.currentFrame + planet.deorbitStartTime)) / 30;
+            canvas.drawImage(state.overlay.scorchingstar, 0,0);
+            console.log("scorching star exiting orbit overlay alpha:" + canvas.globalAlpha);
+          }
+          else {
+            // start of full alpha
+            let frame = ( state.currentFrame - planet.scorchStartTime - 30 + 90 * 4 ) / 4; 
+            let pulse = Math.sin(frame);
+            canvas.globalAlpha = slatAlpha * (0.75 + 0.25 * pulse);
+            console.log("scorching star in orbit overlay alpha:" + canvas.globalAlpha + " slatAlpha = " + slatAlpha);
+            canvas.drawImage(state.overlay.scorchingstar, 0,0);
+          }
+          canvas.restore();
     }
 
     // Paint one of the three blast shield doors.
@@ -172,6 +197,17 @@ export class ShieldDoor implements Paintable {
             canvas.restore();
     }
 
+    // A number between 0 and 12 reflecting how open all the slats are. (There are 12 slats). 
+    getTotalOpenAmount(currentFrame: number): number {
+        let total = 0;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 4; j++) {
+                total += this.getOpenAmount(i, j, currentFrame);
+            }
+        }
+        return total;
+    } 
+
     // A number between 0 and 1 reflecting how open a given slat is.
     getOpenAmount(door: number, slat: number, currentFrame: number): number {
         let st = 0;
@@ -185,7 +221,7 @@ export class ShieldDoor implements Paintable {
             case ShieldDoorState.CLOSING:
                 st = this.slatTime(door, slat, currentFrame);
                 st = Math.max(st, 0);
-                return Math.min(st / SLAT_CLOSING_DUR, 1);    
+                return 1- Math.min(st / SLAT_CLOSING_DUR, 1);    
             case ShieldDoorState.CLOSED:    return 0;       // Fully closed.
         }        
     }
@@ -577,6 +613,16 @@ export class ShieldDoor implements Paintable {
             newEarlyOpenFlags = [...newEarlyOpenFlags, earlyOpen];
             debug = debug + " " + ds;
         }
+        /*
+        let plants : Plant [] = [];
+        if(orbittingScorchingStar(state)) {
+            let healthFactor = 1 - 0.5* state.shieldDoors.getScorchingStarLightAlpha(state.currentFrame);
+            let newDehydrationTime = DEHYDRATION_TIME * healthFactor;
+            state.plants.forEach(plant => {
+                plants = [...plants, plant];
+            });
+        }*/
+
         //console.log(debug);   // When this was uncommented, I could see states transitioning properly.
         return {...state, shieldDoors: new ShieldDoor(newStates, newTimes, newEarlyOpenFlags, shadeFactorSum / 12)};
     }
