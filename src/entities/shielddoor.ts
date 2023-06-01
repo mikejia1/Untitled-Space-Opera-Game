@@ -612,17 +612,6 @@ export class ShieldDoor implements Paintable {
             newEarlyOpenFlags = [...newEarlyOpenFlags, earlyOpen];
             debug = debug + " " + ds;
         }
-        /*
-        let plants : Plant [] = [];
-        if(orbittingScorchingStar(state)) {
-            let healthFactor = 1 - 0.5* state.shieldDoors.getScorchingStarLightAlpha(state.currentFrame);
-            let newDehydrationTime = DEHYDRATION_TIME * healthFactor;
-            state.plants.forEach(plant => {
-                plants = [...plants, plant];
-            });
-        }*/
-
-        //console.log(debug);   // When this was uncommented, I could see states transitioning properly.
         return {...state, shieldDoors: new ShieldDoor(newStates, newTimes, newEarlyOpenFlags, shadeFactorSum / 12)};
     }
 }

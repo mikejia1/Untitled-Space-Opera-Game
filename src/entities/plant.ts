@@ -7,6 +7,7 @@ import { FPS, SHAKE_CAP } from '../utils/constants';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 import { Coin } from './coin';
+import { orbittingScorchingStar } from '../scene/planet';
 
 // Initial, min, and max value for plant health.
 export const INITIAL_PLANT_HEALTH = 4;
@@ -31,6 +32,7 @@ export class Plant {
   lastTrampleTimestamp: number;                         // The last time the plant was trampled.
   lastCoinGenTimestamp: number;                         // The last time the plant generated a coin.
   coin: Coin | null;                                    // Coins the plant has generated that are not yet collected.
+  dehydrationTime = DEHYDRATION_TIME;                   // The number of frames between dehydration events.
 
   constructor(
     colliderId: number,
@@ -66,7 +68,7 @@ export class Plant {
 
   dehydratePlant(state: IGlobalState, forced: boolean = false): Plant {
     if (this.health > 0 && this.growthStage > 0) {
-      if (forced || (state.currentFrame > this.lastDehydrationTimestamp + DEHYDRATION_TIME)) {
+      if (forced || (state.currentFrame > this.lastDehydrationTimestamp + this.dehydrationTime)) {
         this.health--;
         this.lastDehydrationTimestamp = state.currentFrame;
         if (forced) this.lastTrampleTimestamp = state.currentFrame;
@@ -221,6 +223,12 @@ export function updatePlantState(state: IGlobalState): IGlobalState{
   state.plants.forEach(plant => {
     let newPlant = plant.dehydratePlant(state).growPlant(state);
     if (newPlant.isBeingTrampled(state)) newPlant = newPlant.dehydratePlant(state, true);
+    
+    if(orbittingScorchingStar(state)) {
+      let healthFactor = 1 - 0.9* state.shieldDoors.getScorchingStarLightAlpha(state.currentFrame);
+      newPlant.dehydrationTime = DEHYDRATION_TIME * healthFactor;
+    }
+    else newPlant.dehydrationTime = DEHYDRATION_TIME;
     newPlants = [...newPlants, newPlant];
   });
   return {...state, plants: newPlants};
