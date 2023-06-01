@@ -5,6 +5,7 @@ import { Planet, PlanetType } from "../../scene/planet";
 import { IGlobalState } from "./globalstate";
 import { PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_STOP, PULSE_SUBTLE } from "../../scene";
 import { gridOfCats } from "../../entities/cat";
+import { blackHoleDialog, catInvasionDialog, scorchingStarDialog } from "../../scene/npcscript";
 
 const CAT_INVASION_1 = FPS*100;
 const SCORCHING_STAR_1 = FPS*200;
@@ -105,7 +106,10 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
   // Technically, we don't need a special event type for this, but it's in line with having types for all the major events.
   // i.e. this is equivalent to a DRIFT_PLANET event with the right payload.
   function createScorchingStarEvent(delay: number): AnimEvent[] {
-    return [new AnimEvent(AnimEventType.SCORCHING_STAR_SLINGSHOT, computeCurrentFrame() + delay)];
+    return [
+        new AnimEvent(AnimEventType.SCORCHING_STAR_SLINGSHOT, computeCurrentFrame() + delay),
+        new AnimEvent(AnimEventType.DIALOG, computeCurrentFrame() + delay + 500, scorchingStarDialog)
+    ];
   }
 
   function createMindFlayerEvent(delay: number): AnimEvent[] {
@@ -119,32 +123,35 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
   function creatCatInvasionLevel1(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
     let time = f + delay;
+    let dialog:     AnimEvent = new AnimEvent(AnimEventType.DIALOG,             time - (5 * FPS),         catInvasionDialog);
     let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_SUBTLE);
     let shake2:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (2.5 * FPS),       SHAKER_MILD);
     let shake3:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),       SHAKER_SUBTLE);
     let shakeStop:   AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time,                     SHAKER_NO_SHAKE);
     let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
     let enterCats:   AnimEvent =  new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 2, 1));
-    return [shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
+    return [dialog, shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
   }
   
   // Set up the timed schedule for cat invasion event. 
   function creatCatInvasionLevel2(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
     let time = f + delay;
+    let dialog:     AnimEvent = new AnimEvent(AnimEventType.DIALOG,             time - (5 * FPS),         catInvasionDialog);
     let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),           SHAKER_SUBTLE);
     let shake2:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),           SHAKER_MILD);
     let shake3:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),         SHAKER_SUBTLE);
     let shakeStop:   AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time,                       SHAKER_NO_SHAKE);
     let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
     let enterCats:   AnimEvent =  new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),         gridOfCats(new Coord(380, 245), 20, 3, 2));
-    return [shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
+    return [dialog, shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
   }
   
   // Set up the timed schedule for cat invasion event. 
   function creatCatInvasionLevel3(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
     let time = f + delay;
+    let dialog:     AnimEvent = new AnimEvent(AnimEventType.DIALOG,             time - (5 * FPS),         catInvasionDialog);
     let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (5 * FPS),             SHAKER_SUBTLE);
     let shake2:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),             SHAKER_MILD);
     let shake3:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),             SHAKER_MEDIUM);
@@ -153,7 +160,7 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
     let enterCats:   AnimEvent =  new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),           gridOfCats(new Coord(380, 245), 20, 10, 3));
     let shake5:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time + 1.5,                   SHAKER_MILD);
     let shakeStop:   AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time + 2,                     SHAKER_NO_SHAKE);
-    return [shake1, shake2, shake3, enterPortal, shake4, enterCats, shake5, shakeStop ];
+    return [dialog, shake1, shake2, shake3, enterPortal, shake4, enterCats, shake5, shakeStop ];
   }
   
   // Setup the timed schedule of all events associated with a dangerous supernova encounter.
@@ -164,9 +171,11 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
       let alarm1:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay - (15 * FPS),     0);
       let alarm2:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay - (15 * FPS),     1);
       let alarm3:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay - (15 * FPS),     2);
+      let dialog1:    AnimEvent = new AnimEvent(AnimEventType.DIALOG,               f + delay - (14 * FPS),     blackHoleDialog);
       let shake1:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (15 * FPS),     SHAKER_SUBTLE);
       let pulse2:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (12 * FPS),     PULSE_MILD);
       let shake2:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (11 * FPS),     SHAKER_MILD);
+      let dialog2:    AnimEvent = new AnimEvent(AnimEventType.DIALOG,               f + delay - (9 * FPS),      blackHoleDialog);
       let pulse3:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (8 * FPS),      PULSE_MEDIUM);
       let shake3:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (7 * FPS),      SHAKER_MEDIUM);
       let shake4:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (3 * FPS),      SHAKER_INTENSE);
@@ -184,6 +193,7 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
       return [
         enterBH,                                                            // Black hole instantiation.
         alarm1, alarm2, alarm3,                                             // Shield button alarms going off.
+        dialog1, dialog2,                                                   // Dialogs.
         supernova,                                                          // The lethal moment.
         shake1, shake2, shake3, shake4, shake5, shake6, shake7, shakeStop,  // Shaking intensity changes.
         pulse1, pulse2, pulse3, pulse4, pulse5, pulse6, pulse7, pulseStop,  // Black hole pulsing intensity changes.

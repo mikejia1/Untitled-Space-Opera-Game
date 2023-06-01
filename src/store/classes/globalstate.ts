@@ -100,6 +100,7 @@ export interface IGlobalState {
     pendingEvents: AnimEvent[];         // Queue of one-off event animations to draw
     activeEvents: AnimEvent[];          // Queue of one-off event animations to draw
     dialogs: Dialog[];                  // Dialogs to display
+    usedDialogs: Set<string>;           // Previously used dialogs
     lastDialogInteraction: number;      // The last time the player interacted with a dialog
     statusBar: StatusBar;               // The status bar at the top of the screen
     overlay: any;                       // Planet overlay images to display
@@ -197,6 +198,7 @@ export function initialGameState(): IGlobalState {
     gameoverFrame: 0,
     activeEvents: [],
     dialogs: welcomeDialog(npcs),
+    usedDialogs: new Set<string>(),
     lastDialogInteraction: 0,
     statusBar: new StatusBar(),
     gardenerImages: {
