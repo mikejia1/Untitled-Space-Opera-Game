@@ -1,14 +1,14 @@
 import { FPS } from "../../utils/constants";
 import { Coord, SHAKER_INTENSE, SHAKER_MEDIUM, SHAKER_MILD, SHAKER_NO_SHAKE, SHAKER_SUBTLE, computeCurrentFrame } from "../../utils";
 import { AnimEvent, AnimEventType } from "./animation";
-import { Planet, PlanetType, TOTAL_SLINGSHOT_DURATION } from "../../scene/planet";
+import { Planet, PlanetType } from "../../scene/planet";
 import { IGlobalState } from "./globalstate";
 import { PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_STOP, PULSE_SUBTLE } from "../../scene";
 import { gridOfCats } from "../../entities/cat";
 
 const CAT_INVASION_1 = FPS*100;
 const SCORCHING_STAR_1 = FPS*200;
-const MIND_FLAYER = FPS*300;
+export const MIND_FLAYER = FPS*300;
 const CAT_INVASION_2 = FPS*400;
 const SCORCHING_STAR_2 = FPS*500;
 const BLACKHOLE_SUPERNOVA = FPS*600;
@@ -105,26 +105,18 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
   // Technically, we don't need a special event type for this, but it's in line with having types for all the major events.
   // i.e. this is equivalent to a DRIFT_PLANET event with the right payload.
   function createScorchingStarEvent(delay: number): AnimEvent[] {
-    //Dialog: "Someone close the blinds!"
-    //Dialog: "Too bright! Get the shutters!"
-    //Dialog: "Those plants don't look so good..."
-    //Dialog: "I'm going blind!"
     return [new AnimEvent(AnimEventType.SCORCHING_STAR_SLINGSHOT, computeCurrentFrame() + delay)];
   }
 
   function createMindFlayerEvent(delay: number): AnimEvent[] {
-    //Dialog: "I'm feeling a little... off."
-    //Dialog: "I can't take much more of this!"
-    //Dialog: "There are ants in my brain!"
-    //Dialog: "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn"
-    return [];
+    let f = computeCurrentFrame();
+    let time = f + delay;
+    let mindFlayer: AnimEvent = new AnimEvent(AnimEventType.MIND_FLAYER_PLANET, time);
+    return [mindFlayer, ];
   }
 
   // Set up the timed schedule for cat invasion event. 
   function creatCatInvasionLevel1(delay: number): AnimEvent[] {
-    //Dialog: "Cat's aren't allowed in the lab!"
-    //Dialog: "Don't pet the kitty!"
-    //Dialog: "The only good cat is a wet cat."
     let f = computeCurrentFrame();
     let time = f + delay;
     let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_SUBTLE);

@@ -250,8 +250,22 @@ function toggleGameAudio(state: IGlobalState): IGlobalState {
   };
 }
 
-// Attempt to equip item or drop current item.
+// Attempt to equip item or drop current item/ skip dialog.
 function toggleEquip(state: IGlobalState): IGlobalState {
+  if (isDialogCurrentlyDisplayed(state)) {
+    console.log("currently showing dialog");
+    let dialogs : Dialog[] = state.dialogs;
+    if(dialogs[0].skipAnimation) { 
+      console.log("animation skipped, dismissing dialog");
+      dialogs.shift();
+      // Bring forward any stale dialogs so that their text animation doesn't get skipped.
+      if(dialogs.length > 0 && dialogs[0].startFrame < state.currentFrame) dialogs[0].startFrame = state.currentFrame;
+    }
+    else {
+      dialogs[0].skipAnimation = true;
+    }
+    return {...state, dialogs:dialogs};
+  }
   if (state.gardener.itemEquipped) {
     return {
       ...state,
@@ -280,20 +294,6 @@ function canEquip(state: IGlobalState): boolean {
 // Use currently equipped item, if equipped, other use item that is nearby (like a button).
 // Note: Named "utilise" instead of "use" because "useItem" exists elsewhere.
 function utiliseItem(state: IGlobalState): IGlobalState {
-  if (isDialogCurrentlyDisplayed(state)) {
-    console.log("currently showing dialog");
-    let dialogs : Dialog[] = state.dialogs;
-    if(dialogs[0].skipAnimation) { 
-      console.log("animation skipped, dismissing dialog");
-      dialogs.shift();
-      // Bring forward any stale dialogs so that their text animation doesn't get skipped.
-      if(dialogs.length > 0 && dialogs[0].startFrame < state.currentFrame) dialogs[0].startFrame = state.currentFrame;
-    }
-    else {
-      dialogs[0].skipAnimation = true;
-    }
-    return {...state, dialogs:dialogs};
-  }
   if (!state.gardener.itemEquipped) {
     return utiliseNearbyItem(state);
   }

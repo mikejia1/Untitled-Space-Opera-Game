@@ -56,6 +56,8 @@ import airlockDoors         from "../../entities/images/airlock/airlock_doors_64
 import dialogBox            from "../images/dialog.png";
 import oxymeter             from "../images/oxymeter.png";
 import oxymeterflash        from "../images/oxymeter_flash.png";
+import mindflayerOverlay    from "../images/overlays/mindflayer.png";
+import scorchingStarOverlay from "../images/overlays/scorching_star.png";
 
 // Plant image.
 import plantimage       from "../../entities/images/plant/plants_16x16.png";
@@ -98,7 +100,9 @@ export interface IGlobalState {
     pendingEvents: AnimEvent[];         // Queue of one-off event animations to draw
     activeEvents: AnimEvent[];          // Queue of one-off event animations to draw
     dialogs: Dialog[];                  // Dialogs to display
+    lastDialogInteraction: number;      // The last time the player interacted with a dialog
     statusBar: StatusBar;               // The status bar at the top of the screen
+    overlay: any;                       // Planet overlay images to display
     skeleton: any;                      // The skeleton death animation.
     ghost: any;                         // The ghost animation.
     catImages: any;                     // Source images for cat sprites.
@@ -189,6 +193,7 @@ export function initialGameState(): IGlobalState {
     gameoverFrame: 0,
     activeEvents: [],
     dialogs: welcomeDialog(npcs),
+    lastDialogInteraction: 0,
     statusBar: new StatusBar(),
     gardenerImages: {
       walkingBase:        loadImage("Base walk strip", basewalkstrip),
@@ -198,6 +203,10 @@ export function initialGameState(): IGlobalState {
       chokeDeath:         loadImage("Suffocation death strip", gardenerchokestrip),
     },
     skeleton:       loadImage("Skeleton death", skeleton),
+    overlay: {
+      mindflayer:     loadImage("Mindflayer overlay", mindflayerOverlay),
+      scorchingstar:  loadImage("Scorching star overlay", scorchingStarOverlay),
+    },
     ghost:          loadImage("Ghost wabble cycle", ghost),
     catImages:       {
       run:      loadImage("Cat walk cycle", catswalkcycle),

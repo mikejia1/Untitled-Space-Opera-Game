@@ -11,7 +11,7 @@ import {
 import { drawAnimationEvent } from "./drawevent";
 import { Dialog } from "../scene/dialog";
 import { Lifeform } from "../store/classes/lifeform";
-import { Planet } from "../scene/planet";
+import { Planet, currentlySlingshottingPlanet, orbittingMindFlayerPlanet } from "../scene/planet";
 
 export * from './coord';
 export * from './constants';
@@ -124,7 +124,7 @@ export const drawState = (
 
   let shift = computeBackgroundShift(state, 0); // A no-delta shift.
   drawBackground(state, shift, canvas);
-  
+
   // Draw portal.
   if(state.portal !== null) {
     state.portal.paint(canvas, state);
@@ -269,8 +269,12 @@ function drawBackground(state: IGlobalState, shift: Coord, canvas: CanvasRenderi
 function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord) {
   // Draw the starfield visible through the ship's window.
   drawStarfield(state, canvas, shift);
+
+  drawMindFlayerOverlay(state, canvas, shift);
+
   // Draw objects that are in space, visible through the window.
   drawSpaceObjects(state, canvas);
+
   // Draw the blast shield.
   state.shieldDoors.paint(canvas, state);
   // Draw life forms that are being expelled through the air lock.
@@ -279,6 +283,40 @@ function drawShiftedBackground(state: IGlobalState, canvas: CanvasRenderingConte
   state.airlock.paint(canvas, state, shift);
   // Draw the static background of the ship interior.
   canvas.drawImage(state.backgroundImages.default, shift.x, shift.y);
+}
+
+// Draw mindflayer planet overlay
+function drawMindFlayerOverlay(state: IGlobalState, canvas: CanvasRenderingContext2D, shift: Coord){
+  // Draw mindflayer overlay. 
+  if (orbittingMindFlayerPlanet(state)){
+    console.log("orbiting mindflayer");
+    canvas.save();
+    let planet = currentlySlingshottingPlanet(state);
+    if(planet == null) return;
+    canvas.scale(planet.flipped ? -1 : 1, 1);
+    let pos = planet.flipped ? new Coord(-BACKGROUND_WIDTH, 0) : new Coord(0,0);
+    // ease in
+    if(state.currentFrame - planet.orbitStartTime < 30){
+      canvas.globalAlpha = (state.currentFrame - planet.orbitStartTime) / 30;
+      console.log("mindflayer entering orbit overlay alpha:" + canvas.globalAlpha);
+      canvas.drawImage(state.overlay.mindflayer, pos.x, pos.y);
+    }
+    else if(state.currentFrame > planet.deorbitStartTime){
+      canvas.globalAlpha = (Math.max( 0, 30 - state.currentFrame + planet.deorbitStartTime)) / 30;
+      canvas.drawImage(state.overlay.mindflayer, pos.x, pos.y);
+      console.log("mindflayer exiting orbit overlay alpha:" + canvas.globalAlpha);
+    }
+    else {
+      // start of full alpha
+      let frame = ( state.currentFrame - planet.orbitStartTime - 30 + 90 * 4 ) / 4; 
+      let pulse = Math.sin(frame);
+      canvas.globalAlpha = 0.75 + 0.25 * pulse;
+      console.log("mindflayer in orbit overlay alpha:" + canvas.globalAlpha);
+      canvas.drawImage(state.overlay.mindflayer, pos.x, pos.y);
+    }
+    canvas.restore();
+  }
+
 }
 
 // Draw objects that are in space, visible through the window.

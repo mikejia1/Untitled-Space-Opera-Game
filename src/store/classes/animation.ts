@@ -11,6 +11,7 @@ import { CANVAS_WIDTH, DRIFTER_COUNT, FPS } from "../../utils/constants";
 import { IGlobalState } from "./globalstate";
 
 // An enum for event types.
+
 export enum AnimEventType {
     IMPACT,                     // Supernova impact event.
     GAMEOVER_REPLAY_FRAME,      // End the game.
@@ -68,6 +69,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let portal = state.portal;
   let cats = state.cats;
   let colliderId = state.nextColliderId;
+  let randomCabinFeverAllowed = state.randomCabinFeverAllowed
 
   // Process active events
   for (let i = 0; i < state.pendingEvents.length; i++){
@@ -97,6 +99,11 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
           new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD, event.startTime + 30 + (INTER_SLAT_DELAY * 8),     2),
         ];
       }
+    }
+    if (event.event == AnimEventType.MIND_FLAYER_PLANET) {
+      newDrifters = slingshotMindFlayerPlanet(state, newDrifters);
+      event.finished = true;
+      randomCabinFeverAllowed = true;
     }
     if (event.event == AnimEventType.OPEN_CAT_PORTAL) {
       portal = new Portal(state.currentFrame, 140);
@@ -189,6 +196,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     lastNPCDeath: newLastNPCDeath,
     slingshotAllowed: newSlingshotAllowed,
     planetSpawnAllowed: newPlanetSpawnAllowed,
+    randomCabinFeverAllowed: randomCabinFeverAllowed,
   };
 }
 
@@ -202,5 +210,21 @@ function insertDrifter(state: IGlobalState, drifters: (Planet | null)[], drifter
     }
     return drifters;
 }
+
+// Find an unused slot in the drifters array and insert a scorched start for slingshotting.
+function slingshotMindFlayerPlanet(state: IGlobalState, drifters: (Planet | null)[]): (Planet | null)[] {
+  for (let i = 0; i < DRIFTER_COUNT; i++) {
+      if (drifters[i] !== null) continue;
+      let mf = state.planets.get(PlanetType.WET)?.instance(true, 3, 30, Math.PI/2, Math.random() < 0.5);
+      if (mf !== undefined) {
+        mf.start(state);
+        drifters[i] = mf;
+        console.log("Created mindflayer planet");
+        break;
+      }
+  }
+  return drifters;
+}
+
 
 export const GAMEOVER_RESTART_TIME = 5*FPS;

@@ -8,19 +8,6 @@ import { Tile } from '../scene';
 // An upper bound on planet scale multipliers.
 const SCALE_CAP = 1.5;
 
-// Number of frames after planet start frame when the oribit diversion starts.
-const ORBIT_DIVERSION_START_TIME = 60;
-
-// Number of frames after planet start frame when the planet is in position for orbiting to begin.
-const ORBIT_POSITION_REACH_TIME = ORBIT_DIVERSION_START_TIME + 450;
-
-// Number of frames after planet start frame when the planet starts to come out of orbit.
-const DEORBIT_START_TIME = ORBIT_POSITION_REACH_TIME + 200;
-
-// Number of frames after planet start frame when the planet is fully deorbited (i.e. slingshot is done).
-const DEORBIT_END_TIME = DEORBIT_START_TIME + 50;
-export const TOTAL_SLINGSHOT_DURATION = DEORBIT_END_TIME;   // Same value. Different way to look at it.
-
 // An enum for the various types of drifting / slingshotting planets.
 export enum PlanetType {
     CRATER,
@@ -121,6 +108,58 @@ export class Planet implements Paintable {
             slingPos,                           // Position (relative to background) where we want the planet so we can orbit.
             slingSiz                            // Desired size of planet (in pixels) when orbiting.
         );
+    }
+
+    // Number of frames after planet start frame when the oribit diversion starts.
+    get ORBIT_DIVERSION_START_TIME() : number {return 60};
+
+    // Number of frames after planet start frame when the planet is in position for orbiting to begin.
+    get ORBIT_POSITION_REACH_TIME() : number {return this.ORBIT_DIVERSION_START_TIME + 450}; 
+
+    get ORBIT_DURATION() : number {return (this.planetType == 4) ? 720 :  200};
+    // Number of frames after planet start frame when the planet starts to come out of orbit.
+    get DEORBIT_START_TIME() : number {
+        
+        return this.ORBIT_POSITION_REACH_TIME + this.ORBIT_DURATION}; 
+
+    // Number of frames after planet start frame when the planet is fully deorbited (i.e. slingshot is done).
+    get DEORBIT_END_TIME() : number {return this.DEORBIT_START_TIME + 50};
+
+
+    get TOTAL_SLINGSHOT_DURATION () : number {return this.DEORBIT_END_TIME};   // Same value. Different way to look at it.
+
+    get orbitStartTime(): number {
+        return this.startFrame + this.ORBIT_POSITION_REACH_TIME;
+    }
+
+    get deorbitStartTime(): number {
+        return this.startFrame + this.DEORBIT_START_TIME;
+    }
+
+    // Number of frames after planet start frame when the oribit diversion starts.
+    get ORBIT_DIVERSION_START_TIME() : number {return 60};
+
+    // Number of frames after planet start frame when the planet is in position for orbiting to begin.
+    get ORBIT_POSITION_REACH_TIME() : number {return this.ORBIT_DIVERSION_START_TIME + 450}; 
+
+    get ORBIT_DURATION() : number {return (this.planetType == 4) ? 720 :  200};
+    // Number of frames after planet start frame when the planet starts to come out of orbit.
+    get DEORBIT_START_TIME() : number {
+        
+        return this.ORBIT_POSITION_REACH_TIME + this.ORBIT_DURATION}; 
+
+    // Number of frames after planet start frame when the planet is fully deorbited (i.e. slingshot is done).
+    get DEORBIT_END_TIME() : number {return this.DEORBIT_START_TIME + 50};
+
+
+    get TOTAL_SLINGSHOT_DURATION () : number {return this.DEORBIT_END_TIME};   // Same value. Different way to look at it.
+
+    get orbitStartTime(): number {
+        return this.startFrame + this.ORBIT_POSITION_REACH_TIME;
+    }
+
+    get deorbitStartTime(): number {
+        return this.startFrame + this.DEORBIT_START_TIME;
     }
 
     // Paint the planet on the canvas.
@@ -322,16 +361,16 @@ export class Planet implements Paintable {
 
     // A measure of progress toward moving from diversionStartPos to slingshotTargetPos, in range [0, 1].
     orbitPositioningProgress(state: IGlobalState): number {
-        let a = this.startFrame + ORBIT_DIVERSION_START_TIME;
-        let b = this.startFrame + ORBIT_POSITION_REACH_TIME;
+        let a = this.startFrame + this.ORBIT_DIVERSION_START_TIME;
+        let b = this.startFrame + this.ORBIT_POSITION_REACH_TIME;
         let prog = (state.currentFrame - a) / (b - a);
         return /*this.easeOut(*/Math.max(0, Math.min(1, prog))/*)*/;
     }
 
     // A measure of progress in the deorbit phase of the slingshot. Range [0, 1].
     deorbitProgress(state: IGlobalState): number {
-        let a = this.startFrame + DEORBIT_START_TIME;
-        let b = this.startFrame + DEORBIT_END_TIME;
+        let a = this.startFrame + this.DEORBIT_START_TIME;
+        let b = this.startFrame + this.DEORBIT_END_TIME;
         let prog = (state.currentFrame - a) / (b - a);
         return Math.max(0, Math.min(1, prog));
     }
@@ -456,7 +495,7 @@ export class Planet implements Paintable {
     orbitDiversionHasBegun(frame: number): boolean {
         if (!this.isSlingshotting) return false;
         let t = (frame - this.startFrame);
-        return t > ORBIT_DIVERSION_START_TIME;
+        return t > this.ORBIT_DIVERSION_START_TIME;
     }
 
     // Check whether the ship has started to deorbit (or should start to deorbit).
@@ -464,7 +503,7 @@ export class Planet implements Paintable {
     deorbitHasBegun(frame: number): boolean {
         if (!this.isSlingshotting) return false;
         let t = (frame - this.startFrame);
-        return t > DEORBIT_START_TIME;
+        return t > this.DEORBIT_START_TIME;
     }
 
     // Compute a displacement that will place the planet at the correct place on the canvas.
@@ -513,4 +552,11 @@ export function currentlySlingshottingPlanet(state: IGlobalState): (Planet | nul
         if (p.isSlingshotting) return p;
     }
     return null;
+}
+
+export function orbittingMindFlayerPlanet(state : IGlobalState): boolean {
+    let planet = currentlySlingshottingPlanet(state);
+    if(planet == null) return false;
+                // Planet type is Island
+    else return planet.planetType == 4 && planet.startFrame + planet.ORBIT_POSITION_REACH_TIME < state.currentFrame;
 }
