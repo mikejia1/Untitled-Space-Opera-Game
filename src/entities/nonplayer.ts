@@ -18,13 +18,13 @@ import {
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 import { CausaMortis, Death } from './skeleton';
-import { isMindFlayerActive } from '../scene/planet';
+import { orbittingMindFlayerPlanet } from '../scene/planet';
 import { cabinFeverDialog, movingToAirlockDialog, contemplatingDeathDialog } from '../scene/npcscript';
 import { Dialog } from '../scene/dialog';
 import { AirlockState } from './airlock';
 
 // Probability of cabin fever, per NPC, per frame. 5 in 10,000.
-const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0005;
+const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0001;
 
 // Number of frames until a frazzled NPC becomes suicidal.
 const SUICIDAL_DELAY = 200;
@@ -399,7 +399,7 @@ export class NonPlayer implements Lifeform, Collider {
             // randomly gets frazzled (cabin fever).
             case MentalState.Normal:
                 if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
-                else if(Math.random() < 0.01 && isMindFlayerActive(state)){
+                else if(Math.random() < 0.01 && orbittingMindFlayerPlanet(state)){
                     newHasCabinFever = true;
                     newMentalState = MentalState.Frazzled;
                     newSuicideCountdown = SUICIDAL_DELAY;

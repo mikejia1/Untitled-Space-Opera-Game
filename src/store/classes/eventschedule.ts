@@ -1,12 +1,10 @@
 import { FPS } from "../../utils/constants";
 import { computeCurrentFrame } from "../../utils";
 import { AnimEvent, AnimEventType } from "./animation";
-import { TOTAL_SLINGSHOT_DURATION } from "../../scene/planet";
 
 const CAT_INVASION_1 = FPS*100;
 const SCORCHING_STAR_1 = FPS*200;
-export const MIND_FLAYER = FPS*10;
-export const MIND_FLAYER_ACTIVE = FPS*60;
+export const MIND_FLAYER = FPS*1;
 const CAT_INVASION_2 = FPS*400;
 const SCORCHING_STAR_2 = FPS*500;
 const BLACKHOLE_SUPERNOVA = FPS*600;
@@ -14,9 +12,9 @@ const CAT_INVASION_3 = FPS*700;
 
 export function getEvents(): AnimEvent[] {
     return [
-        ...createScorchingStarEvent(TOTAL_SLINGSHOT_DURATION),
-        ...creatCatInvasionLevel1(CAT_INVASION_1), 
-        ...createScorchingStarEvent(SCORCHING_STAR_1),
+        //...createScorchingStarEvent(TOTAL_SLINGSHOT_DURATION),
+        //...creatCatInvasionLevel1(CAT_INVASION_1), 
+        //...createScorchingStarEvent(SCORCHING_STAR_1),
         ...createMindFlayerEvent(MIND_FLAYER),
         ...creatCatInvasionLevel2(CAT_INVASION_2), 
         ...createScorchingStarEvent(SCORCHING_STAR_2),
@@ -29,10 +27,8 @@ export function getEvents(): AnimEvent[] {
     let f = computeCurrentFrame();
     let time = f + delay;
     // Prevent spontaneous slingshots for a long enough period before the star slngshot, and re-enabled it immediately after.
-    let forbidSlingshots: AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_FORBIDDEN,      time - TOTAL_SLINGSHOT_DURATION);
     let scorchedStar:     AnimEvent = new AnimEvent(AnimEventType.SCORCHING_STAR_SLINGSHOT, time);
-    let allowSlingshots:  AnimEvent = new AnimEvent(AnimEventType.SLINGSHOT_ALLOWED,        time + 1);
-    return [forbidSlingshots, scorchedStar, allowSlingshots];
+    return [scorchedStar];
   }
 
   function createMindFlayerEvent(delay: number): AnimEvent[] {
