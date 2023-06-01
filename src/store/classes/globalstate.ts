@@ -1,9 +1,9 @@
-import { AnimEvent, AnimEventType, Collider, ColliderType, SUPERNOVA_DELAY } from './';
+import { AnimEvent, Collider, ColliderType } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, DOWNWARD_STARFIELD_DRIFT } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { BlackHole, InvisibleCollider } from "../../scene";
-import { Planet, makePlanet } from '../../scene/planet';
+import { Planet, PlanetType, makePlanet } from '../../scene/planet';
 import { ShieldButton } from '../../entities/shieldbutton';
 import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
 import { Cat } from '../../entities/cat';
@@ -12,11 +12,11 @@ import { Railing } from '../../scene/railing';
 import { StatusBar } from '../../scene/statusbar';
 
 // Gardener images.
-import basewalkstrip             from "../../entities/images/gardener/base_walk_strip8.png";
-import basewateringstrip         from "../../entities/images/gardener/base_watering_strip5.png";
-import toolwateringstrip         from "../../entities/images/gardener/tools_watering_strip5.png";
-import gardenerslainstrip        from "../../entities/images/gardener/gardener_slain.png"; 
-import gardenerchokestrip        from "../../entities/images/gardener/gardener_choke.png";
+import basewalkstrip      from "../../entities/images/gardener/base_walk_strip8.png";
+import basewateringstrip  from "../../entities/images/gardener/base_watering_strip5.png";
+import toolwateringstrip  from "../../entities/images/gardener/tools_watering_strip5.png";
+import gardenerslainstrip from "../../entities/images/gardener/gardener_slain.png"; 
+import gardenerchokestrip from "../../entities/images/gardener/gardener_choke.png";
 
 // Blast shield images.
 import closedShield      from "../../entities/images/shield/shield_32x160.png";
@@ -106,7 +106,7 @@ export interface IGlobalState {
     skeleton: any;                      // The skeleton death animation.
     ghost: any;                         // The ghost animation.
     catImages: any;                     // Source images for cat sprites.
-    portalImage: any        ;            // Source image of the portal.
+    portalImage: any;                   // Source image of the portal.
     gardenerImages: any;                // Source images for gardener sprites.
     shieldImages: any;                  // Source images for the blast shield image.
     shieldButtonImage: any;             // Source image for the shield button animation.
@@ -126,7 +126,7 @@ export interface IGlobalState {
     screenShaker: Shaker;               // For causing the screen to shake at key moments.
     blackHole: BlackHole | null;        // The black hole in view, or null if none in view.
     drifters: (Planet | null)[];        // Array of potentially drifting planets.
-    planets: Planet[];                  // The full list of available drifting planets.
+    planets: Map<PlanetType, Planet>;   // The full set of available drifting planet templates, keyed by type.
     randomCabinFeverAllowed: boolean;   // Whether or not NPCs can now develop cabin fever at random.
     lastNPCDeath: number;               // Frame number of the last time an NPC died.
     debugSettings: any;                 // For configuring extra debug info and visualizations.
@@ -172,7 +172,7 @@ export function initialGameState(): IGlobalState {
   let railing = new Railing(new Coord(165, 231), colliderId);
   colliderId++;
 
-  return {
+  let withoutEvents = {
     gameover: false,
     gardener: gardener,
     keysPressed: [],
@@ -191,7 +191,6 @@ export function initialGameState(): IGlobalState {
     railing: railing,
     currentFrame: 0,
     gameoverFrame: 0,
-    pendingEvents: getEvents(),
     activeEvents: [],
     dialogs: welcomeDialog(npcs),
     lastDialogInteraction: 0,
@@ -256,16 +255,15 @@ export function initialGameState(): IGlobalState {
     screenShaker:     SHAKER_NO_SHAKE,      // Initially, the screen is not shaking.
     blackHole:        null,                 // Initially, there's no black hole in view.
     drifters:         emptyDrifterArray(),  // Drifting planets. All initially null.
-    planets:          [
-      makePlanet(0, 256, 60, loadImage("Cratered planet", crateredPlanetImg), true),   // Cratered planet. Can slingshot.
-      makePlanet(1, 256, 60, loadImage("Dry planet",      dryPlanetImg),      true),   // Dry planet. Can slingshot.
-      makePlanet(2, 384, 40, loadImage("Gas ring planet", gasRingPlanetImg),  false),  // Gas ring planet. (actually 384 pixels). Cannot slingshot.
-      makePlanet(3, 256, 60, loadImage("Ice planet",      icePlanetImg),      true),   // Ice planet. Can slingshot.
-      makePlanet(4, 256, 60, loadImage("Island planet",   islandPlanetImg),   true),   // Island planet. Can slingshot.
-      makePlanet(5, 256, 60, loadImage("Lava planet",     lavaPlanetImg),     true),   // Lava planet. Can slingshot.
-      makePlanet(6, 512, 30, loadImage("Star planet",     starPlanetImg),     false),  // Star planet (yes, a star - actually 512 pixels). Cannot slingshot.
-      makePlanet(7, 256, 60, loadImage("Wet planet",      wetPlanetImg),      true),   // Wet planet. Can slingshot.
-    ],
+    planets:          new Map<PlanetType, Planet>()
+      .set(PlanetType.CRATER, makePlanet(PlanetType.CRATER, 256, 60, loadImage("Cratered planet", crateredPlanetImg)))  // Cratered planet
+      .set(PlanetType.DRY,    makePlanet(PlanetType.DRY,    256, 60, loadImage("Dry planet",      dryPlanetImg)))       // Dry planet
+      .set(PlanetType.RING,   makePlanet(PlanetType.RING,   384, 40, loadImage("Gas ring planet", gasRingPlanetImg)))   // Gas ring planet. (actually 384 pixels)
+      .set(PlanetType.ICE,    makePlanet(PlanetType.ICE,    256, 60, loadImage("Ice planet",      icePlanetImg)))       // Ice planet
+      .set(PlanetType.ISLAND, makePlanet(PlanetType.ISLAND, 256, 60, loadImage("Island planet",   islandPlanetImg)))    // Island planet
+      .set(PlanetType.LAVA,   makePlanet(PlanetType.LAVA,   256, 60, loadImage("Lava planet",     lavaPlanetImg)))      // Lava planet
+      .set(PlanetType.STAR,   makePlanet(PlanetType.STAR,   512, 30, loadImage("Star planet",     starPlanetImg)))      // Star planet (yes, a star - actually 512 pixels)
+      .set(PlanetType.WET,    makePlanet(PlanetType.WET,    256, 60, loadImage("Wet planet",      wetPlanetImg))),      // Wet planet
     randomCabinFeverAllowed: false, // No random cabin fever, initially.
     lastNPCDeath: 0,                // Dummy value for initialization.
     debugSettings: {
@@ -286,7 +284,14 @@ export function initialGameState(): IGlobalState {
       driftAngle: 3 * Math.PI / 4,                  // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).
       driftSpeed: DOWNWARD_STARFIELD_DRIFT,         // Initial drift speed (pixels per frame).
     },
-  }
+    pendingEvents: [],  // No events yet. This is populated below.
+  };
+
+  // Populate the pending events and return it.
+  return {
+    ...withoutEvents,
+    pendingEvents: getEvents(withoutEvents),
+  };
 }
 
 // Initial array of drifting planets. All null.

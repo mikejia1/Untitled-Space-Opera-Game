@@ -184,7 +184,6 @@ export class ShieldDoor implements Paintable {
             for (let j = 0; j < 4; j++) {
                 let op = this.getOpenAmount(i, j, currentFrame);
                 let alpha = intensity * op * SCORCH_LIGHT_ALPHA;
-                console.log("Slat alpha " + alpha);
                 let x = this.slatX(i, j);
                 let y = 0; //SHIP_INTERIOR_RECT.a.y;
                 let w = 32;

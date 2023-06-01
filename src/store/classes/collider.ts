@@ -1,5 +1,4 @@
 import { Rect, rectanglesOverlap } from '../../utils';
-import { rectToString } from '../../utils/rect';
 import { IGlobalState } from './globalstate';
 
 // Colliders have types.

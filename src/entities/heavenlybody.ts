@@ -13,31 +13,9 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     // Once the black hole has been around long enough to have passed by, clear it back to null.
     if ((newBlackHole !== null) && ((f - newBlackHole.startFrame) > 1000)) newBlackHole = null;
 
-    // Maybe it's time for another planet to drift by.
-    // No spawning if black hole has moved some distance.
-    // No spawning if an existing planet is slingshotting and has started orbit diversion.
-    // No spawning if state.planetSpawnAllowed is false.
-    let blackHoleFarAlready = (state.blackHole !== null) && (state.blackHole.driftDistance() > 400);
+    // Get current slingshot planet (if any) and check whether or not moving into orbit has begun yet.
     let sling = currentlySlingshottingPlanet(state);
     let orbitDiversionHappening = (sling !== null) && (sling.orbitDiversionHasBegun(state.currentFrame));
-    //console.log("BH far already: " + blackHoleFarAlready + " orbit diversion happening: " + orbitDiversionHappening);
-    if ((!blackHoleFarAlready) && (!orbitDiversionHappening) && (state.planetSpawnAllowed)) {
-        let slingshotPlanetAlreadyPresent = false;
-        let alreadyPresentCount = 0;
-        for (let i = 0; i < DRIFTER_COUNT; i++) {
-            let p = newDrifters[i];
-            let tooManyAlready = (alreadyPresentCount >= MAX_DRIFTERS);
-            let spawnNow = (randomInt(0, 9999) < 200);
-            if (p === null && spawnNow && (!tooManyAlready)) {
-                let choice = randomInt(0, state.planets.length - 1);
-                p = state.planets[choice].randomizedClone(state, !slingshotPlanetAlreadyPresent);
-                alreadyPresentCount += 1;
-                newDrifters[i] = p;
-                // Avoids creating two slingshotters during this one pass through "drifters" array.
-                if (p.isSlingshotting) slingshotPlanetAlreadyPresent = true;
-            } else alreadyPresentCount += 1;
-        }
-    }
 
     // Let the planets rotate and do other things that change with time.
     for (let i = 0; i < DRIFTER_COUNT; i++) {

@@ -8,9 +8,21 @@ import { Tile } from '../scene';
 // An upper bound on planet scale multipliers.
 const SCALE_CAP = 1.5;
 
+// An enum for the various types of drifting / slingshotting planets.
+export enum PlanetType {
+    CRATER,
+    DRY,
+    RING,
+    ICE,
+    ISLAND,
+    LAVA,
+    STAR,
+    WET,
+}
+
 // A rotating planet that can drift by.
 export class Planet implements Paintable {
-    planetType: number;                     // Uniquely identifies the type of planet. (Star planet, for example, is 6).
+    planetType: PlanetType;                 // Uniquely identifies the type of planet.
     pos: Coord;                             // Only used when planet is in presence of a slingshotting planet. Position relative to slingshotting planet.
     relativeToSlingshotter: boolean;        // Whether or not this planet's motion is now to be computed relative to a slingshotting planet.
     startFrame: number;                     // The frame when the planet first appeared.
@@ -20,7 +32,6 @@ export class Planet implements Paintable {
     flipped: boolean;                       // Whether or not the planet is flipped horizontally.
     image: any;                             // The sprite sheet source image.
     angle: number;                          // 0 to 2*PI. Angle that planet moves away from radial centre.
-    canSlingshot: boolean;                  // Whether or not this type of planet is eligible for slingshot.
     isSlingshotting: boolean;               // Whether or not this instance will actually slingshot.
     animationFrame: number;                 // The last animation frame that was painted.
     lastPaintFrame: number;                 // Frame number (time) when animationFrame was painted.
@@ -32,11 +43,11 @@ export class Planet implements Paintable {
     slingshotTargetSize: number;            // On-canvas size we want to expand the planet to so we can orbit it.
   
     constructor(
-        planetType: number,
+        planetType: PlanetType,
         pos: Coord, relativeToSlingshotter: boolean,
         startFrame: number, size: number, frames: number, scale: number, animationFrame: number,
         lastPaintFrame: number, spinSpeed: number, originalSpinSpeed: number, flipped: boolean,
-        image: any, angle: number, canSlingshot: boolean, isSlingshotting: boolean,
+        image: any, angle: number, isSlingshotting: boolean,
         diversionStartPos: (Coord | null), diversionStartScale: (number | null),
         slingshotTargetPos: Coord, slingshotTargetSize: number
         ) {
@@ -54,7 +65,6 @@ export class Planet implements Paintable {
         this.flipped = flipped;
         this.image = image;
         this.angle = angle;
-        this.canSlingshot = canSlingshot;
         this.isSlingshotting = isSlingshotting;
         this.diversionStartPos = diversionStartPos;
         this.diversionStartScale = diversionStartScale;
@@ -62,46 +72,42 @@ export class Planet implements Paintable {
         this.slingshotTargetSize = slingshotTargetSize;
     }
 
-    // Pick some random values for angle, scale, spin rate, etc.
-    randomizedClone(state: IGlobalState, slingshotOkay: boolean) {
-        let scale: number = randomInt(1500, 3500) / 1000;                           // Planet scale multiplier.
-        let spinSpeed = randomInt(10, 30);                                          // Planet rotation speed.
-        let startFrame = state.currentFrame;                                        // Spawning time of the planet.
-        let angle = Math.random() * Math.PI * 2;                                    // Angle of recession from vanishing point.
-        let flipped = ((randomInt(0, 99) % 2) === 0);                               // 50-50 chance of being flipped horizontally.
-        let isSlingshotting = this.canSlingshot && ((randomInt(0, 99) < 50));       // Chance of doing a slingshot.
-        if (currentlySlingshottingPlanet(state) !== null) isSlingshotting = false;  // One slingshot at a time.
-        if (!state.slingshotAllowed) isSlingshotting = false;                       // Sometimes it's outright forbidden.
-        if (!slingshotOkay) isSlingshotting = false;                                // Sometimes the caller forbids it.
+    // Set the start frame to the current frame.
+    start(state: IGlobalState): void {
+        this.startFrame = state.currentFrame;
+    }
+
+    // Make an instance using this planet as template.
+    instance(slingshot: boolean, scale: number, spin: number, angle: number, flip: boolean): Planet {
         let slingPos = this.slingshotTargetPos;
         let slingSiz = this.slingshotTargetSize;
-        // Scorched stars always get a larger target size when slingshotting.
-        if (this.planetType === 6) {
-            slingPos = new Coord(flipped ? -40 : CANVAS_WIDTH + 40, 100);     // Intended location for orbiting.
-            slingSiz = 600;                                                   // Intended size for orbiting.
+        // Scorching stars always get a larger target size when slingshotting.
+        if (this.planetType === PlanetType.STAR) {
+            slingPos = new Coord(flip ? -40 : CANVAS_WIDTH + 40, 100);     // Intended location for orbiting.
+            slingSiz = 600;                                                // Intended size for orbiting.
         } else {
-            slingPos = new Coord(flipped ? CANVAS_WIDTH + 20 : -20, 80);      // Intended location for orbiting.
-            slingSiz = 200;                                                   // Intended size for orbiting.    
+            slingPos = new Coord(flip ? CANVAS_WIDTH + 20 : -20, 80);      // Intended location for orbiting.
+            slingSiz = 200;                                                // Intended size for orbiting.
         }
         return new Planet(
-            this.planetType,                    // Planet type from template is preserved. (Type 6 is the star planet).
-            new Coord(0, 0),                    // Dummy position value (relative to slingshotter).
+            this.planetType,                    // Planet type from template is preserved.
+            this.pos,                           // Dummy position value (relative to slingshotter).
             false,                              // This planet is not initially moving relative to a slingshotting planet.
-            startFrame,                         // Time when the planet was spawned.
+            0,                                  // Dummy value for startFrame - need to set this when inserting into drifters array.
             this.size, this.frames,             // Source image size and number of frames.
             scale,                              // Scale multiplier.
             randomInt(0, this.frames - 1),      // Random starting animation frame.
-            state.currentFrame,                 // Time of last animation frame change.
-            spinSpeed,                          // Rotation speed for the new instance of the planet.
-            spinSpeed,                          // Original spin speed when planet instance was created (i.e. now).
-            flipped, this.image,                // Horizontal flip, image.
+            0,                                  // Dummy value for time of last animation frame change.
+            spin,                               // Rotation speed for the new instance of the planet.
+            spin,                               // Original spin speed when planet instance was created (i.e. now).
+            flip, this.image,                   // Horizontal flip, image.
             angle,                              // Direction to recede from vanishing point.
-            this.canSlingshot,                  // Slingshot eligibility is preserved from template planet.
-            isSlingshotting,                    // Whether or not this instance will slingshot.
+            slingshot,                          // Whether or not this instance will slingshot.
             null,                               // No diversion start position yet.
             null,                               // No diversion start scale yet.
             slingPos,                           // Position (relative to background) where we want the planet so we can orbit.
-            slingSiz);                          // Size we want for the planet when we orbit it.
+            slingSiz                            // Desired size of planet (in pixels) when orbiting.
+        );
     }
 
     // Number of frames after planet start frame when the oribit diversion starts.
@@ -110,15 +116,13 @@ export class Planet implements Paintable {
     // Number of frames after planet start frame when the planet is in position for orbiting to begin.
     get ORBIT_POSITION_REACH_TIME() : number {return this.ORBIT_DIVERSION_START_TIME + 450}; 
 
-    get ORBIT_DURATION() : number {return (this.planetType == 4) ? 720 :  200};
+    get ORBIT_DURATION() : number {return (this.planetType == PlanetType.ISLAND) ? 720 :  200};
+
     // Number of frames after planet start frame when the planet starts to come out of orbit.
-    get DEORBIT_START_TIME() : number {
-        
-        return this.ORBIT_POSITION_REACH_TIME + this.ORBIT_DURATION}; 
+    get DEORBIT_START_TIME() : number {return this.ORBIT_POSITION_REACH_TIME + this.ORBIT_DURATION};
 
     // Number of frames after planet start frame when the planet is fully deorbited (i.e. slingshot is done).
     get DEORBIT_END_TIME() : number {return this.DEORBIT_START_TIME + 50};
-
 
     get TOTAL_SLINGSHOT_DURATION () : number {return this.DEORBIT_END_TIME};   // Same value. Different way to look at it.
 
@@ -370,7 +374,7 @@ export class Planet implements Paintable {
             if (this.deorbitHasBegun(state.currentFrame)) {
                 deorbitBackAway = Math.pow(this.deorbitProgress(state), 2) * -CANVAS_WIDTH;
                 if (this.flipped) deorbitBackAway *= -1;
-                if (this.planetType === 6) deorbitBackAway *= -1;   // Type 6 (star) spins opposite the others.
+                if (this.planetType === PlanetType.STAR) deorbitBackAway *= -1;   // STAR type spins opposite the others.
             }
             let delta = this.orbitDiversionDelta(state);
             return this.diversionStartPos.plus(delta.x + deorbitBackAway, delta.y);
@@ -459,7 +463,7 @@ export class Planet implements Paintable {
             this.planetType,
             newPos, newRelative,
             this.startFrame, this.size, this.frames, newScale, animationFrame, lastFrameUpdate, spin, this.originalSpinSpeed,
-            this.flipped, this.image, this.angle, this.canSlingshot, this.isSlingshotting,
+            this.flipped, this.image, this.angle, this.isSlingshotting,
             dsp, dss, this.slingshotTargetPos, this.slingshotTargetSize);
     }
 
@@ -494,9 +498,9 @@ export class Planet implements Paintable {
 }
 
 // Make a new planet. Used for making a "template". Create instances using randomizeClone.
-export function makePlanet(planetType: number, size: number, frames: number, image: any, canSlingshot: boolean): Planet {
+export function makePlanet(planetType: PlanetType, size: number, frames: number, image: any): Planet {
     return new Planet(
-        planetType,         // Identifies the type of planet (0, 1, 2, etc).
+        planetType,         // Identifies the type of planet (CRATER, LAVA, STAR, etc).
         new Coord(0, 0),    // Dummy position value.
         false,              // Not realtive to a slingshotter.
         0,                  // Start frame
@@ -510,7 +514,6 @@ export function makePlanet(planetType: number, size: number, frames: number, ima
         false,              // Whether or ot it is flipped horizontally
         image,              // Source image
         0,                  // Angle of recession from vanishing point
-        canSlingshot,       // Whether or not a planet of this type is eligible for slingshot maneuver
         false,              // Whether or not the planet instance is currently slingshotting
         new Coord(0, 0),    // Dummy value for diversionStartPos
         1,                  // Dummy value for diversionStartScale
@@ -530,14 +533,14 @@ export function currentlySlingshottingPlanet(state: IGlobalState): (Planet | nul
 
 export function orbittingMindFlayerPlanet(state : IGlobalState): boolean {
     let planet = currentlySlingshottingPlanet(state);
-    if(planet == null) return false;
-                // Planet type is Island
-    else return planet.planetType == 4 && planet.startFrame + planet.ORBIT_POSITION_REACH_TIME < state.currentFrame;
+    if (planet == null) return false;
+    // Planet type is ISLAND
+    else return (planet.planetType == PlanetType.ISLAND) && (planet.startFrame + planet.ORBIT_POSITION_REACH_TIME < state.currentFrame);
 }
 
 export function orbittingScorchingStar(state : IGlobalState): boolean {
     let planet = currentlySlingshottingPlanet(state);
     if(planet == null) return false;
                 // Planet type is Island
-    else return planet.planetType == 6 && planet.scorchStartTime < state.currentFrame;
+    else return planet.planetType == PlanetType.STAR && planet.startFrame + planet.ORBIT_POSITION_REACH_TIME < state.currentFrame;
 }
