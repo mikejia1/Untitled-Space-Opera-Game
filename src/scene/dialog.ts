@@ -31,12 +31,9 @@ export class Dialog implements Paintable {
             state.uiImages.dialogBox,             
             this.pos.x, this.pos.y);
         npc.paintAtPos(canvas, state, this.avatar);
-        if (this.skipAnimation){
-            this.lines.forEach((line, index) => drawText(canvas, base.plus(26, 3 + index * 12), line));
-        }
-        else {
+        let newLines : string[] = [];
+        if (!this.skipAnimation){
             let remainingChars = state.currentFrame - this.startFrame;
-            let newLines : string[] = [];
             for(let i = 0; i < this.lines.length; i++){
                 if(remainingChars < this.lines[i].length){
                     newLines = [...newLines, this.lines[i].substring(0, remainingChars)];
@@ -45,8 +42,12 @@ export class Dialog implements Paintable {
                 remainingChars -= this.lines[i].length;
                 newLines = [...newLines, this.lines[i]];
             }
-            newLines.forEach((line, index) => drawText(canvas, base.plus(26, 3 + index * 12), line));
         }
+        else {
+            newLines = this.lines;
+        }
+        if(this.lines.length == 1) drawText(canvas, base.plus(26, 9), newLines[0]);
+        else newLines.forEach((line, index) => drawText(canvas, base.plus(26, 3 + index * 12), line));
     }
 }
 
