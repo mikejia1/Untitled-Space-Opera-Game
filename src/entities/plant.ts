@@ -223,7 +223,10 @@ export function updatePlantState(state: IGlobalState): IGlobalState{
   state.plants.forEach(plant => {
     let newPlant = plant.dehydratePlant(state).growPlant(state);
     if (newPlant.isBeingTrampled(state)) newPlant = newPlant.dehydratePlant(state, true);
-    
+    if (newPlant.coin != null && newPlant.coin.lastCoinCollected > 0){
+      newPlant.coin = newPlant.coin.updateCoinState(state);
+      if(newPlant.coin.collecTionComplete(state)) newPlant.coin = null;
+    }
     if(orbittingScorchingStar(state)) {
       let healthFactor = 1 - 0.9* state.shieldDoors.getScorchingStarLightAlpha(state.currentFrame);
       newPlant.dehydrationTime = DEHYDRATION_TIME * healthFactor;

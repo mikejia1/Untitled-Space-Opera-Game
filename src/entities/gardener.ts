@@ -340,11 +340,11 @@ export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
     let plants : Plant[] = [];
     for (let i = 0; i < state.plants.length; i++){
         let plant = state.plants[i];
-        if(plant.coin != null && rectanglesOverlap(plant.coin.collisionRect(), newGar.collisionRect())){
+        if(plant.coin !=null && plant.coin.lastCoinCollected < 0 && rectanglesOverlap(plant.coin.collisionRect(), newGar.collisionRect())){
             console.log("Collecting coin!");
             score += plant.coin.count;
+            plant.coin.lastCoinCollected = state.currentFrame;
             statusBar.newCoins += plant.coin.count;
-            plant.coin = null;
         }
         plants = [...plants, plant];
     }
