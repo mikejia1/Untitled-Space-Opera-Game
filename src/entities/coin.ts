@@ -27,8 +27,6 @@ export class Coin implements Paintable {
       let aY = 24;
       let dY = (this.ghostPos.y  - aY) * (Math.sqrt(1 - (dX - this.ghostPos.x) * (dX - this.ghostPos.x) / ((this.ghostPos.x - aX) * (this.ghostPos.x - aX))))+aY;
       this.pos = new Coord(dX, Math.floor(dY));
-      
-      console.log("dx = "+ dX + " dy = " + dY);
       return this;
     }
 
@@ -45,7 +43,6 @@ export class Coin implements Paintable {
 
     paint (canvas: CanvasRenderingContext2D, state: IGlobalState) {
         let shift = this.computeShift(state);
-        if(this.lastCoinCollected > 0) console.log("coin: posX = "+ this.pos.x + " posY = " + this.pos.y);
         this.paintAtPos(canvas, state, this.pos.plus(shift.x, shift.y));
     }
 
