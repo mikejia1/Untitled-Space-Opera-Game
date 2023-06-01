@@ -10,34 +10,36 @@ import { CANVAS_WIDTH, DRIFTER_COUNT, FPS } from "../../utils/constants";
 import { IGlobalState } from "./globalstate";
 
 // An enum for event types.
+
 export enum AnimEventType {
-    IMPACT,                     // Supernova impact event.
-    GAMEOVER_REPLAY_FRAME,      // End the game.
-    ALARM_1,                    // Trigger leftmost shield button alarm.
-    ALARM_2,                    // Trigger middle shield button alarm.
-    ALARM_3,                    // Trigger rightmost shield button alarm.
-    OPEN_CAT_PORTAL,            // Open the cat portal for 30 cats. 
-    CAT_INVASION_1,             // 2 cat invasion.
-    CAT_INVASION_2,             // 5 cat invasion.
-    CAT_INVASION_3,             // 30 cat invasion.
-    EARLY_OPEN_SHIELD_1,        // Open leftmost shield early.
-    EARLY_OPEN_SHIELD_2,        // Open middle shield early.
-    EARLY_OPEN_SHIELD_3,        // Open rightmost shield early.
-    SHAKE_STOP,                 // Set screen shake back to zero/none.
-    SHAKE_LEVEL_1,              // Set screen shake to level 1 (weakest).
-    SHAKE_LEVEL_2,              // Set screen shake to level 2.
-    SHAKE_LEVEL_3,              // Set screen shake to level 3.
-    SHAKE_LEVEL_4,              // Set screen shake to level 4 (strongest).
-    BLACK_HOLE_APPEARS,         // Bring black hole into view.
-    BH_PULSE_STOP,              // Bring black hole pulse magnitude to zero.
-    BH_PULSE_LEVEL_1,           // Bring black hole pulse magnitude to level 1 (weakest).
-    BH_PULSE_LEVEL_2,           // Bring black hole pulse magnitude to level 2.
-    BH_PULSE_LEVEL_3,           // Bring black hole pulse magnitude to level 3.
-    BH_PULSE_LEVEL_4,           // Bring black hole pulse magnitude to level 4 (strongest).
-    SLINGSHOT_ALLOWED,          // Allow planetary slingshot events to initiate.
-    SLINGSHOT_FORBIDDEN,        // Prevent planetary slingshot events from initiating.
-    PLANET_SPAWN_ALLOWED,       // Allow new drifting planets to be spawned.
-    PLANET_SPAWN_FORBIDDEN,     // Prevent new drifting planets from being spawned.
+    IMPACT,    
+    GAMEOVER_REPLAY_FRAME,    
+    ALARM_1,    
+    ALARM_2,    
+    ALARM_3,    
+    OPEN_CAT_PORTAL,      
+    CAT_INVASION_1,    
+    CAT_INVASION_2,    
+    CAT_INVASION_3,    
+    MIND_FLAYER_PLANET,
+    EARLY_OPEN_SHIELD_1,    
+    EARLY_OPEN_SHIELD_2,    
+    EARLY_OPEN_SHIELD_3,    
+    SHAKE_STOP,    
+    SHAKE_LEVEL_1,    
+    SHAKE_LEVEL_2,    
+    SHAKE_LEVEL_3,    
+    SHAKE_LEVEL_4,    
+    BLACK_HOLE_APPEARS,    
+    BH_PULSE_STOP,    
+    BH_PULSE_LEVEL_1,    
+    BH_PULSE_LEVEL_2,    
+    BH_PULSE_LEVEL_3,    
+    BH_PULSE_LEVEL_4,    
+    SLINGSHOT_ALLOWED,    
+    SLINGSHOT_FORBIDDEN,    
+    PLANET_SPAWN_ALLOWED,    
+    PLANET_SPAWN_FORBIDDEN,    
     SCORCHING_STAR_SLINGSHOT,   // Introduce a "star" type drifting planet that we will slingshot around.
 }
 
@@ -81,6 +83,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let portal = state.portal;
   let cats = state.cats;
   let colliderId = state.nextColliderId;
+  let randomCabinFeverAllowed = state.randomCabinFeverAllowed
 
   // Process active events
   for (let i = 0; i < state.pendingEvents.length; i++){
@@ -110,6 +113,11 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
           new AnimEvent(AnimEventType.EARLY_OPEN_SHIELD_3, event.startTime + 30 + (INTER_SLAT_DELAY * 8)),
         ];
       }
+    }
+    if(event.event == AnimEventType.MIND_FLAYER_PLANET){
+      newDrifters = slingshotMindFlayerPlanet(state, newDrifters);
+      event.finished = true;
+      randomCabinFeverAllowed = true;
     }
     if(event.event == AnimEventType.OPEN_CAT_PORTAL){
       portal = new Portal(state.currentFrame, 140);
@@ -231,7 +239,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         event.finished = true;
     }
     if (event.event === AnimEventType.SCORCHING_STAR_SLINGSHOT) {
-        newDrifters = insertScorchedStarSlingshotter(state, newDrifters);
+        newDrifters = slingshotScorchedStar(state, newDrifters);
         event.finished = true;
     }
     // This event should only ever triggered via the Gardener update method.
@@ -264,11 +272,12 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     lastNPCDeath: newLastNPCDeath,
     slingshotAllowed: newSlingshotAllowed,
     planetSpawnAllowed: newPlanetSpawnAllowed,
+    randomCabinFeverAllowed: randomCabinFeverAllowed,
   };
 }
 
 // Find an unused slot in the drifters array and insert a scorched start for slingshotting.
-function insertScorchedStarSlingshotter(state: IGlobalState, drifters: (Planet | null)[]): (Planet | null)[] {
+function slingshotScorchedStar(state: IGlobalState, drifters: (Planet | null)[]): (Planet | null)[] {
     for (let i = 0; i < DRIFTER_COUNT; i++) {
         if (drifters[i] !== null) continue;
         let ss = state.planets[6].randomizedClone(state, true);
@@ -279,5 +288,19 @@ function insertScorchedStarSlingshotter(state: IGlobalState, drifters: (Planet |
     }
     return drifters;
 }
+
+// Find an unused slot in the drifters array and insert a scorched start for slingshotting.
+function slingshotMindFlayerPlanet(state: IGlobalState, drifters: (Planet | null)[]): (Planet | null)[] {
+  for (let i = 0; i < DRIFTER_COUNT; i++) {
+      if (drifters[i] !== null) continue;
+      let mf = state.planets[4].randomizedClone(state, true);
+      mf.isSlingshotting = true;  // Star normally not slingshot eligible. Have to force it.
+      drifters[i] = mf;
+      console.log("Created mindflayer planet");
+      break;
+  }
+  return drifters;
+}
+
 
 export const GAMEOVER_RESTART_TIME = 5*FPS;

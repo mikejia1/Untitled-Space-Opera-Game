@@ -509,3 +509,10 @@ export function currentlySlingshottingPlanet(state: IGlobalState): (Planet | nul
     }
     return null;
 }
+
+export function isMindFlayerActive(state : IGlobalState): boolean {
+    let planet = currentlySlingshottingPlanet(state);
+    if(planet == null) return false;
+                // Planet type is Island
+    else return planet.planetType == 4;
+}

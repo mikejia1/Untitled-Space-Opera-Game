@@ -54,7 +54,7 @@ export function updateDialogState(state : IGlobalState) : IGlobalState {
     if (state.dialogs.length == 0) return state;
     let dialogs : Dialog[] = state.dialogs;
     dialogs[0].skipAnimation = state.currentFrame - dialogs[0].startFrame > dialogs[0].totalChars || dialogs[0].skipAnimation;
-    return { ...state, dialogs: dialogs};
+    return { ...state, dialogs: dialogs, lastDialogInteraction: state.currentFrame};
 }
 
 export function isDialogCurrentlyDisplayed(state : IGlobalState) : boolean {

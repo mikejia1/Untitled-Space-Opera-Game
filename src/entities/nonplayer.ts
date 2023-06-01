@@ -18,6 +18,10 @@ import {
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
 import { CausaMortis, Death } from './skeleton';
+import { isMindFlayerActive } from '../scene/planet';
+import { cabinFeverDialog, movingToAirlockDialog, contemplatingDeathDialog } from '../scene/npcscript';
+import { Dialog } from '../scene/dialog';
+import { AirlockState } from './airlock';
 
 // Probability of cabin fever, per NPC, per frame. 5 in 10,000.
 const PER_FRAME_CABIN_FEVER_PROBABILITY = 0.0005;
@@ -395,7 +399,12 @@ export class NonPlayer implements Lifeform, Collider {
             // randomly gets frazzled (cabin fever).
             case MentalState.Normal:
                 if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
-                else if (((randomInt(0, 9999) / 10000) < PER_FRAME_CABIN_FEVER_PROBABILITY) && state.randomCabinFeverAllowed) {
+                else if(Math.random() < 0.01 && isMindFlayerActive(state)){
+                    newHasCabinFever = true;
+                    newMentalState = MentalState.Frazzled;
+                    newSuicideCountdown = SUICIDAL_DELAY;
+                }
+                else if ((Math.random() < PER_FRAME_CABIN_FEVER_PROBABILITY) && state.randomCabinFeverAllowed) {
                     // When an NPC first develops cabin fever, that's when the suicide countdown starts.
                     newHasCabinFever = true;
                     newMentalState = MentalState.Frazzled;
@@ -552,6 +561,10 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
     // Allow NPCs to move and adjust their mental state.
     let newNPCs: NonPlayer[] = [];
     let atLeastOneNPCPushingAirLockButton: boolean = false;
+    let atLeastOneNPCFrazzled = false;
+    let atLeastOneNPCAtAirlock = false;
+    let atLeastOneNPCMovingToAirlock = false;
+    let crazyNPCId = 0;
     state.npcs.forEach(npc => {
         let newNPC: NonPlayer = npc;
         // If NPC is dead, check that the death animation is done.
@@ -591,23 +604,60 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
         // Decrement the suicide countdowns (only frazzled NPCs will do this).
         newNPC = newNPC.decrementSuicideCountdowns();
 
+        if(newNPC.hasCabinFever) { 
+            atLeastOneNPCFrazzled = true;
+            crazyNPCId = newNPC.id;
+        }
+        if(newNPC.hasReachedAirLockButton){
+            console.log("dialog: here its working");
+            atLeastOneNPCAtAirlock =true;}
+        if(newNPC.hasCabinFever && newNPC.suicideCountdown == 0) {
+            console.log("dialog: this is working too");
+            atLeastOneNPCMovingToAirlock = true;}
+
         // If NPC is trying to push air lock button, and is close enough to do so, push it and head toward the air lock.
         if (newNPC.readyToPushAirLockButton
             && rectanglesOverlap(newNPC.collisionRect(), state.airlockButton.interactionRect())
-            && state.airlock.isAirtight(state)) {
+            && state.airlock.state == AirlockState.CLOSED) {
             newNPC = newNPC.headTowardAirLockDoom();
             atLeastOneNPCPushingAirLockButton = true;
         }
-    
         // Update the NPC array. Update the colliders so that subsequent NPCs will
         // check collisions against up-to-date locations of their peers.
         newNPCs = [...newNPCs, newNPC];
         state.colliderMap.set(newNPC.colliderId, newNPC);
     });
 
+    let dialog = state.dialogs;
+    // Trigger crazy NPC dialog.
+    if(atLeastOneNPCAtAirlock){
+        console.log("dialog: atLeastOneNPCAtAirlock");
+        if(state.currentFrame > state.lastDialogInteraction + 2 * FPS){
+            let npcLine = contemplatingDeathDialog[Math.floor(Math.random() * contemplatingDeathDialog.length)];
+            dialog = [new Dialog(npcLine, state.currentFrame, crazyNPCId), ...dialog];
+            console.log("dialog: contemplating death" + npcLine);
+        }
+    }
+    else if(atLeastOneNPCMovingToAirlock){
+        console.log("dialog: atLeastOneNPCMovingToAirlock");
+        if(state.currentFrame > state.lastDialogInteraction + 2 * FPS){
+            let npcLine = movingToAirlockDialog[Math.floor(Math.random() * movingToAirlockDialog.length)];
+            dialog = [new Dialog(npcLine, state.currentFrame, crazyNPCId), ...dialog];
+            console.log("dialog: going to airlock" + npcLine);
+        }
+    }
+    else if(atLeastOneNPCFrazzled){
+        if(state.currentFrame > state.lastDialogInteraction + 2 * FPS){
+            let npcLine = cabinFeverDialog[Math.floor(Math.random() * cabinFeverDialog.length)];
+            dialog = [new Dialog(npcLine, state.currentFrame, crazyNPCId), ...dialog];
+            console.log("dialog: cabin fever" + npcLine);
+        }
+    }
+
     let newState = {
         ...state,
         npcs: newNPCs,
+        dialogs: dialog,
         //colliderMap: allColliders,
     };
     if (atLeastOneNPCPushingAirLockButton) return activateAirlockButton(newState);

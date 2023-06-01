@@ -98,6 +98,7 @@ export interface IGlobalState {
     pendingEvents: AnimEvent[];         // Queue of one-off event animations to draw
     activeEvents: AnimEvent[];          // Queue of one-off event animations to draw
     dialogs: Dialog[];                  // Dialogs to display
+    lastDialogInteraction: number;      // The last time the player interacted with a dialog
     statusBar: StatusBar;               // The status bar at the top of the screen
     skeleton: any;                      // The skeleton death animation.
     ghost: any;                         // The ghost animation.
@@ -190,6 +191,7 @@ export function initialGameState(): IGlobalState {
     pendingEvents: getEvents(),
     activeEvents: [],
     dialogs: welcomeDialog(npcs),
+    lastDialogInteraction: 0,
     statusBar: new StatusBar(),
     gardenerImages: {
       walkingBase:        loadImage("Base walk strip", basewalkstrip),

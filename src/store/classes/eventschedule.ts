@@ -5,7 +5,8 @@ import { TOTAL_SLINGSHOT_DURATION } from "../../scene/planet";
 
 const CAT_INVASION_1 = FPS*100;
 const SCORCHING_STAR_1 = FPS*200;
-const MIND_FLAYER = FPS*300;
+export const MIND_FLAYER = FPS*10;
+export const MIND_FLAYER_ACTIVE = FPS*60;
 const CAT_INVASION_2 = FPS*400;
 const SCORCHING_STAR_2 = FPS*500;
 const BLACKHOLE_SUPERNOVA = FPS*600;
@@ -25,10 +26,6 @@ export function getEvents(): AnimEvent[] {
   }
   
   function createScorchingStarEvent(delay: number): AnimEvent[] {
-    //Dialog: "Someone close the blinds!"
-    //Dialog: "Too bright! Get the shutters!"
-    //Dialog: "Those plants don't look so good..."
-    //Dialog: "I'm going blind!"
     let f = computeCurrentFrame();
     let time = f + delay;
     // Prevent spontaneous slingshots for a long enough period before the star slngshot, and re-enabled it immediately after.
@@ -39,18 +36,14 @@ export function getEvents(): AnimEvent[] {
   }
 
   function createMindFlayerEvent(delay: number): AnimEvent[] {
-    //Dialog: "I'm feeling a little... off."
-    //Dialog: "I can't take much more of this!"
-    //Dialog: "There are ants in my brain!"
-    //Dialog: "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn"
-    return [];
+    let f = computeCurrentFrame();
+    let time = f + delay;
+    let mindFlayer: AnimEvent = new AnimEvent(AnimEventType.MIND_FLAYER_PLANET, time);
+    return [mindFlayer, ];
   }
 
   // Set up the timed schedule for cat invasion event. 
   function creatCatInvasionLevel1(delay: number): AnimEvent[] {
-    //Dialog: "Cat's aren't allowed in the lab!"
-    //Dialog: "Don't pet the kitty!"
-    //Dialog: "The only good cat is a wet cat."
     let f = computeCurrentFrame();
     let time = f + delay;
     let shake1:     AnimEvent =   new AnimEvent(AnimEventType.SHAKE_LEVEL_1,    time - (3 * FPS));
