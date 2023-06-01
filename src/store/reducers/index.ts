@@ -31,6 +31,7 @@ import {
   TOGGLE_DEBUG_CONTROL_INTERACTION_RECTS,
   TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS,
   TOGGLE_GAME_AUDIO,
+  ANY_KEY,
 } from "../actions";
 import { updateOxygenState } from "../../entities/oxygen";
 import { Dialog, isDialogCurrentlyDisplayed, updateDialogState } from "../../scene/dialog";
@@ -47,6 +48,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
     case STOP_LEFT:                               return newKeyUp(state, Direction.Left);
     case STOP_UP:                                 return newKeyUp(state, Direction.Up);
     case STOP_DOWN:                               return newKeyUp(state, Direction.Down);
+    case ANY_KEY:                                 return anyKeyDown(state);
     case TOGGLE_EQUIP:                            return toggleEquip(state);
     case USE_ITEM:                                return utiliseItem(state);
     case STOP_WATERING:                           return ceaseWatering(state);
@@ -66,6 +68,14 @@ const gameReducer = (state = initialGameState(), action: any) => {
     default:                                      return state;
   }
 };
+
+
+function anyKeyDown(state: IGlobalState): IGlobalState {
+  if (state.gameover && state.currentFrame - state.gameoverFrame > GAMEOVER_RESTART_TIME ) {
+    return initialGameState();
+  }
+  else return state;
+}
 
 // Stop the gardener if the keyup direction matches the current gardener direction.
 function newKeyUp(state: IGlobalState, direction: Direction): IGlobalState {
@@ -87,9 +97,6 @@ function newKeyUp(state: IGlobalState, direction: Direction): IGlobalState {
 
 // Only move the gardener if the keypress changes the gardener direction.
 function newKeyDown(state: IGlobalState, direction: Direction): IGlobalState {
-  if (state.gameover && state.currentFrame - state.gameoverFrame > GAMEOVER_RESTART_TIME ) {
-    return initialGameState();
-  }
   // This is a spurious keypress. Ignore it.
   if (ignoreKeyPress(direction, state.keysPressed)) {
     return state;

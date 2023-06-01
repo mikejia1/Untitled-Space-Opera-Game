@@ -7,7 +7,7 @@ export const STOP_RIGHT = "STOP_RIGHT";
 export const STOP_LEFT = "STOP_LEFT";
 export const STOP_UP = "STOP_UP";
 export const STOP_DOWN = "STOP_DOWN";
-
+export const ANY_KEY = "ANY_KEY";
 export const RESET = "RESET";
 export const STOP_GAME = "STOP_GAME";
 export const INCREMENT_SCORE = "INCREMENT_SCORE";
@@ -29,6 +29,10 @@ export const TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS = "TOGGLE_DEBUG_CONTROL_DIS
 
 export const makeMove = (move: string) => ({
   type: move,
+});
+
+export const anyKey = () => ({
+  type: ANY_KEY,
 });
 
 export const stopWatering = () => ({

@@ -27,6 +27,7 @@ import {
   toggleShowInteractionRects,
   toggleDisableCollisions,
   toggleGameAudio,
+  anyKey,
 } from "../store/actions";
 import { IGlobalState } from "../store/classes";
 import { clearBoard, drawState } from "../utils";
@@ -49,6 +50,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
 
   const handleKeyUpEvents = useCallback(
     (event: KeyboardEvent) => {
+      dispatch(anyKey())
       switch (event.key) {
           case "w":
             dispatch(makeMove(STOP_UP));

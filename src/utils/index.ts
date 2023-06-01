@@ -316,7 +316,6 @@ function drawMindFlayerOverlay(state: IGlobalState, canvas: CanvasRenderingConte
     }
     canvas.restore();
   }
-
 }
 
 // Draw objects that are in space, visible through the window.
