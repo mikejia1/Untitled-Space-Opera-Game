@@ -7,8 +7,8 @@ import { PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_STOP, PULSE_SUBTLE } fro
 import { gridOfCats } from "../../entities/cat";
 
 const CAT_INVASION_1 = FPS*100;
-const SCORCHING_STAR_1 = FPS*0;
-export const MIND_FLAYER = FPS*300;
+const SCORCHING_STAR_1 = FPS*200;
+const MIND_FLAYER = FPS*300;
 const CAT_INVASION_2 = FPS*400;
 const SCORCHING_STAR_2 = FPS*500;
 const BLACKHOLE_SUPERNOVA = FPS*600;

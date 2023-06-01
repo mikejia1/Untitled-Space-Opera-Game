@@ -24,7 +24,7 @@ export class StatusBar implements Paintable {
 
     getMeterColor(state: IGlobalState) : string {
 
-        let oxygen = Math.min(state.oxygen, 100);
+        let oxygen = Math.min(state.oxygen.level, 100);
         let r = 0;
         let g = 168;
         let b = 243;
@@ -59,7 +59,7 @@ export class StatusBar implements Paintable {
         canvas.restore();
 
         // Paint oxymeter reading.
-        let oxygen = Math.min(state.oxygen, 100);
+        let oxygen = Math.min(state.oxygen.level, 100);
         let oxyReading: number = Math.floor((meterEnd - meterStart) * oxygen / 100);
         canvas.save();
         canvas.beginPath();

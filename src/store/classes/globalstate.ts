@@ -84,7 +84,7 @@ export interface IGlobalState {
     gardener: Gardener;                 // The gardener tending the garden. Controlled by the player.
     keysPressed: Direction[];           // The movement keys currently pressed by the player.
     score: number;                      // The current game score
-    oxygen: number;                     // The current oxygen level
+    oxygen: any;                        // The current oxygen level
     wateringCan: WateringCan;           // The watering can that the gardener uses to water plants
     plants: Plant[];                    // All the plants currently living
     npcs: NonPlayer[];                  // The various crew people wandering around in the garden
@@ -177,7 +177,11 @@ export function initialGameState(): IGlobalState {
     gardener: gardener,
     keysPressed: [],
     score: 0,
-    oxygen: 100,
+    oxygen: {
+      level: 70,
+      consumptionRate: 0,
+      productionRate: 0,
+     },
     wateringCan: initialWateringCan(),
     plants: allPlants,
     npcs: npcs,
