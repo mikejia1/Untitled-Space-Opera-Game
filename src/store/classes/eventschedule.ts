@@ -7,15 +7,15 @@ import { PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_STOP, PULSE_SUBTLE } fro
 import { gridOfCats } from "../../entities/cat";
 import { blackHoleDialog, catInvasionDialog, scorchingStarDialog } from "../../scene/npcscript";
 
-const CAT_INVASION_1 = FPS*30;
+const CAT_INVASION_1 = FPS*50;
 //scorching star takes 770 frames
-const SCORCHING_STAR_1 = FPS*60;
+const SCORCHING_STAR_1 = FPS*80;
 //mindflayer takes 1290 frames
-const MIND_FLAYER = FPS*100;
-const CAT_INVASION_2 = FPS*160;
-const SCORCHING_STAR_2 = FPS*200;
-const BLACKHOLE_SUPERNOVA = FPS*240;
-const CAT_INVASION_3 = FPS*260;
+const MIND_FLAYER = FPS*120;
+const CAT_INVASION_2 = FPS*190;
+const SCORCHING_STAR_2 = FPS*230;
+const BLACKHOLE_SUPERNOVA = FPS*270;
+const CAT_INVASION_3 = FPS*300;
 
 export function getEvents(state: IGlobalState): AnimEvent[] {
     return [
