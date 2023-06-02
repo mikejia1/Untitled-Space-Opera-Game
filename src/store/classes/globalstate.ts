@@ -2,7 +2,7 @@ import { AnimEvent, Collider, ColliderType } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, DOWNWARD_STARFIELD_DRIFT } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
-import { Asteroid, BlackHole, InvisibleCollider, NUM_ASTEROIDS } from "../../scene";
+import { Asteroid, BlackHole, InvisibleCollider, NUM_ASTEROIDS, tutorialDialog } from "../../scene";
 import { Planet, PlanetType, makePlanet } from '../../scene/planet';
 import { ShieldButton } from '../../entities/shieldbutton';
 import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
@@ -76,6 +76,7 @@ import icePlanetImg from      "../images/drifting_planets/planet_ice_256px_60f.p
 import islandPlanetImg from   "../images/drifting_planets/planet_island_256px_60f.png";
 import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.png";
 import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
+import redGiantPlanetImg from     "../images/drifting_planets/planet_sun_384px_42f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
 
 // Asteroid images.
@@ -298,7 +299,7 @@ export function initialGameState(): IGlobalState {
       .set(PlanetType.ICE,    makePlanet(PlanetType.ICE,    256, 60, loadImage("Ice planet",      icePlanetImg)))       // Ice planet
       .set(PlanetType.ISLAND, makePlanet(PlanetType.ISLAND, 256, 60, loadImage("Island planet",   islandPlanetImg)))    // Island planet
       .set(PlanetType.LAVA,   makePlanet(PlanetType.LAVA,   256, 60, loadImage("Lava planet",     lavaPlanetImg)))      // Lava planet
-      .set(PlanetType.STAR,   makePlanet(PlanetType.STAR,   512, 30, loadImage("Star planet",     starPlanetImg)))      // Star planet (yes, a star - actually 512 pixels)
+      .set(PlanetType.STAR,   makePlanet(PlanetType.STAR,   384, 42, loadImage("Star planet",     redGiantPlanetImg)))      // Star planet (yes, a star - actually 512 pixels)
       .set(PlanetType.WET,    makePlanet(PlanetType.WET,    256, 60, loadImage("Wet planet",      wetPlanetImg))),      // Wet planet
     randomCabinFeverAllowed: false, // No random cabin fever, initially.
     lastNPCDeath: 0,                // Dummy value for initialization.
@@ -479,7 +480,8 @@ export function activateAirlockButton(globalState: IGlobalState): IGlobalState {
 
 export function welcomeDialog(npcs : NonPlayer[]): Dialog[] {
   let dialogs : Dialog[] = [];
-  dialogs = [...dialogs, new Dialog("Shouldn't you be watering the plants?", computeCurrentFrame() + 5*FPS, npcs[0].id)];
-  dialogs = [...dialogs, new Dialog("Press 'e' to pick up the watering can and\n 'f' to water. It's on the upper deck.", computeCurrentFrame() + 5*FPS, npcs[2].id)];
+  dialogs = [...dialogs, new Dialog(tutorialDialog[0], computeCurrentFrame() + 5*FPS, npcs[0].id)];
+  dialogs = [...dialogs, new Dialog(tutorialDialog[1], computeCurrentFrame() + 5*FPS, npcs[1].id)];
+  dialogs = [...dialogs, new Dialog(tutorialDialog[2], computeCurrentFrame() + 5*FPS, npcs[2].id)];
   return dialogs;
 }

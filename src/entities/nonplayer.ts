@@ -399,7 +399,7 @@ export class NonPlayer implements Lifeform, Collider {
             // randomly gets frazzled (cabin fever).
             case MentalState.Normal:
                 if (dangerIsImpending(state)) newMentalState = MentalState.Scared;
-                else if(Math.random() < 0.01 && orbittingMindFlayerPlanet(state)){
+                else if(Math.random() < 0.002 && orbittingMindFlayerPlanet(state)){
                     newHasCabinFever = true;
                     newMentalState = MentalState.Frazzled;
                     newSuicideCountdown = SUICIDAL_DELAY;

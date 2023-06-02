@@ -68,10 +68,13 @@ function generateRandomIndices(length : number) : number[] {
 
 // feed a random line from list to use as dialog. Returns new list of dialog.
 export function feedDialog(state: IGlobalState, lines: string[], npcId: number) : Dialog [] {
-    let dialogList : Dialog[] = state.dialogs;
     let randomIndices : number[] = generateRandomIndices(lines.length);
     for(let i = 0; i < lines.length; i++){
         if(state.usedDialogs.has(lines[randomIndices[i]])) continue;
+        if(lines[randomIndices[i]] == undefined){
+            console.log("undefined dialog" + randomIndices[i]);
+            continue;
+        }
         return [...state.dialogs, new Dialog(lines[randomIndices[i]], state.currentFrame, npcId)];
     }
     return state.dialogs;

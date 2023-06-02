@@ -245,7 +245,7 @@ function insertDrifter(state: IGlobalState, drifters: (Planet | null)[], drifter
 function slingshotMindFlayerPlanet(state: IGlobalState, drifters: (Planet | null)[]): (Planet | null)[] {
   for (let i = 0; i < DRIFTER_COUNT; i++) {
       if (drifters[i] !== null) continue;
-      let mf = state.planets.get(PlanetType.WET)?.instance(true, 3, 30, Math.PI/2, Math.random() < 0.5);
+      let mf = state.planets.get(PlanetType.ISLAND)?.instance(true, 3, 30, Math.PI/2, Math.random() < 0.5);
       if (mf !== undefined) {
         mf.start(state);
         drifters[i] = mf;

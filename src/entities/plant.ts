@@ -228,7 +228,7 @@ export function updatePlantState(state: IGlobalState): IGlobalState{
       if(newPlant.coin.collecTionComplete(state)) newPlant.coin = null;
     }
     if(orbittingScorchingStar(state)) {
-      let healthFactor = 1 - 0.9* state.shieldDoors.getScorchingStarLightAlpha(state.currentFrame);
+      let healthFactor = 1 - 0.8* state.shieldDoors.getScorchingStarLightAlpha(state.currentFrame);
       newPlant.dehydrationTime = DEHYDRATION_TIME * healthFactor;
     }
     else newPlant.dehydrationTime = DEHYDRATION_TIME;

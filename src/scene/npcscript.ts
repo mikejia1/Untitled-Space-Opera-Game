@@ -2,19 +2,20 @@
 const lineLength = ".........................................";
 
 export const cabinFeverDialog : string[] = [
-    "We must be reaching the edge of the\n universe...",
-    "The silence is suffocating...",
-    "Space is so big...",
+    "Darkness envelopes our ship like a\n protean womb.",
+    "I think I'm seeing things...",
+    "That planet looks bad for my mental\n health.",
 ] 
 
 export const movingToAirlockDialog : string[] = [
     "I must be cleansed!",
     "My insides are on fire!",
     "My eyeballs! They itch! THEY ITCH!",
+    "Have you ever strangled a kitten?",
 ] 
 
 export const contemplatingDeathDialog : string[] = [
-    "There's no point going on anymore...",
+    "There's no point going on anymore!",
     "It's too stuffy in here, I need some air!",
     "I think I'l go for a walk outside...",
     "Ph'nglui mglw'nafh Cthulhu R'lyeh\n wgah'nagl fhtagn.",
@@ -41,7 +42,8 @@ export const blackHoleDialog: string[] = [
     "We're dooooooomed!",
 ]
 
-export const welcomeDialog: string[] = [
+export const tutorialDialog: string[] = [
     "Shouldn't you be watering the plants?", 
     "Press 'e' to pick up the watering can and\n 'f' to water. It's on the upper deck.",
+    "And don't go pushing any red buttons!",
 ]
