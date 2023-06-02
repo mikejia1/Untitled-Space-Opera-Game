@@ -139,30 +139,34 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
   function creatCatInvasionLevel2(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
     let time = f + delay;
-    let dialog:     AnimEvent = new AnimEvent(AnimEventType.DIALOG,             time - (5 * FPS),         catInvasionDialog);
-    let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),           SHAKER_SUBTLE);
-    let shake2:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),           SHAKER_MILD);
-    let shake3:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),         SHAKER_SUBTLE);
-    let shakeStop:   AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time,                       SHAKER_NO_SHAKE);
-    let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
-    let enterCats:   AnimEvent =  new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),         gridOfCats(new Coord(380, 245), 20, 3, 2));
-    return [dialog, shake1, shake2, shake3, shakeStop, enterPortal, enterCats ];
+    let asteroidsStart: AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_BEGIN,  time - (5 * FPS));
+    let dialog:         AnimEvent = new AnimEvent(AnimEventType.DIALOG,           time - (5 * FPS),         catInvasionDialog);
+    let shake1:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),         SHAKER_SUBTLE);
+    let shake2:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_MILD);
+    let shake3:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),       SHAKER_SUBTLE);
+    let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time,                     SHAKER_NO_SHAKE);
+    let enterPortal:    AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
+    let enterCats:      AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 3, 2));
+    let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (3 * FPS));
+    return [asteroidsStart, dialog, shake1, shake2, shake3, shakeStop, enterPortal, enterCats, asteroidsEnd ];
   }
   
   // Set up the timed schedule for cat invasion event. 
   function creatCatInvasionLevel3(delay: number): AnimEvent[] {
     let f = computeCurrentFrame();
     let time = f + delay;
-    let dialog:     AnimEvent = new AnimEvent(AnimEventType.DIALOG,             time - (5 * FPS),         catInvasionDialog);
-    let shake1:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (5 * FPS),             SHAKER_SUBTLE);
-    let shake2:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),             SHAKER_MILD);
-    let shake3:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),             SHAKER_MEDIUM);
-    let enterPortal: AnimEvent =  new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
-    let shake4:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time + 1,                     SHAKER_MILD);
-    let enterCats:   AnimEvent =  new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),           gridOfCats(new Coord(380, 245), 20, 10, 3));
-    let shake5:      AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time + 1.5,                   SHAKER_MILD);
-    let shakeStop:   AnimEvent =  new AnimEvent(AnimEventType.SHAKE,            time + 2,                     SHAKER_NO_SHAKE);
-    return [dialog, shake1, shake2, shake3, enterPortal, shake4, enterCats, shake5, shakeStop ];
+    let asteroidsStart: AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_BEGIN,  time - (5 * FPS));
+    let dialog:         AnimEvent = new AnimEvent(AnimEventType.DIALOG,           time - (5 * FPS),         catInvasionDialog);
+    let shake1:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (5 * FPS),         SHAKER_SUBTLE);
+    let shake2:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),         SHAKER_MILD);
+    let shake3:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_MEDIUM);
+    let enterPortal:    AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
+    let shake4:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + 1,                 SHAKER_MILD);
+    let enterCats:      AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 10, 3));
+    let shake5:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + 1.5,               SHAKER_MILD);
+    let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + 2,                 SHAKER_NO_SHAKE);
+    let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (3 * FPS));
+    return [asteroidsStart, dialog, shake1, shake2, shake3, enterPortal, shake4, enterCats, shake5, shakeStop, asteroidsEnd ];
   }
   
   // Setup the timed schedule of all events associated with a dangerous supernova encounter.
