@@ -182,11 +182,11 @@ function updateFrame(state: IGlobalState): IGlobalState {
 function updateGameScreen(state: IGlobalState): IGlobalState {
   switch (state.gameScreen) {
     case GameScreen.INTRO:
-      if (introShipShiftValue(state) <= 0) {    // The transition from INTRO to PLAY.
+      if (introShipShiftValue(state) <= 0) {    // If the transition from INTRO to PLAY is done
         return {
           ...state,
-          gameScreen: GameScreen.PLAY,          // New GameScreen is PLAY.
-          pendingEvents: getEvents(state),      // Schedule the AnimEvents.
+          gameScreen: GameScreen.PLAY,          // Switch GameScreen to PLAY.
+          pendingEvents: getEvents(state),      // Schedule the full game AnimEvents.
           bigEarth: null,                       // Get rid of the big Earth.
         };
       } else return state;
@@ -196,11 +196,11 @@ function updateGameScreen(state: IGlobalState): IGlobalState {
       return state;
     case GameScreen.GAME_OVER:
       return state;
-    case GameScreen.OUTRO:
-      if (state.bigEarth === null) {
+    case GameScreen.OUTRO:                      // If we're in the OUTRO
+      if (state.bigEarth === null) {            // And we haven't create the big Earth (II) yet
         return {
           ...state,
-          bigEarth: secondHomeEarth(state),
+          bigEarth: secondHomeEarth(state),     // Create it
         };
       } else return state;
   }
