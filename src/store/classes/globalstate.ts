@@ -29,7 +29,7 @@ import blackBottomShield from "../../entities/images/shield/black_shield_bottom_
 
 // NPC images.
 import skeleton             from "../../entities/images/skeleton/skeleton_death.png";
-import ghost                from "../../entities/images/skeleton/ghost_48px_20f.png";
+import ghost                from "../../entities/images/skeleton/ghost_24px_20f.png";
 import npcwalkcycle         from "../../entities/images/nonplayer/npcwalkcycle.png";
 import frazzlednpcwalkcycle from "../../entities/images/nonplayer/frazzled_npcwalkcycle.png";
 import scarednpcwalkcycle   from "../../entities/images/nonplayer/scared_npcwalkcycle.png";

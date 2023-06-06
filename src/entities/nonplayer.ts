@@ -193,6 +193,7 @@ export class NonPlayer implements Lifeform, Collider {
                 jitter = randomInt(-1, 1);
                 break;
         }
+        if(this.death != null) jitter = 0;
         // The walking animation has 8 frames.
         let frame = this.currentSpriteFrame(state);
         let shift = this.computeShift(state);
@@ -203,9 +204,10 @@ export class NonPlayer implements Lifeform, Collider {
         newPos = (dialog != null) ? dialog : newPos;
 
         // Determine where, on the canvas, the NPC should be painted.
+        let unflippedDest = new Coord(newPos.x - 3, newPos.y - 18).toIntegers();
         let dest = flip
             ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
-            : new Coord(newPos.x - 3, newPos.y - 18);
+            : unflippedDest;
         dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
@@ -227,7 +229,7 @@ export class NonPlayer implements Lifeform, Collider {
         // Restore canvas transforms to normal.
         canvas.restore();
 
-        if (this.death !== null) this.paintRisingGhost(canvas, state, dest);
+        if (this.death !== null) this.paintRisingGhost(canvas, state, unflippedDest);
 
         // Extra debug displays.
         if (state.debugSettings.showCollisionRects) {
@@ -247,11 +249,11 @@ export class NonPlayer implements Lifeform, Collider {
         if (t === 0) return;
         let frame = state.currentFrame % 20;
         canvas.save();
-        canvas.globalAlpha = Math.max(0, 0.75 - ((t / 80) * 0.75));
+        canvas.globalAlpha = Math.max(0, 0.5 - ((t / 80) * 0.75));
         canvas.drawImage(
             state.ghost,                // The sprite sheet image
-            frame * 48, 0,              // Top-left corner of frame in source
-            48, 48,                     // Size of frame in source
+            frame * 24, 0,              // Top-left corner of frame in source
+            24, 24,                     // Size of frame in source
             dest.x, dest.y - (t * 3),   // Position of sprite on canvas
             24, 24);                    // Sprite size on canvas
         canvas.restore();
