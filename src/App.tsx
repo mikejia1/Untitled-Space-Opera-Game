@@ -7,6 +7,7 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT } from './utils';
 
 const App = () => {
   return (
+    // @ts-expect-error
     <Provider store={store}>
       <ChakraProvider>
         <Container maxW="container.lg" centerContent>

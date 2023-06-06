@@ -14,8 +14,8 @@ const SCORCHING_STAR_1 = FPS*80;
 const MIND_FLAYER = FPS*120;
 const CAT_INVASION_2 = FPS*190;
 const SCORCHING_STAR_2 = FPS*230;
-const BLACKHOLE_SUPERNOVA = FPS*270;
-const CAT_INVASION_3 = FPS*300;
+const BLACKHOLE_SUPERNOVA = FPS*280;
+const CAT_INVASION_3 = FPS*320;
 
 export function getEvents(state: IGlobalState): AnimEvent[] {
     return [

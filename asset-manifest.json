@@ -1,0 +1,41 @@
+{
+  "files": {
+    "main.css": "/static/css/main.35e39109.css",
+    "main.js": "/static/js/main.45524812.js",
+    "static/media/planet_wet_256px_60f.png": "/static/media/planet_wet_256px_60f.9be4ffa58f664977576a.png",
+    "static/media/planet_sun_384px_42f.png": "/static/media/planet_sun_384px_42f.a76804b4085654cbfcef.png",
+    "static/media/planet_ice_256px_60f.png": "/static/media/planet_ice_256px_60f.7f8186e90701f6a2c32b.png",
+    "static/media/planet_lava_256px_60f.png": "/static/media/planet_lava_256px_60f.b9ced24b3d761a80042d.png",
+    "static/media/planet_island_256px_60f.png": "/static/media/planet_island_256px_60f.62e107aef838e084c5d2.png",
+    "static/media/mindflayer.png": "/static/media/mindflayer.3fd652d4ccd2afce4ffb.png",
+    "static/media/scorching_star.png": "/static/media/scorching_star.760110a9bfef09bbc01b.png",
+    "static/media/planet_dry_256px_60f.png": "/static/media/planet_dry_256px_60f.e62b30188b06aa7f7e66.png",
+    "static/media/planet_gas_ring_128px_40f.png": "/static/media/planet_gas_ring_128px_40f.0d34694df3d389d6bc62.png",
+    "static/media/planet_black_hole_256px_30f.png": "/static/media/planet_black_hole_256px_30f.e5e3d1384dfc1b5c85c7.png",
+    "static/media/portal_128px_120f.png": "/static/media/portal_128px_120f.cfff6ce6f80fcb210f0f.png",
+    "static/media/ghost_48px_20f.png": "/static/media/ghost_48px_20f.6515a925006cd2494a2b.png",
+    "static/media/planet_cratered_256px_60f.png": "/static/media/planet_cratered_256px_60f.530d5f8f48b56ca71e2d.png",
+    "static/media/asteroid_07_256px_20f.png": "/static/media/asteroid_07_256px_20f.ee80f14bd28f0834a9b5.png",
+    "static/media/space_frames.png": "/static/media/space_frames.b135a70c9755ce611d58.png",
+    "static/media/asteroid_02_256px_20f.png": "/static/media/asteroid_02_256px_20f.33d5c2f97d296c408c64.png",
+    "static/media/asteroid_05_256px_20f.png": "/static/media/asteroid_05_256px_20f.976400a737b8f3782a38.png",
+    "static/media/boing.mp3": "/static/media/boing.60efa42372e6c35bdd26.mp3",
+    "static/media/asteroid_10_256px_20f.png": "/static/media/asteroid_10_256px_20f.2034786021fc7a3c758a.png",
+    "static/media/asteroid_01_256px_20f.png": "/static/media/asteroid_01_256px_20f.418b6314b791085c7fb2.png",
+    "static/media/asteroid_11_256px_20f.png": "/static/media/asteroid_11_256px_20f.866cfc2fd9e1e576abb8.png",
+    "static/media/asteroid_09_256px_20f.png": "/static/media/asteroid_09_256px_20f.ba655aa2abef51383cdc.png",
+    "static/media/asteroid_06_256px_20f.png": "/static/media/asteroid_06_256px_20f.ab5b94669d3612042bf8.png",
+    "static/media/asteroid_08_256px_20f.png": "/static/media/asteroid_08_256px_20f.199281b9c69a2173b926.png",
+    "static/media/asteroid_04_256px_20f.png": "/static/media/asteroid_04_256px_20f.f487f7b66b101a0b1c71.png",
+    "static/media/asteroid_03_256px_20f.png": "/static/media/asteroid_03_256px_20f.541ad7947a57b27f8eb8.png",
+    "static/media/space_garden_impact.png": "/static/media/space_garden_impact.59c65a2f7dcf6f932513.png",
+    "static/media/space_garden.png": "/static/media/space_garden.bfa7a986c32b3a2f2aec.png",
+    "index.html": "/index.html",
+    "main.35e39109.css.map": "/static/css/main.35e39109.css.map",
+    "main.45524812.js.map": "/static/js/main.45524812.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.35e39109.css",
+    "static/js/main.45524812.js"
+  ]
+}
