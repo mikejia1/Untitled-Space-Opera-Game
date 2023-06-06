@@ -1,3 +1,4 @@
+import { GameScreen } from "../scene";
 import { IGlobalState } from "../store/classes";
 import { MentalState, NonPlayer } from "./nonplayer";
 import { MAX_PLANT_HEALTH, Plant } from "./plant";

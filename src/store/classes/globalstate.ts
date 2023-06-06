@@ -1,8 +1,8 @@
 import { AnimEvent, Collider, ColliderType } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
-import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, DOWNWARD_STARFIELD_DRIFT } from '../../utils';
+import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, DOWNWARD_STARFIELD_DRIFT, INITIAL_DOWNWARD_STARFIELD_DRIFT } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
-import { Asteroid, BlackHole, InvisibleCollider, NUM_ASTEROIDS, tutorialDialog } from "../../scene";
+import { Asteroid, BigEarth, BlackHole, GameScreen, InvisibleCollider, NUM_ASTEROIDS, tutorialDialog } from "../../scene";
 import { Planet, PlanetType, makePlanet } from '../../scene/planet';
 import { ShieldButton } from '../../entities/shieldbutton';
 import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
@@ -11,7 +11,6 @@ import { Dialog } from '../../scene/dialog';
 import { Railing } from '../../scene/railing';
 import { StatusBar } from '../../scene/statusbar';
 import { Portal } from '../../entities/portal';
-import { getEvents } from './eventschedule';
 
 // Gardener images.
 import basewalkstrip      from "../../entities/images/gardener/base_walk_strip8.png";
@@ -78,6 +77,7 @@ import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.
 import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
 import redGiantPlanetImg from     "../images/drifting_planets/planet_sun_384px_42f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
+import bigEarthImg from       "../images/drifting_planets/big_earth_512px_32f.png";
 
 // Asteroid images.
 import ast1  from "../images/drifting_planets/asteroid_01_256px_20f.png";
@@ -94,6 +94,9 @@ import ast11 from "../images/drifting_planets/asteroid_11_256px_20f.png";
 
 // Interface for full game state object.
 export interface IGlobalState {
+    gameScreen: GameScreen;             // The current GameScreen being shown (see enum comments).
+    introShipShiftStart: number;        // Time at which ship begins to shift up at end of intro.
+    outroShipShiftStart: number;        // Time at which ship begins to shift down at beginning of outro.
     gameover: boolean;                  // Is the game over?
     gardener: Gardener;                 // The gardener tending the garden. Controlled by the player.
     keysPressed: Direction[];           // The movement keys currently pressed by the player.
@@ -134,6 +137,7 @@ export interface IGlobalState {
     gameOverImage: any,                 // The game over image
     replayImage: any,                   // The replay prompt image
     blackHoleImage: any,                // Images containing animation frames for the black hole
+    bigEarthImage: any,                 // Sprite sheet source image for the big INTRO / OUTRO Earth{like} planet.
     uiImages: any,                      // Images containing UI elements
     invisibleColliders: Collider[];     // All Colliders that aren't visible.
     nextColliderId: number;             // The next collider ID that is unassigned.
@@ -142,6 +146,7 @@ export interface IGlobalState {
     blackHole: BlackHole | null;        // The black hole in view, or null if none in view.
     drifters: (Planet | null)[];        // Array of potentially drifting planets.
     planets: Map<PlanetType, Planet>;   // The full set of available drifting planet templates, keyed by type.
+    bigEarth: BigEarth | null;          // The big Earth from the GameScreen.INTRO and GameScreen.OUTRO.
     randomCabinFeverAllowed: boolean;   // Whether or not NPCs can now develop cabin fever at random.
     lastNPCDeath: number;               // Frame number of the last time an NPC died.
     debugSettings: any;                 // For configuring extra debug info and visualizations.
@@ -190,7 +195,10 @@ export function initialGameState(): IGlobalState {
   let railing = new Railing(new Coord(165, 231), colliderId);
   colliderId++;
 
-  let withoutEvents = {
+  let incomplete = {
+    gameScreen: GameScreen.INTRO,           // Begin in intro screen.
+    introShipShiftStart: Number.MAX_VALUE,  // Shifting ship to normal position at end of intro hasn't started yet.
+    outroShipShiftStart: Number.MAX_VALUE,  // Shifting ship to special low position at beginning of outro hasn't started yet.
     gameover: false,
     gardener: gardener,
     keysPressed: [],
@@ -286,6 +294,7 @@ export function initialGameState(): IGlobalState {
       loadImage("Asteroid 10", ast10),
       loadImage("Asteroid 11", ast11),
     ],
+    bigEarthImage:    loadImage("Big Earth", bigEarthImg),
     invisibleColliders: [worldBoundaries, features, ladders].flat(),
     asteroidsStillGoing: false,             // No asteroid swam initially.
     muted: true,
@@ -299,10 +308,11 @@ export function initialGameState(): IGlobalState {
       .set(PlanetType.ICE,    makePlanet(PlanetType.ICE,    256, 60, loadImage("Ice planet",      icePlanetImg)))       // Ice planet
       .set(PlanetType.ISLAND, makePlanet(PlanetType.ISLAND, 256, 60, loadImage("Island planet",   islandPlanetImg)))    // Island planet
       .set(PlanetType.LAVA,   makePlanet(PlanetType.LAVA,   256, 60, loadImage("Lava planet",     lavaPlanetImg)))      // Lava planet
-      .set(PlanetType.STAR,   makePlanet(PlanetType.STAR,   384, 42, loadImage("Star planet",     redGiantPlanetImg)))      // Star planet (yes, a star - actually 512 pixels)
+      .set(PlanetType.STAR,   makePlanet(PlanetType.STAR,   384, 42, loadImage("Star planet",     redGiantPlanetImg)))  // Star planet (yes, a star - actually 512 pixels)
       .set(PlanetType.WET,    makePlanet(PlanetType.WET,    256, 60, loadImage("Wet planet",      wetPlanetImg))),      // Wet planet
-    randomCabinFeverAllowed: false, // No random cabin fever, initially.
-    lastNPCDeath: 0,                // Dummy value for initialization.
+    bigEarth: null,                     // The big Earth that is seen in GameScreen.INTRO (and later in GameScreen.OUTRO). Initialised below.
+    randomCabinFeverAllowed: false,     // No random cabin fever, initially.
+    lastNPCDeath: 0,                    // Dummy value for initialization.
     debugSettings: {
       showCollisionRects: false,    // Collision rectangles for colliders.
       showPositionRects: false,     // Position rectangles for paintables.
@@ -318,18 +328,19 @@ export function initialGameState(): IGlobalState {
     planetSpawnAllowed: true,                       // Whether or not new drifting planets can currently be spawned. Initially true.
     starfield: {                                    // Information about the background starfield.
       pos:        new Coord(0, 0),                  // Game begins with no accumulated starfield displacement.
-      driftAngle: 3 * Math.PI / 4,                  // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).
-      driftSpeed: DOWNWARD_STARFIELD_DRIFT,         // Initial drift speed (pixels per frame).
+      driftAngle: 0.5 * Math.PI,                    // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).
+      driftSpeed: INITIAL_DOWNWARD_STARFIELD_DRIFT, // Initial drift speed (pixels per frame).
     },
-    pendingEvents: [],  // No events yet. This is populated below.
+    pendingEvents: [],  // No events yet. This is populated when we switch from INTRO to PLAY (see GameScreen enum).
     asteroids:     [],  // No asteroids yet. This is populated below.
   };
 
   // Populate the pending events and the asteroids.
   return {
-    ...withoutEvents,
-    pendingEvents: getEvents(withoutEvents),
-    asteroids: initialAsteroids(withoutEvents, NUM_ASTEROIDS),
+    ...incomplete,
+    //pendingEvents: getEvents(withoutEvents),  // Commented out when GameScreen enum and INTRO were introduced.
+    asteroids: initialAsteroids(incomplete, NUM_ASTEROIDS),
+    bigEarth: initialBigEarth(incomplete),
   };
 }
 
@@ -344,6 +355,18 @@ function initialAsteroids(state: IGlobalState, count: number): Asteroid[] {
     ];
   }
   return asts;
+}
+
+// Initial big Earth to be seen in GameScreen.INTRO.
+function initialBigEarth(state: IGlobalState): BigEarth {
+  return new BigEarth(
+    new Coord(0,0),         // Dummy value.
+    1,                      // Scale
+    0,                      // Animation frame.
+    state.currentFrame,     // Last time animation frame updated.
+    3,                     // Earth rotaiton speed.
+    state.bigEarthImage     // Sprite sheet source image.
+  );
 }
 
 // Initial array of drifting planets. All null.

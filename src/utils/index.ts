@@ -3,11 +3,11 @@ import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/positio
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
   BACKGROUND_WIDTH, BACKGROUND_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT, Direction, ALL_DIRECTIONS,
-  ALL_DIR8S, Colour, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, FPS, Dir8,
+  ALL_DIR8S, Colour, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, FPS, Dir8, SPECIAL_SHIP_SHIFT_TIME, SPECIAL_SHIP_SHIFT,
  } from "./constants";
  import { Coord } from './coord';
  import { Rect } from './rect';
- import { Tile, WrapSector, InvisibleCollider, Asteroid } from '../scene';
+ import { Tile, WrapSector, InvisibleCollider, Asteroid, GameScreen } from '../scene';
 import { drawAnimationEvent } from "./drawevent";
 import { Dialog } from "../scene/dialog";
 import { Lifeform } from "../store/classes/lifeform";
@@ -126,7 +126,7 @@ export const drawState = (
   drawBackground(state, shift, canvas);
 
   // Draw portal.
-  if(state.portal !== null) {
+  if (state.portal !== null) {
     state.portal.paint(canvas, state);
   }
 
@@ -180,7 +180,16 @@ export function computeBackgroundShift(state: IGlobalState, deltaCap: number): C
 // Compute a displacement that would shift the background to the "right" place. In tile.ts this
 // corresponds to the background being placed in WrapSector.Middle. This is without any screen shake.
 export function computeBackgroundShiftWithoutShake(state: IGlobalState): Coord {
-  return new Coord(0,0);
+  switch (state.gameScreen) {
+    case GameScreen.INTRO:
+      return new Coord(0, SPECIAL_SHIP_SHIFT * introShipShiftValue(state));   // Ship starts low and shifts up at end of intro.
+    case GameScreen.PLAY:
+    case GameScreen.CONTINUE:
+    case GameScreen.GAME_OVER:
+      return new Coord(0, 0);                                                 // No special shift calculation for PLAY, CONTINUE, and GAME_OVER.
+    case GameScreen.OUTRO:
+      return new Coord(0, SPECIAL_SHIP_SHIFT * outroShipShiftValue(state));   // Ship starts in normal position and shifts down at beginning of outro.
+  };
   /*
   let shift = CANVAS_CENTRE.minus(state.gardener.pos.x, state.gardener.pos.y);
 
@@ -208,6 +217,27 @@ export function computeBackgroundShiftWithoutShake(state: IGlobalState): Coord {
   if ((shift.x + BACKGROUND_WIDTH) < (CANVAS_WIDTH - padding)) shift = shift.plus((CANVAS_WIDTH - padding) - (shift.x + BACKGROUND_WIDTH), 0);
   return shift.toIntegers();
   */
+}
+
+// How much is the ship shifted downward from its normal position at end of intro.
+// 0 for no shift. 1 for fully downward shifted.
+export function introShipShiftValue(state: IGlobalState): number {
+  let n = clampRemap(state.currentFrame, state.introShipShiftStart, state.introShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1, 1, 0);
+  return Math.max(0, Math.min(1, n));
+}
+
+// How much is the ship shifted downward from its normal position at the beginning of the outro.
+// 0 for no shift. 1 for fully downward shifted.
+export function outroShipShiftValue(state: IGlobalState): number {
+  let n = clampRemap(state.currentFrame, state.outroShipShiftStart, state.outroShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1, 0, 1);
+  return Math.max(0, Math.min(1, n));
+}
+
+// Map a value, val, so inA maps to outA, inB maps to outB, linear interpolation between them, but clamped for any values outside that range.
+export function clampRemap(val: number, inA: number, inB: number, outA: number, outB: number): number {
+  let pos = (val - inA) / (inB - inA);
+  pos = Math.max(0, Math.min(1, pos));
+  return outA + (pos * (outB - outA));
 }
 
 // Given a value (val), if it falls within the range [inA, inB] then linearly remap it to the range [outA, outB].
@@ -353,6 +383,11 @@ function drawSpaceObjects(state: IGlobalState, canvas: CanvasRenderingContext2D)
     let a = q.poll();
     a?.paint(canvas, state);
   }
+
+  // If there's a big Earth, paint it.
+  if (state.bigEarth !== null) {
+    state.bigEarth.paint(canvas, state);
+  }
 }
 
 // Draw the starfield seen through the window of the ship.
@@ -392,7 +427,27 @@ function drawStarfield(state: IGlobalState, canvas: CanvasRenderingContext2D, sh
     h, v,                             // Size of frame in source
     dest.x - h,                       // X position of top-left corner on canvas
     dest.y - v,                       // Y position of top-left corner on canvas
-    h, v);                            // Sprite size on canvas  
+    h, v);                            // Sprite size on canvas
+  
+  // Extra stuff for GameScreen.INTRO only.
+  if (state.gameScreen === GameScreen.INTRO) {
+    // Starfield north of northeast of drifted position of top-left corner.
+    canvas.drawImage(
+      state.backgroundImages.deepSpace, // Sprite source image
+      deepSpaceFrame * h, 0,            // Top-left corner of frame in source
+      h, v,                             // Size of frame in source
+      dest.x,                           // X position of top-left corner on canvas
+      dest.y - (2 * v),                 // Y position of top-left corner on canvas
+      h, v);                            // Sprite size on canvas
+    // Starfield northwest of drifted position of top-left corner.
+    canvas.drawImage(
+      state.backgroundImages.deepSpace, // Sprite source image
+      deepSpaceFrame * h, 0,            // Top-left corner of frame in source
+      h, v,                             // Size of frame in source
+      dest.x - h,                       // X position of top-left corner on canvas
+      dest.y - (2 * v),                 // Y position of top-left corner on canvas
+      h, v);                            // Sprite size on canvas
+  }
 }
 
 export function randomInt(min: number, max: number): number {

@@ -1,7 +1,7 @@
 // Reducers take in the current state and an action and return a new state.
 // They are responsible for processing all game logic.
 
-import { Direction, computeCurrentFrame, rectanglesOverlap, unitVector } from "../../utils";
+import { Direction, computeCurrentFrame, introShipShiftValue, outroShipShiftValue, rectanglesOverlap, unitVector } from "../../utils";
 import { GAMEOVER_RESTART_TIME, IGlobalState, activateAirlockButton, allCollidersFromState, initialGameState, updateAnimEventState } from "../classes";
 import { Airlock, AirlockState, MentalState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
 import { Cat, updateCatState } from "../../entities/cat";
@@ -37,7 +37,8 @@ import { updateOxygenState } from "../../entities/oxygen";
 import { Dialog, isDialogCurrentlyDisplayed, updateDialogState } from "../../scene/dialog";
 import { CausaMortis } from "../../entities/skeleton";
 import { updatePortalState } from "../../entities/portal";
-import { updateAsteroids } from "../../scene";
+import { GameScreen, updateAsteroids } from "../../scene";
+import { getEvents } from "../classes/eventschedule";
 // All actions/index.ts setters are handled here
 const gameReducer = (state = initialGameState(), action: any) => {
   switch (action.type) {
@@ -75,7 +76,15 @@ function anyKeyDown(state: IGlobalState): IGlobalState {
   if (state.gameover && state.currentFrame - state.gameoverFrame > GAMEOVER_RESTART_TIME ) {
     return initialGameState();
   }
-  else return state;
+
+  // In INTRO screen / view, pressing any key begins the ship/planet shit that will lead into PLAY screen / view.
+  if ((state.gameScreen === GameScreen.INTRO) && (state.currentFrame < state.introShipShiftStart)) {
+    return {
+      ...state,
+      introShipShiftStart: state.currentFrame,
+    };
+  }
+  return state;
 }
 
 // Stop the gardener if the keyup direction matches the current gardener direction.
@@ -143,23 +152,53 @@ function updateFrame(state: IGlobalState): IGlobalState {
 
   state = state.shieldDoors.updateState(state);
 
-  state = updatePlantState(state);
+  // Some things only update in GameScreen.PLAY mode.
+  if (state.gameScreen === GameScreen.PLAY) {
 
-  state = updateAnimEventState(state);
+    state = updatePlantState(state);
 
-  state = updateHeavenlyBodyState(state);
+    state = updateAnimEventState(state);
 
-  state = updateAsteroids(state);
+    state = updateAsteroids(state);
 
-  state = updateOxygenState(state);
+    state = updateOxygenState(state);
+
+  };
 
   state = updateDialogState(state);
+
+  state = updateHeavenlyBodyState(state);
 
   state = state.statusBar.updateStatusBarState(state);
 
   state = updateStarfieldDisplacement(state);
 
+  state = updateGameScreen(state);
+
   return state;
+}
+
+// Update the current GameScreen (state.gameScreen) if it's time.
+function updateGameScreen(state: IGlobalState): IGlobalState {
+  switch (state.gameScreen) {
+    case GameScreen.INTRO:
+      if (introShipShiftValue(state) <= 0) {    // The transition from INTRO to PLAY.
+        return {
+          ...state,
+          gameScreen: GameScreen.PLAY,          // New GameScreen is PLAY.
+          pendingEvents: getEvents(state),      // Schedule the AnimEvents.
+          bigEarth: null,                       // Get rid of the big Earth.
+        };
+      } else return state;
+    case GameScreen.PLAY:
+      return state;
+    case GameScreen.CONTINUE:
+      return state;
+    case GameScreen.GAME_OVER:
+      return state;
+    case GameScreen.OUTRO:
+      return state;
+  }
 }
 
 // Update the displacement of the starfield.

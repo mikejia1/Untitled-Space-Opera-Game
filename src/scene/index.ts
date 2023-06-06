@@ -7,3 +7,5 @@ export * from './npcscript';
 export * from './planet';
 export * from './railing';
 export * from './statusbar';
+export * from './gamescreen';
+export * from './bigearth';

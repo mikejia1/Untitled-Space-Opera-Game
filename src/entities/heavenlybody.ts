@@ -1,13 +1,36 @@
-import { BlackHole } from "../scene";
+import { BigEarth, BlackHole, GameScreen } from "../scene";
 import { Planet, currentlySlingshottingPlanet, orbittingScorchingStar } from "../scene/planet";
 import { IGlobalState } from "../store/classes";
-import { DEHYDRATION_TIME, DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, MAX_DRIFTERS, SHAKER_NO_SHAKE, SHAKER_SUBTLE, randomInt } from "../utils";
+import { DEHYDRATION_TIME, DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, INITIAL_DOWNWARD_STARFIELD_DRIFT, MAX_DRIFTERS, SHAKER_NO_SHAKE, SHAKER_SUBTLE, SPECIAL_SHIP_SHIFT_TIME, clampRemap, introShipShiftValue, outroShipShiftValue, randomInt } from "../utils";
 import { Plant } from "./plant";
 
 export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     const f = state.currentFrame;
     let newBlackHole: BlackHole | null = state.blackHole;
     let newDrifters: (Planet | null)[] = state.drifters;
+    let newBigEarth: BigEarth | null = state.bigEarth;
+    let newDriftSpeed = state.starfield.driftSpeed;
+    let newDriftAngle = state.starfield.driftAngle;
+
+    // Update the big Earth, if there is one.
+    if (newBigEarth !== null) {
+        newBigEarth = newBigEarth.update(state);
+
+        // Update starfield drift speed at end of GameScreen.INTRO and at beginning of GameScreen.OUTRO.
+        if (state.gameScreen === GameScreen.INTRO) {
+            let n = introShipShiftValue(state);
+            newDriftSpeed = clampRemap(
+                state.currentFrame,                                                                     // Drift speed changes linearly with time.
+                state.introShipShiftStart, state.introShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1,     // This time range maps to the drift speed range, below.
+                INITIAL_DOWNWARD_STARFIELD_DRIFT, DOWNWARD_STARFIELD_DRIFT);                            // This is the drift speed range.
+        } else if (state.gameScreen === GameScreen.OUTRO) {
+            let n = outroShipShiftValue(state);
+            newDriftSpeed = clampRemap(
+                state.currentFrame,                                                                     // Drift speed changes linearly with time.
+                state.outroShipShiftStart, state.outroShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1,     // This time range maps to the drift speed range, below.
+                INITIAL_DOWNWARD_STARFIELD_DRIFT, DOWNWARD_STARFIELD_DRIFT);                            // This is the drift speed range.
+        }
+    }
 
     // Update the black hole's pulse magnitude.
     if (newBlackHole !== null) newBlackHole = newBlackHole.adjustPulseMagnitude();
@@ -34,8 +57,6 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     }
 
     // Starfield drift.
-    let newDriftSpeed = state.starfield.driftSpeed;
-    let newDriftAngle = state.starfield.driftAngle;
     if ((sling !== null) && orbitDiversionHappening) {
        let prog = sling.orbitPositioningProgress(state) - sling.deorbitProgress(state);
        let downward = DOWNWARD_STARFIELD_DRIFT;
@@ -72,6 +93,7 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
         ...state,
         blackHole:    newBlackHole,
         drifters:     newDrifters,
+        bigEarth:     newBigEarth,
         screenShaker: newShaker,
         starfield: {
             ...state.starfield,

@@ -85,3 +85,14 @@ export const MAX_DRIFTERS = 2;
 
 // Speed at which the starfield drifts downwards.
 export const DOWNWARD_STARFIELD_DRIFT = 0.1;
+
+// Initial speed at which the starfield drifts downwards (i.e. when GameScreen.INTRO begins).
+export const INITIAL_DOWNWARD_STARFIELD_DRIFT = 6.0;
+
+// Number of pixels below normal position for the ship to be painted.
+// This is used during the GameScreen.INTRO and the GameScreen.OUTRO.
+export const SPECIAL_SHIP_SHIFT = 170;
+
+// The amount of time (in frames) required to shift the shift from
+// normal position to SPECIAL_SHIP_SHIFT position.
+export const SPECIAL_SHIP_SHIFT_TIME = 100;
