@@ -1,6 +1,7 @@
+import { paintSkeletonDeath } from "../entities/skeleton";
 import { AnimEvent, AnimEventType, IGlobalState } from "../store/classes";
 import { MAP_TILE_SIZE, H_TILE_COUNT, V_TILE_COUNT } from "../store/data/positions";
-import { CANVAS_WIDTH, CANVAS_HEIGHT, FPS } from "./constants";
+import { CANVAS_WIDTH, CANVAS_HEIGHT, FPS, GardenerDirection, Dir8 } from "./constants";
 import { Coord } from "./coord";
 
 export function drawAnimationEvent(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
@@ -22,24 +23,35 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
     const frameCount = state.currentFrame - anim.startTime;
     console.log("Draw supernova animation");
     let impactFrame = 0;
-    if (frameCount == 1){
+    if(!state.gameover && frameCount > 5) return;
+    
+    if (frameCount == 1 || frameCount == 2 || frameCount == 5 || frameCount == 6 ||frameCount > 8){
       impactFrame = 1;
-    }
-    else if (frameCount == 2){
-      impactFrame = 0;
-    }
-    else {
-      impactFrame = Math.min(Math.floor((frameCount)/4), 3);
     }
     // SUPERNOVA IMPACT
     if (frameCount < 24){
       canvas.drawImage(
         state.backgroundImages.impact,                            // Sprite source image
-        impactFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,            // Top-left corner of frame in source
+        impactFrame * MAP_TILE_SIZE * H_TILE_COUNT, 0,                      // Top-left corner of frame in source
         H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE,   // Size of frame in source
         shift.x,                                                  // X position of top-left corner on canvas
         shift.y,                                                  // Y position of top-left corner on canvas
         H_TILE_COUNT*MAP_TILE_SIZE, V_TILE_COUNT*MAP_TILE_SIZE);  // Sprite size on canvas
+      
+      state.npcs.forEach((npc) => {
+        let newPos = npc.pos.plus(shift.x, shift.y);
+        let flip = (npc.facing === Dir8.Left);
+        if(npc.death!=null) paintSkeletonDeath(canvas, state, newPos, flip, npc.death);
+      });
+      let gardener = state.gardener;
+      let newPos = gardener.pos.plus(shift.x, shift.y);
+      let flip = (gardener.facing === GardenerDirection.Left);
+      if(gardener.death!=null) paintSkeletonDeath(canvas, state, newPos, flip, gardener.death);
+
+      //fade back from white
+      let opacity = frameCount/24;
+      canvas.fillStyle = "rgba(255, 255, 255, " + opacity + ")";
+      canvas.fillRect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);
     }
     // FADE OUT WHITE
     else if (frameCount < 48) { 
@@ -56,7 +68,7 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
   function drawGameoverEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
     const frameCount = state.currentFrame - anim.startTime;
     // FADE TO BLACK
-    if (frameCount > 2.5*FPS){
+    if (frameCount > 3.5*FPS){
         let opacity = Math.min((frameCount - 2.5*FPS)/2, 18)/18;
         canvas.fillStyle = "rgba(0, 0, 0, " + opacity + ")";
         canvas.fillRect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);

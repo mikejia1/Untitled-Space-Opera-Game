@@ -221,7 +221,7 @@ export class NonPlayer implements Lifeform, Collider {
         // Paint gardener sprite for current frame.
         canvas.drawImage(
             this.currentWalkCycleImage(state),                          // The sprite sheet image
-            (frame * 96) + 40, 20,                                      // Top-left corner of frame in source
+            (frame * 96) + 40, 18,                                      // Top-left corner of frame in source
             48, 48,                                                     // Size of frame in source
             dest.x + (shiftToCentre * xScale), dest.y + shiftToCentre,  // Position of sprite on canvas
             scaledSize, scaledSize);                                    // Sprite size on canvas
@@ -292,8 +292,8 @@ export class NonPlayer implements Lifeform, Collider {
                 case CausaMortis.Asphyxiation:
                     return Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 16);
                 case CausaMortis.Incineration:
-                    // The walking animation has 20 frames. Stay on the initial skeleton frame for 10 frames,
-                    let frameTicker = Math.max(state.currentFrame - state.gameoverFrame - 0, 0);
+                    // The walking animation has 20 frames. Stay on the initial skeleton frame for 28 frames,
+                    let frameTicker = Math.max(state.currentFrame - state.gameoverFrame - 28, 0);
                     return Math.min(Math.floor(frameTicker / 2), 19);
             }   
         }

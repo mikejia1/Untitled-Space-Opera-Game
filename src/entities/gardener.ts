@@ -3,7 +3,7 @@ import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH,
     computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
-    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap, SHAKE_CAP, stretchRect, FPS,
+    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap, SHAKE_CAP, stretchRect, FPS, SHAKER_NO_SHAKE,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -30,9 +30,9 @@ export class Gardener implements Lifeform, Collider, Interactable {
     watering: boolean;          // Whether or not the gardener is watering.
     colliderId: number;         // The ID that distinguishes the collider from all others.
     colliderType: ColliderType = ColliderType.GardenerCo; // The type of collider that the gardener is.
-    death : Death | null;       // Death data to specify how to paint death animation.
- 
-    constructor(colliderId: number, pos: Coord, facing: GardenerDirection, itemEquipped: boolean=false, moving: boolean=false, watering: boolean, death: Death | null) {
+    death: Death | null;       // Death data to specify how to paint death animation.
+
+    constructor(colliderId: number, pos: Coord, facing: GardenerDirection, itemEquipped: boolean = false, moving: boolean = false, watering: boolean, death: Death | null) {
         this.colliderId = colliderId;
         this.pos = pos;
         this.facing = facing;
@@ -75,24 +75,24 @@ export class Gardener implements Lifeform, Collider, Interactable {
     // Change facing direction of the gardener but without changing its position.
     changeFacingDirection(direction: Direction): Gardener {
         // Up and Down won't change gardener facing direction.
-        if ((direction === Direction.Up ) || (direction === Direction.Down)) {
+        if ((direction === Direction.Up) || (direction === Direction.Down)) {
             return this;
         }
         // Left and Right will change gardener facing direction.
         this.facing = (direction === Direction.Left) ? GardenerDirection.Left : GardenerDirection.Right;
         return this;
     }
-  
+
     // Set value of itemEquipped. Return new gardener.
     setItemEquipped(itemEquipped: boolean): Gardener {
         this.itemEquipped = itemEquipped;
         return this;
     }
-  
+
     // Paint the gardener on the canvas.
     paint(canvas: CanvasRenderingContext2D, state: IGlobalState): void {
         let shift = this.computeShift(state);
-        let newPos = this.pos.plus(shift.x, shift.y);        
+        let newPos = this.pos.plus(shift.x, shift.y);
         let flip = (this.facing === GardenerDirection.Left);
 
         if (this.death != null) this.paintDeath(canvas, state, shift, newPos, flip);
@@ -142,8 +142,8 @@ export class Gardener implements Lifeform, Collider, Interactable {
             case CausaMortis.Asphyxiation:
                 frame = Math.min(Math.floor((state.currentFrame - this.death.time) / 3), 16);
                 image = state.gardenerImages.chokeDeath;
-                console.log("asphyxiation current frame: "+ state.currentFrame + " death time: "+ this.death.time);
-                console.log("painting gardener asphyxiation, frame: "+ frame);
+                console.log("asphyxiation current frame: " + state.currentFrame + " death time: " + this.death.time);
+                console.log("painting gardener asphyxiation, frame: " + frame);
                 break;
             case CausaMortis.Incineration:
                 return paintSkeletonDeath(canvas, state, newPos, flip, this.death);
@@ -151,7 +151,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
                 image = state.gardenerImages.walkingBase;
                 frame = Math.floor(state.currentFrame % (6 * 8) / 6);
         }
-    
+
         // Determine where, on the canvas, the gardener should be painted.
         let dest = flip
             ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
@@ -191,7 +191,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
         dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);
-        
+
         // Paint gardener sprite for current frame.
         canvas.drawImage(
             state.gardenerImages.walkingBase,  // Walking base source image
@@ -199,7 +199,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
             48, 48,                            // Size of frame in source
             dest.x, dest.y,                    // Position of sprite on canvas
             48, 48);                           // Sprite size on canvas
-    
+
         // Restore canvas transforms to normal.
         canvas.restore();
     }
@@ -233,7 +233,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
             w, 48,                             // Size of frame in source
             dest.x, dest.y,                     // Position of sprite on canvas
             w, 48);                            // Sprite size on canvas
-    
+
         canvas.drawImage(
             state.gardenerImages.waterPouring,  // Pouring water and watering can
             (frame * 96) + 40 + w, 20,          // Top-left corner of frame in source
@@ -261,7 +261,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
     collisionRect(): Rect {
         return {
             a: this.pos.plus(3, -ENTITY_RECT_HEIGHT),
-            b: this.pos.plus(ENTITY_RECT_WIDTH+3, 0),
+            b: this.pos.plus(ENTITY_RECT_WIDTH + 3, 0),
         }
     }
 
@@ -277,7 +277,7 @@ export class Gardener implements Lifeform, Collider, Interactable {
         let rect = this.collisionRect();
         let pulse = 3.5;
         switch (this.facing) {
-            case GardenerDirection.Left:  return stretchRect(shiftRect(rect, -ENTITY_RECT_WIDTH * pulse, 0), pulse, 1);
+            case GardenerDirection.Left: return stretchRect(shiftRect(rect, -ENTITY_RECT_WIDTH * pulse, 0), pulse, 1);
             case GardenerDirection.Right: return stretchRect(shiftRect(rect, ENTITY_RECT_WIDTH, 0), pulse, 1);
         }
     }
@@ -309,38 +309,45 @@ export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
             state.gardener.death.ejectionScaleFactor *= EJECTION_SHRINK_RATE;
         }
         if (!state.gameover) {
-            return {...state, pendingEvents: [...state.pendingEvents, new AnimEvent(AnimEventType.GAMEOVER_REPLAY_FRAME, state.currentFrame)]}
+            return {
+                ...state,
+                pendingEvents:
+                    [
+                        ...state.pendingEvents,
+                        new AnimEvent(AnimEventType.GAMEOVER_REPLAY_FRAME, state.currentFrame),
+                        new AnimEvent(AnimEventType.SHAKE, state.currentFrame, SHAKER_NO_SHAKE)]
+            }
         }
         else return state;
     }
     if (!state.gardener.moving) {
-      return state;
+        return state;
     }
     // Move the gardener according to keys pressed.
     // This will be aborted if the would-be new position overlaps with a plant.
     // Would-be new post-move gardener.
     const newGar = state.gardener.move(state, state.keysPressed);
     let allColliders: Map<number, Collider> = state.colliderMap;
-  
+
     // Get all colliders currently in collision with the gardener.
     let colliders: Collider[] = detectCollisions(state, allColliders, newGar);
-  
+
     // Filter those colliders down to just those that are NPCs, keyed by collider ID.
     let bumpedNPCs: Set<number> = getBumpedNPCs(colliders);
-  
+
     // Get a new list of NPCs where the bumped ones have begun avoiding the gardener.
     let newNPCs: NonPlayer[] = [];
     for (let i = 0; i < state.npcs.length; i++) {
-      let npc = state.npcs[i];
-      if (bumpedNPCs.has(npc.colliderId)) newNPCs = [...newNPCs, npc.startAvoidingGardener()];
-      else newNPCs = [...newNPCs, npc]; 
+        let npc = state.npcs[i];
+        if (bumpedNPCs.has(npc.colliderId)) newNPCs = [...newNPCs, npc.startAvoidingGardener()];
+        else newNPCs = [...newNPCs, npc];
     }
     let statusBar = state.statusBar
     let score = state.score;
-    let plants : Plant[] = [];
-    for (let i = 0; i < state.plants.length; i++){
+    let plants: Plant[] = [];
+    for (let i = 0; i < state.plants.length; i++) {
         let plant = state.plants[i];
-        if(plant.coin !=null && plant.coin.lastCoinCollected < 0 && rectanglesOverlap(plant.coin.collisionRect(), newGar.collisionRect())){
+        if (plant.coin != null && plant.coin.lastCoinCollected < 0 && rectanglesOverlap(plant.coin.collisionRect(), newGar.collisionRect())) {
             console.log("Collecting coin!");
             score += plant.coin.count;
             plant.coin.lastCoinCollected = state.currentFrame;
@@ -350,23 +357,23 @@ export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
     }
     // If new gardener is in collision with anything, we abort the move.
     if (colliders.length > 0) {
-      console.log("Bump!");
-      if (!state.muted) playBumpSound();
-      return {
-        ...state,
-        npcs: newNPCs,
-      }
+        console.log("Bump!");
+        if (!state.muted) playBumpSound();
+        return {
+            ...state,
+            npcs: newNPCs,
+        }
     }
     // All clear. Update new version of garden to colliderMap and commit the move to global state.
     allColliders.set(state.gardener.colliderId, newGar);
     return {
-      ...state,
-      gardener: newGar,
-      // Watering can moves with gardener if the item is equipped.
-      wateringCan: state.wateringCan.isEquipped ? state.wateringCan.moveWithGardener(newGar) : state.wateringCan,
-      colliderMap: allColliders,
-      plants: plants,
-      score: score,
-      statusBar: statusBar,
+        ...state,
+        gardener: newGar,
+        // Watering can moves with gardener if the item is equipped.
+        wateringCan: state.wateringCan.isEquipped ? state.wateringCan.moveWithGardener(newGar) : state.wateringCan,
+        colliderMap: allColliders,
+        plants: plants,
+        score: score,
+        statusBar: statusBar,
     }
 }

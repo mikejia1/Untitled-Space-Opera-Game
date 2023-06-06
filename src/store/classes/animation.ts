@@ -93,12 +93,16 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     if (event.event == AnimEventType.IMPACT){
       // If IMPACT occurs without all shield doors being closed, trigger GAMEOVER event.
       if (!state.shieldDoors.allDoorsClosed()) {
-        gardener.dieOf(CausaMortis.Incineration, state.currentFrame + 24);
-        npcs.forEach(npc => npc.dieOf(CausaMortis.Incineration, state.currentFrame + 24));
+        gardener.dieOf(CausaMortis.Incineration, state.currentFrame);
+        npcs.forEach(npc => npc.dieOf(CausaMortis.Incineration, state.currentFrame));
         newLastNPCDeath = state.currentFrame + 24;
         for (let i = 0; i < newPlants.length; i++){
           newPlants[i].health = 0;
         }
+        triggeredEvents = [
+          ...triggeredEvents,
+          new AnimEvent(AnimEventType.SHAKE, state.currentFrame, SHAKER_NO_SHAKE),
+        ];
       } else {
         // Otherwise, go ahead and tell all three shield doors to open early - the danger has passed.
         triggeredEvents = [

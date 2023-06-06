@@ -25,8 +25,8 @@ export const catInvasionDialog : string[] = [
     "I hear the cats are planning an\n invasion...",
     "The only good cat is a wet cat!",
     "Don't pet the kitty!",
-    "Everyone knows cats aren't real.",
-    "Cats hate water, right?",
+    "Is that meowing I hear?",
+    "Cats are evil!",
 ]
 
 export const scorchingStarDialog: string[] = [
