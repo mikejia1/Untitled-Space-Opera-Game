@@ -5,15 +5,15 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT, FPS, GardenerDirection, Dir8 } from "./con
 import { Coord } from "./coord";
 
 export function drawAnimationEvent(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
-    if (state.activeEvents.length == 0) {
+    if (state.activeEvents.length === 0) {
       return;
     }
     for(let i = 0; i < state.activeEvents.length; i++){
         let anim: AnimEvent = state.activeEvents[i];
-        if(anim.event == AnimEventType.IMPACT){
+        if(anim.event === AnimEventType.IMPACT){
         drawImpactEvent(anim, state, shift, canvas);
         }
-        if(anim.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
+        if(anim.event === AnimEventType.GAMEOVER_REPLAY_FRAME){
         drawGameoverEvent(anim, state, shift, canvas);
         }
     }
@@ -25,7 +25,7 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
     let impactFrame = 0;
     if(!state.gameover && frameCount > 5) return;
     
-    if (frameCount == 1 || frameCount == 2 || frameCount == 5 || frameCount == 6 ||frameCount > 8){
+    if (frameCount === 1 || frameCount === 2 || frameCount === 5 || frameCount === 6 ||frameCount > 8){
       impactFrame = 1;
     }
     // SUPERNOVA IMPACT
@@ -41,12 +41,12 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
       state.npcs.forEach((npc) => {
         let newPos = npc.pos.plus(shift.x, shift.y);
         let flip = (npc.facing === Dir8.Left);
-        if(npc.death!=null) paintSkeletonDeath(canvas, state, newPos, flip, npc.death);
+        if (npc.death !== null) paintSkeletonDeath(canvas, state, newPos, flip, npc.death);
       });
       let gardener = state.gardener;
       let newPos = gardener.pos.plus(shift.x, shift.y);
       let flip = (gardener.facing === GardenerDirection.Left);
-      if(gardener.death!=null) paintSkeletonDeath(canvas, state, newPos, flip, gardener.death);
+      if (gardener.death !== null) paintSkeletonDeath(canvas, state, newPos, flip, gardener.death);
 
       //fade back from white
       let opacity = frameCount/24;

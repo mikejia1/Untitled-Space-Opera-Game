@@ -1,6 +1,6 @@
 import { AnimEvent, Collider, ColliderType } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
-import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, DOWNWARD_STARFIELD_DRIFT, INITIAL_DOWNWARD_STARFIELD_DRIFT } from '../../utils';
+import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, INITIAL_DOWNWARD_STARFIELD_DRIFT } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { Asteroid, BigEarth, BlackHole, EARTH_DRIFT_AWAY_DISTANCE, GameScreen, InvisibleCollider, NUM_ASTEROIDS, tutorialDialog } from "../../scene";
 import { Planet, PlanetType, makePlanet } from '../../scene/planet';
@@ -74,7 +74,7 @@ import gasRingPlanetImg from  "../images/drifting_planets/planet_gas_ring_128px_
 import icePlanetImg from      "../images/drifting_planets/planet_ice_256px_60f.png";
 import islandPlanetImg from   "../images/drifting_planets/planet_island_256px_60f.png";
 import lavaPlanetImg from     "../images/drifting_planets/planet_lava_256px_60f.png";
-import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
+//import starPlanetImg from     "../images/drifting_planets/planet_star_256px_30f.png";
 import redGiantPlanetImg from     "../images/drifting_planets/planet_sun_384px_42f.png";
 import wetPlanetImg from      "../images/drifting_planets/planet_wet_256px_60f.png";
 import bigEarthImg from       "../images/drifting_planets/big_earth_512px_32f.png";
@@ -402,7 +402,7 @@ function invisibleCollidersForMapFeatures(nextColliderId: number): Collider[] {
   for (let r = 0; r < V_TILE_COUNT; r++) {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
-      if (collisions[i] == 0) continue;
+      if (collisions[i] === 0) continue;
       let ic = new InvisibleCollider(nextColliderId + all.length, tileRect(r,c), ColliderType.WallCo);
       all = [...all, ic];
     }
@@ -416,7 +416,7 @@ function invisibleCollidersForLadders(nextColliderId: number): Collider[] {
   for (let r = 0; r < V_TILE_COUNT; r++) {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
-      if (ladders[i] == 0) continue;
+      if (ladders[i] === 0) continue;
       let ic = new InvisibleCollider(nextColliderId + all.length, tileRect(r,c), ColliderType.LadderCo);
       all = [...all, ic];
     }
@@ -432,7 +432,7 @@ function createPlants(colliderId: number): Plant[] {
   for (let r = 0; r < V_TILE_COUNT; r++) {
     for (let c = 0; c < H_TILE_COUNT; c++) {
       let i = (r * H_TILE_COUNT) + c;
-      if (plants[i] == 0) continue;
+      if (plants[i] === 0) continue;
       // Shift the vertical position of plants by 4 pixels to better align with dirt patch. Give size type based on non-zero value in plants.
       let plant: Plant = new Plant(colliderId++, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE+6), INITIAL_PLANT_HEALTH, plants[i]-baseValue+1);
       all = [...all, plant];
@@ -448,7 +448,7 @@ function createShieldButtons(): ShieldButton[] {
     for (let r = 0; r < V_TILE_COUNT; r++) {
       for (let c = 0; c < H_TILE_COUNT; c++) {
         let i = (r * H_TILE_COUNT) + c;
-        if (buttons[i] == 0) continue;
+        if (buttons[i] === 0) continue;
         let sb: ShieldButton = new ShieldButton(buttonIndex, new Coord(c*MAP_TILE_SIZE, r*MAP_TILE_SIZE), f, false);
         buttonIndex += 1;
         all = [...all, sb];
@@ -499,7 +499,7 @@ export function activateAirlockButton(globalState: IGlobalState): IGlobalState {
   console.log("Activating airlock button");
   let airlock: Airlock = globalState.airlock.activate(globalState);
   let airlockButton: ShieldButton;
-  if (airlock.state == AirlockState.OPENING){
+  if (airlock.state === AirlockState.OPENING){
     airlockButton = globalState.airlockButton.startAlarm(globalState);
   }
   else {

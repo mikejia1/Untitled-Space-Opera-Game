@@ -9,7 +9,6 @@ import {
  import { Rect } from './rect';
  import { Tile, WrapSector, InvisibleCollider, Asteroid, GameScreen } from '../scene';
 import { drawAnimationEvent } from "./drawevent";
-import { Dialog } from "../scene/dialog";
 import { Lifeform } from "../store/classes/lifeform";
 import { Planet, currentlySlingshottingPlanet, orbittingMindFlayerPlanet } from "../scene/planet";
 
