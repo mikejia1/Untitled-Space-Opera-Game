@@ -3,7 +3,8 @@ import { shiftForTile,
     CANVAS_RECT, randomInt, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, STARFIELD_RECT, FPS, DRIFTER_COUNT, CANVAS_WIDTH, clampRemap, SPECIAL_SHIP_SHIFT_TIME } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
-import { Tile } from '../scene';
+import { GameScreen, Tile } from '../scene';
+import { INCREMENT_SCORE } from '../store/actions';
 
 // Size of a single frame of big Earth in the sprite sheet.
 const EARTH_SIZE = 512;
@@ -13,6 +14,9 @@ const EARTH_SCALE = 1;
 
 // Number of frames in the big Earth sprite sheet.
 const EARTH_FRAMES = 32;
+
+// The distance (in pixels) over which the big Earth drift away or shows up.
+export const EARTH_DRIFT_AWAY_DISTANCE = 100;
 
 // A planet that looks a little like the Earth.
 export class BigEarth implements Paintable {
@@ -94,11 +98,20 @@ export class BigEarth implements Paintable {
         let t = (state.currentFrame - this.lastPaintFrame);
         let animationFrame  = (t >= this.spinSpeed) ? ((this.animationFrame + 1) % EARTH_FRAMES) : this.animationFrame;
         let lastFrameUpdate = (t >= this.spinSpeed) ? state.currentFrame : this.lastPaintFrame;
-        let y = clampRemap(
-            state.currentFrame,
-            state.introShipShiftStart, state.introShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1,
-            0, -100);
-        let newPos = new Coord(0, y);
+        let newPos = this.pos;
+        if (state.gameScreen === GameScreen.INTRO) {
+            let y = clampRemap(
+                state.currentFrame,
+                state.introShipShiftStart, state.introShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1,
+                0, -EARTH_DRIFT_AWAY_DISTANCE);
+            newPos = new Coord(0, y);
+        } else if (state.gameScreen === GameScreen.OUTRO) {
+            let y = clampRemap(
+                state.currentFrame,
+                state.outroShipShiftStart, state.outroShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1,
+                -EARTH_DRIFT_AWAY_DISTANCE, 0);
+            newPos = new Coord(0, y);
+        }
 
         // Updated version of big Earth.
         return new BigEarth(newPos, this.scale, animationFrame, lastFrameUpdate, this.spinSpeed, this.image);

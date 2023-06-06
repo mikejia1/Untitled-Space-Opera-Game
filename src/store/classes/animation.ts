@@ -4,7 +4,7 @@ import { Portal } from "../../entities/portal";
 import { ShieldButton } from "../../entities/shieldbutton";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
 import { CausaMortis } from "../../entities/skeleton";
-import { BlackHole, NUM_ASTEROIDS, PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_SUBTLE } from "../../scene";
+import { BlackHole, GameScreen, NUM_ASTEROIDS, PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_SUBTLE } from "../../scene";
 import { Planet, PlanetType } from "../../scene/planet";
 import { Coord, SHAKER_INTENSE, SHAKER_MEDIUM, SHAKER_MILD, SHAKER_NO_SHAKE, SHAKER_SUBTLE, computeCurrentFrame, randomInt } from "../../utils";
 import { CANVAS_WIDTH, DRIFTER_COUNT, FPS } from "../../utils/constants";
@@ -30,6 +30,7 @@ export enum AnimEventType {
     MIND_FLAYER_PLANET,         // We orbit and slingshot around the mind-warping Cthulhu evil planet.
     ASTEROIDS_BEGIN,            // Begin flying through an asteroid swarm / field.
     ASTEROIDS_END,              // No more new asteroids - i.e. we start coming out of the swarm / field.
+    OUTRO_TRIGGER,              // Transition from GameScreen.PLAY to GameScreen.OUTRO. Player has completed the game.
 }
 
 // Interface for one-off event animations.
@@ -53,6 +54,8 @@ export class AnimEvent {
 export const SUPERNOVA_DELAY = FPS*300;
 
 export function updateAnimEventState(state: IGlobalState) : IGlobalState {
+  let newGameScreen = state.gameScreen;
+  let newOutroShipShiftStart = state.outroShipShiftStart;
   let newPlants = state.plants;
   let newShield = state.shieldDoors;
   let newShaker = state.screenShaker;
@@ -197,6 +200,12 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         console.log("ASTEROIDS END");
         event.finished = true;
     }
+    if (event.event === AnimEventType.OUTRO_TRIGGER) {
+        console.log("The ship and crew have made it to their new home.");
+        newGameScreen = GameScreen.OUTRO;               // Switch to GameScreen.OUTRO.
+        newOutroShipShiftStart = state.currentFrame;    // Begin shifting the ship down and entering orbit of big Earth (II).
+        event.finished = true;
+    }
     // This event should only ever triggered via the Gardener update method.
     if (event.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
         console.log("GAME OVER");
@@ -208,7 +217,9 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     }
   }
   return {
-    ...state, 
+    ...state,
+    gameScreen: newGameScreen,
+    outroShipShiftStart: newOutroShipShiftStart,
     gardener : gardener,
     npcs: npcs,
     cats: cats,

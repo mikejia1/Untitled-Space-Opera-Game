@@ -2,7 +2,7 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, introShipShiftValue, outroShipShiftValue, rectanglesOverlap, unitVector } from "../../utils";
-import { GAMEOVER_RESTART_TIME, IGlobalState, activateAirlockButton, allCollidersFromState, initialGameState, updateAnimEventState } from "../classes";
+import { GAMEOVER_RESTART_TIME, IGlobalState, activateAirlockButton, allCollidersFromState, initialGameState, secondHomeEarth, updateAnimEventState } from "../classes";
 import { Airlock, AirlockState, MentalState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
 import { Cat, updateCatState } from "../../entities/cat";
 import { updateHeavenlyBodyState } from "../../entities/heavenlybody";
@@ -197,7 +197,12 @@ function updateGameScreen(state: IGlobalState): IGlobalState {
     case GameScreen.GAME_OVER:
       return state;
     case GameScreen.OUTRO:
-      return state;
+      if (state.bigEarth === null) {
+        return {
+          ...state,
+          bigEarth: secondHomeEarth(state),
+        };
+      } else return state;
   }
 }
 

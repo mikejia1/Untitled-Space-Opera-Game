@@ -7,15 +7,16 @@ import { PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_STOP, PULSE_SUBTLE } fro
 import { gridOfCats } from "../../entities/cat";
 import { blackHoleDialog, catInvasionDialog, scorchingStarDialog } from "../../scene/npcscript";
 
-const CAT_INVASION_1 = FPS*50;
-//scorching star takes 770 frames
-const SCORCHING_STAR_1 = FPS*80;
-//mindflayer takes 1290 frames
-const MIND_FLAYER = FPS*120;
-const CAT_INVASION_2 = FPS*190;
-const SCORCHING_STAR_2 = FPS*230;
-const BLACKHOLE_SUPERNOVA = FPS*280;
-const CAT_INVASION_3 = FPS*320;
+const CAT_INVASION_1 =            FPS *  50;
+// Scorching star takes 770 frames
+const SCORCHING_STAR_1 =          FPS *  80;
+// Mindflayer takes 1290 frames
+const MIND_FLAYER =               FPS * 120;
+const CAT_INVASION_2 =            FPS * 190;
+const SCORCHING_STAR_2 =          FPS * 230;
+const BLACKHOLE_SUPERNOVA =       FPS * 280;
+const CAT_INVASION_3 =            FPS * 320;
+const SUCCESS_OUTRO =             FPS * 360;
 
 export function getEvents(state: IGlobalState): AnimEvent[] {
     return [
@@ -26,7 +27,8 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
         ...creatCatInvasionLevel2(CAT_INVASION_2), 
         ...createScorchingStarEvent(SCORCHING_STAR_2),
         ...createSupernovaEvents(BLACKHOLE_SUPERNOVA),
-        ...creatCatInvasionLevel3(CAT_INVASION_3), 
+        ...creatCatInvasionLevel3(CAT_INVASION_3),
+        ...creatSuccessOutro(SUCCESS_OUTRO),
     ];
   }
   
@@ -169,6 +171,14 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
     let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + 2,                 SHAKER_NO_SHAKE);
     let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (3 * FPS));
     return [asteroidsStart, dialog, shake1, shake2, shake3, enterPortal, shake4, enterCats, shake5, shakeStop, asteroidsEnd ];
+  }
+
+  // Set up the event that ends GameScreen.PLAY and transitions to GameScreen.OUTRO.
+  function creatSuccessOutro(delay: number): AnimEvent[] {
+    let f = computeCurrentFrame();
+    let time = f + delay;
+    let outroTrigger: AnimEvent = new AnimEvent(AnimEventType.OUTRO_TRIGGER, time);
+    return [outroTrigger];
   }
   
   // Setup the timed schedule of all events associated with a dangerous supernova encounter.

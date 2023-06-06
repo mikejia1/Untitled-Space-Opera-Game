@@ -430,7 +430,7 @@ function drawStarfield(state: IGlobalState, canvas: CanvasRenderingContext2D, sh
     h, v);                            // Sprite size on canvas
   
   // Extra stuff for GameScreen.INTRO only.
-  if (state.gameScreen === GameScreen.INTRO) {
+  if ((state.gameScreen === GameScreen.INTRO) || (state.gameScreen === GameScreen.OUTRO)) {
     // Starfield north of northeast of drifted position of top-left corner.
     canvas.drawImage(
       state.backgroundImages.deepSpace, // Sprite source image

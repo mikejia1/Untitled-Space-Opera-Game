@@ -2,7 +2,7 @@ import { AnimEvent, Collider, ColliderType } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
 import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, DOWNWARD_STARFIELD_DRIFT, INITIAL_DOWNWARD_STARFIELD_DRIFT } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
-import { Asteroid, BigEarth, BlackHole, GameScreen, InvisibleCollider, NUM_ASTEROIDS, tutorialDialog } from "../../scene";
+import { Asteroid, BigEarth, BlackHole, EARTH_DRIFT_AWAY_DISTANCE, GameScreen, InvisibleCollider, NUM_ASTEROIDS, tutorialDialog } from "../../scene";
 import { Planet, PlanetType, makePlanet } from '../../scene/planet';
 import { ShieldButton } from '../../entities/shieldbutton';
 import { ShieldDoor, initialShieldDoor } from '../../entities/shielddoor';
@@ -360,12 +360,23 @@ function initialAsteroids(state: IGlobalState, count: number): Asteroid[] {
 // Initial big Earth to be seen in GameScreen.INTRO.
 function initialBigEarth(state: IGlobalState): BigEarth {
   return new BigEarth(
-    new Coord(0,0),         // Dummy value.
+    new Coord(0,0),         // Start with big Earth on-screen.
     1,                      // Scale
     0,                      // Animation frame.
     state.currentFrame,     // Last time animation frame updated.
-    3,                     // Earth rotaiton speed.
+    3,                      // Earth rotaiton speed.
     state.bigEarthImage     // Sprite sheet source image.
+  );
+}
+
+export function secondHomeEarth(state: IGlobalState): BigEarth {
+  return new BigEarth(
+    new Coord(0, -EARTH_DRIFT_AWAY_DISTANCE),   // Start with big Earth off-screen.
+    1,                                          // Scale
+    0,                                          // Animation frame.
+    state.currentFrame,                         // Last time animation frame updated.
+    3,                                          // Earth rotation speed.
+    state.bigEarthImage                         // Sprite sheet source image.
   );
 }
 

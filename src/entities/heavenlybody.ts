@@ -28,7 +28,7 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
             newDriftSpeed = clampRemap(
                 state.currentFrame,                                                                     // Drift speed changes linearly with time.
                 state.outroShipShiftStart, state.outroShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1,     // This time range maps to the drift speed range, below.
-                INITIAL_DOWNWARD_STARFIELD_DRIFT, DOWNWARD_STARFIELD_DRIFT);                            // This is the drift speed range.
+                DOWNWARD_STARFIELD_DRIFT, INITIAL_DOWNWARD_STARFIELD_DRIFT);                            // This is the drift speed range.
         }
     }
 
