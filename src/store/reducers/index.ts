@@ -32,6 +32,7 @@ import {
   TOGGLE_DEBUG_CONTROL_DISABLE_COLLISIONS,
   TOGGLE_GAME_AUDIO,
   ANY_KEY,
+  TOGGLE_DEBUG_CONTROL_OXYGEN_DETAILS,
 } from "../actions";
 import { updateOxygenState } from "../../entities/oxygen";
 import { Dialog, isDialogCurrentlyDisplayed, updateDialogState } from "../../scene/dialog";
@@ -60,6 +61,7 @@ const gameReducer = (state = initialGameState(computeCurrentFrame()), action: an
     case INCREMENT_SCORE:                         return { ...state, score: state.score + 1 };
     case TOGGLE_GAME_AUDIO:                       return toggleGameAudio(state);
     case TICK:                                    return updateFrame(state);
+    case TOGGLE_DEBUG_CONTROL_OXYGEN_DETAILS:     return toggleDebugControlOxygenDetails(state);
     case TOGGLE_DEBUG_CONTROL_COLLISION_RECTS:    return toggleDebugControlCollisionRects(state);
     case TOGGLE_DEBUG_CONTROL_POSITION_RECTS:     return toggleDebugControlPositionRects(state);
     case TOGGLE_DEBUG_CONTROL_WATERING_RECTS:     return toggleDebugControlWateringRects(state);
@@ -217,6 +219,17 @@ function updateStarfieldDisplacement(state: IGlobalState): IGlobalState {
       ...state.starfield,
       pos: state.starfield.pos.plus(delta.x, delta.y),
       //driftAngle: state.starfield.driftAngle + ((Math.random() - 0.5) * 0.4),
+    },
+  };
+}
+
+// Toggle debug control showCollisionRects from False to True or vice versa.
+function toggleDebugControlOxygenDetails(state: IGlobalState): IGlobalState {
+  return {
+    ...state,
+    debugSettings: {
+      ...state.debugSettings,
+      showOxygenDetails: !state.debugSettings.showOxygenDetails,
     },
   };
 }

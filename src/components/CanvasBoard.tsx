@@ -28,6 +28,7 @@ import {
   toggleDisableCollisions,
   toggleGameAudio,
   anyKey,
+  toggleShowOxygenDetails,
 } from "../store/actions";
 import { IGlobalState } from "../store/classes";
 import { clearBoard, drawState } from "../utils";
@@ -112,6 +113,11 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     window.addEventListener("keydown", handleKeyDownEvents);
     window.addEventListener("keyup", handleKeyUpEvents);
   }, [context, dispatch, handleKeyDownEvents, handleKeyUpEvents, state]);
+
+  // Toggle oxygen debug boolean.
+  const oxygenDetailsDebug = useCallback(() => {
+    dispatch(toggleShowOxygenDetails());
+  }, [dispatch])
 
   // Toggle the showCollisionRects debug boolean.
   const collisionRectsDebug = useCallback(() => {
@@ -206,6 +212,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
         <Instruction resetBoard={resetBoard} />
         <br />
         <DebugControls
+          oxygenDetailsDebug={oxygenDetailsDebug}
           collisionRectsDebug={collisionRectsDebug}
           positionRectsDebug={positionRectsDebug}
           wateringRectsDebug={wateringRectsDebug}

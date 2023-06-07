@@ -1,6 +1,7 @@
 import { Box, Checkbox, Flex, Heading } from "@chakra-ui/react";
 
 export interface IDebugControlsProps {
+  oxygenDetailsDebug: () => void;
   collisionRectsDebug: () => void;
   positionRectsDebug: () => void;
   wateringRectsDebug: () => void;
@@ -12,7 +13,7 @@ export interface IDebugControlsProps {
   isMuted: () => boolean;
 }
 const DebugControls = ({
-    collisionRectsDebug, positionRectsDebug, wateringRectsDebug, facingRectsDebug,
+  oxygenDetailsDebug, collisionRectsDebug, positionRectsDebug, wateringRectsDebug, facingRectsDebug,
     equipRectsDebug, interactionRectsDebug, disableCollisionsDebug, toggleSound, isMuted,
     }: IDebugControlsProps) => (
   <Box mt={3}>
@@ -21,6 +22,7 @@ const DebugControls = ({
     </Heading>
     <Flex flexDirection="row" mt={3}>
       <Flex flexDirection="column">
+        <Checkbox onChange={() => oxygenDetailsDebug()}>Show oxygen details</Checkbox>
         <Checkbox onChange={() => collisionRectsDebug()}>Show collision rectangles</Checkbox>
         <Checkbox onChange={() => positionRectsDebug()}>Show position rectangles</Checkbox>
         <Checkbox onChange={() => wateringRectsDebug()}>Show watering rectangles</Checkbox>

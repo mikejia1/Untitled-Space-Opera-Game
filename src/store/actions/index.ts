@@ -19,6 +19,8 @@ export const STOP_WATERING = "STOP_WATERING";
 export const TOGGLE_FREEZE = "TOGGLE_FREEZE";
 export const TOGGLE_GAME_AUDIO = "TOGGLE_GAME_AUDIO";
 
+
+export const TOGGLE_DEBUG_CONTROL_OXYGEN_DETAILS = "TOGGLE_DEBUG_CONTROL_OXYGEN_DETAILS";
 export const TOGGLE_DEBUG_CONTROL_COLLISION_RECTS = "TOGGLE_DEBUG_CONTROL_COLLISION_RECTS";
 export const TOGGLE_DEBUG_CONTROL_POSITION_RECTS = "TOGGLE_DEBUG_CONTROL_POSITION_RECTS";
 export const TOGGLE_DEBUG_CONTROL_WATERING_RECTS = "TOGGLE_DEBUG_CONTROL_WATERING_RECTS";
@@ -61,6 +63,10 @@ export const toggleEquip = () => ({
 
 export const useItem = () => ({
   type: USE_ITEM
+});
+
+export const toggleShowOxygenDetails= () => ({
+  type: TOGGLE_DEBUG_CONTROL_OXYGEN_DETAILS
 });
 
 export const toggleShowCollisionRects = () => ({
