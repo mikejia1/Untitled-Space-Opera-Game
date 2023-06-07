@@ -3,6 +3,7 @@ import { AnimEvent, AnimEventType, IGlobalState } from "../store/classes";
 import { MAP_TILE_SIZE, H_TILE_COUNT, V_TILE_COUNT } from "../store/data/positions";
 import { CANVAS_WIDTH, CANVAS_HEIGHT, FPS, GardenerDirection, Dir8 } from "./constants";
 import { Coord } from "./coord";
+import { drawCenteredText, drawText } from "./drawtext";
 
 export function drawAnimationEvent(state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
     if (state.activeEvents.length === 0) {
@@ -78,18 +79,16 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
             canvas.drawImage(
                 state.gameOverImage,                                      // Sprite source image
                 Math.floor((CANVAS_WIDTH - state.gameOverImage.width)/2), // X position of top-left corner on canvas
-                170,                                                      // Y position of top-left corner on canvas
+                160,                                                      // Y position of top-left corner on canvas
             );
         }
         if (frameCount > 5*FPS){
-            canvas.drawImage(
-                state.replayImage,                                      // Sprite source image
-                Math.floor((CANVAS_WIDTH - state.replayImage.width)/2), // X position of top-left corner on canvas
-                ((frameCount % 30) > 15) ? 200 : 202,                   // Y position of top-left corner on canvas
-            );
-        }
+          let text = "Cause of death: " + state.gardener.death?.cause.toString();
+          drawCenteredText(canvas, 190, text,  "rgba(255,255,255,1)");
 
-        //*/
+          let text2 = "PRESS ANY KEY TO RESTART";
+          drawCenteredText(canvas, ((frameCount % 30) > 15) ? 220 : 222, text2,  "rgba(255,255,255,1)");
+        }
     }
   }
   

@@ -11,6 +11,7 @@ import {
 import { drawAnimationEvent } from "./drawevent";
 import { Lifeform } from "../store/classes/lifeform";
 import { Planet, currentlySlingshottingPlanet, orbittingMindFlayerPlanet } from "../scene/planet";
+import { drawCenteredText } from "./drawtext";
 
 export * from './coord';
 export * from './constants';
@@ -146,6 +147,11 @@ export const drawState = (
 
   drawAnimationEvent(state, shift, canvas);
 
+  // Draw title text.
+  if (state.gameScreen === GameScreen.INTRO) {
+    drawTitleAssets(state, canvas);
+  }
+
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
@@ -153,6 +159,20 @@ export const drawState = (
 
   canvas.restore();
 };
+
+function drawTitleAssets(state: IGlobalState, canvas: CanvasRenderingContext2D): void {
+  let opacity = Math.max(introShipShiftValue(state)*2 -1 , 0);
+  canvas.save();
+  canvas.globalAlpha = opacity;
+  canvas.drawImage(
+      state.titleImage,                                      // Sprite source image
+      Math.floor((CANVAS_WIDTH - state.titleImage.width)/2), // X position of top-left corner on canvas
+      80,                                                      // Y position of top-left corner on canvas
+  );
+  let posY = ((state.currentFrame % 30) > 15) ? 240 : 242;
+  drawCenteredText(canvas, posY, "press any key to begin", "rgba(255,255,255,1)");
+  canvas.restore();
+}
 
 // Draw a semi-transparent black rectangle over the canvas to convey global ambient shade from the shield doors.
 function drawAmbientShade(state: IGlobalState, canvas: CanvasRenderingContext2D): void {
