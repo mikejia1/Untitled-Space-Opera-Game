@@ -157,6 +157,7 @@ export interface IGlobalState {
     asteroids: Asteroid[];              // All the asteroids in the swarm.
     asteroidImages: any[];              // Array of asteroid sprite sheet source images.
     asteroidsStillGoing: boolean;       // Whether or not we're still in the asteroid swarm / field.
+    sounds: any;                        // All the sound files.
   }
 
  // Generate the game starting state.
@@ -331,8 +332,9 @@ export function initialGameState(): IGlobalState {
       driftAngle: 0.5 * Math.PI,                    // Initial drift angle (0 degrees is to the right, PI/2 is up, etc).
       driftSpeed: INITIAL_DOWNWARD_STARFIELD_DRIFT, // Initial drift speed (pixels per frame).
     },
-    pendingEvents: [],  // No events yet. This is populated when we switch from INTRO to PLAY (see GameScreen enum).
-    asteroids:     [],  // No asteroids yet. This is populated below.
+    pendingEvents: [],          // No events yet. This is populated when we switch from INTRO to PLAY (see GameScreen enum).
+    asteroids:     [],          // No asteroids yet. This is populated below.
+    sounds:        getSounds(), // All the game sounds. 
   };
 
   // Populate the pending events and the asteroids.
@@ -343,6 +345,30 @@ export function initialGameState(): IGlobalState {
     bigEarth: initialBigEarth(incomplete),
   };
 }
+
+function getSounds(): any {
+  return {
+    airlockAlarm: new Audio(require('../sounds/airlockalarm.mp3')),
+  };
+}
+
+/*
+// Play the sound corresponding to the gardener bumping into a collider.
+export function playBumpSound(): void {
+    try {
+      let boing = new Audio(require('../sounds/boing.mp3'));
+      let playPromise = boing.play();
+      // In browsers that don’t yet support this functionality, playPromise won’t be defined.
+      if (playPromise !== undefined) {
+        playPromise.then(function() {}).catch(function(error) {
+          console.log("Bump sound failure: ", error);
+        });
+      }
+    } catch (error) {
+      console.log("Audio error: ", error);
+  }
+}
+*/
 
 // Initialze the asteroids in the asteroid field / swarm.
 function initialAsteroids(state: IGlobalState, count: number): Asteroid[] {
