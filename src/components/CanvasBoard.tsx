@@ -28,11 +28,13 @@ import {
   toggleDisableCollisions,
   toggleGameAudio,
   anyKey,
+  toggleShowOxygenDetails,
 } from "../store/actions";
 import { IGlobalState } from "../store/classes";
 import { clearBoard, drawState } from "../utils";
 import Instruction from "./Instructions";
 import DebugControls from './DebugControls';
+import { Grid, GridItem } from "@chakra-ui/react";
 
 export interface ICanvasBoard {
   height: number;
@@ -52,53 +54,53 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     (event: KeyboardEvent) => {
       dispatch(anyKey())
       switch (event.key) {
-          case "w":
-            dispatch(makeMove(STOP_UP));
-            break;
-          case "s":
-            dispatch(makeMove(STOP_DOWN));
-            break;
-          case "a":
-            dispatch(makeMove(STOP_LEFT));
-            break;
-          case "d":
-            dispatch(makeMove(STOP_RIGHT));
-            break;
-          case "f":
-            dispatch(stopWatering());
-            break;
-          case "p":
-            dispatch(toggleFreeze());
-            break;
-        }
-      },
+        case "w":
+          dispatch(makeMove(STOP_UP));
+          break;
+        case "s":
+          dispatch(makeMove(STOP_DOWN));
+          break;
+        case "a":
+          dispatch(makeMove(STOP_LEFT));
+          break;
+        case "d":
+          dispatch(makeMove(STOP_RIGHT));
+          break;
+        case "f":
+          dispatch(stopWatering());
+          break;
+        case "p":
+          dispatch(toggleFreeze());
+          break;
+      }
+    },
     [dispatch]
   );
   const handleKeyDownEvents = useCallback(
     (event: KeyboardEvent) => {
       switch (event.key) {
-          case "w":
-            dispatch(makeMove(UP));
-            break;
-          case "s":
-            dispatch(makeMove(DOWN));
-            break;
-          case "a":
-            dispatch(makeMove(LEFT));
-            break;
-          case "d":
-            dispatch(makeMove(RIGHT));
-            break;
-          case "e":
-            dispatch(toggleEquip());
-            break;
-          case "f":
-            dispatch({
-              type: USE_ITEM
-            });
-            break;
-        }
-      },
+        case "w":
+          dispatch(makeMove(UP));
+          break;
+        case "s":
+          dispatch(makeMove(DOWN));
+          break;
+        case "a":
+          dispatch(makeMove(LEFT));
+          break;
+        case "d":
+          dispatch(makeMove(RIGHT));
+          break;
+        case "e":
+          dispatch(toggleEquip());
+          break;
+        case "f":
+          dispatch({
+            type: USE_ITEM
+          });
+          break;
+      }
+    },
     [dispatch]
   );
 
@@ -111,6 +113,11 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     window.addEventListener("keydown", handleKeyDownEvents);
     window.addEventListener("keyup", handleKeyUpEvents);
   }, [context, dispatch, handleKeyDownEvents, handleKeyUpEvents, state]);
+
+  // Toggle oxygen debug boolean.
+  const oxygenDetailsDebug = useCallback(() => {
+    dispatch(toggleShowOxygenDetails());
+  }, [dispatch])
 
   // Toggle the showCollisionRects debug boolean.
   const collisionRectsDebug = useCallback(() => {
@@ -147,16 +154,16 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     dispatch(toggleDisableCollisions());
   }, [dispatch])
 
-    // Toggle audio on/off.
-    const toggleSound = useCallback(() => {
-      dispatch(toggleGameAudio());
-    }, [context, dispatch])
+  // Toggle audio on/off.
+  const toggleSound = useCallback(() => {
+    dispatch(toggleGameAudio());
+  }, [context, dispatch])
 
-    // Check whether audio is muted or not.
-    const audioIsMuted = useCallback(() => {
-      return state.muted;
-    }, [state])
-    
+  // Check whether audio is muted or not.
+  const audioIsMuted = useCallback(() => {
+    return state.muted;
+  }, [state])
+
   // Paint the canvas and dispatch tick() to trigger next paint event.
   const animate = () => {
     //Draw on canvas each time
@@ -165,7 +172,7 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
     drawState(context, state);
   };
 
-  useEffect(animate, [context, state, dispatch, handleKeyDownEvents, handleKeyUpEvents]);  
+  useEffect(animate, [context, state, dispatch, handleKeyDownEvents, handleKeyUpEvents]);
 
   useEffect(() => {
     window.addEventListener("keypress", handleKeyDownEvents);
@@ -190,28 +197,34 @@ const CanvasBoard = ({ height, width }: ICanvasBoard) => {
   }, []); // Make sure the effect runs only once
 
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        /*style={{
-          border: `3px solid ${gameEnded ? "red" : "black"}`,
-        }}*/
-        width={width}
-        height={height}
-      />
-      <Instruction resetBoard={resetBoard} />
-      <DebugControls 
-        collisionRectsDebug={collisionRectsDebug}
-        positionRectsDebug={positionRectsDebug}
-        wateringRectsDebug={wateringRectsDebug}
-        facingRectsDebug={facingRectsDebug}
-        equipRectsDebug={equipRectsDebug}
-        interactionRectsDebug={interactionRectsDebug}
-        disableCollisionsDebug={disableCollisionsDebug}
-        toggleSound={toggleSound}
-        isMuted={audioIsMuted}
-      />
-    </>
+    <Grid templateColumns='repeat(2, 1fr)' gap={6}>
+      <GridItem>
+        <canvas
+          ref={canvasRef}
+          /*style={{
+            border: `3px solid ${gameEnded ? "red" : "black"}`,
+          }}*/
+          width={width}
+          height={height}
+        />
+      </GridItem>
+      <GridItem>
+        <Instruction resetBoard={resetBoard} />
+        <br />
+        <DebugControls
+          oxygenDetailsDebug={oxygenDetailsDebug}
+          collisionRectsDebug={collisionRectsDebug}
+          positionRectsDebug={positionRectsDebug}
+          wateringRectsDebug={wateringRectsDebug}
+          facingRectsDebug={facingRectsDebug}
+          equipRectsDebug={equipRectsDebug}
+          interactionRectsDebug={interactionRectsDebug}
+          disableCollisionsDebug={disableCollisionsDebug}
+          toggleSound={toggleSound}
+          isMuted={audioIsMuted}
+        />
+      </GridItem>
+    </Grid>
   );
 };
 

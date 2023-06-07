@@ -41,7 +41,7 @@ export function updateOxygenState(state : IGlobalState): IGlobalState {
 // Realistically just max output is 0.18 since plants dehydrate after watering. 
 function oxygenOutput(plant : Plant): number {
     let bonus = (plant.health === MAX_PLANT_HEALTH && plant.growthStage === 4) ? 3 : 0;
-    return (plant.growthStage + bonus) * 0.001;
+    return  (plant.health == 0) ? 0 : (plant.growthStage + bonus) * 0.001;
 }
 
 // 10 npcs, max consumption == 0.25

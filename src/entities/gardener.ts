@@ -94,13 +94,14 @@ export class Gardener implements Lifeform, Collider, Interactable {
         else if (this.watering) this.paintWatering(canvas, state, shift, newPos, flip);
         else this.paintWalking(canvas, state, shift, newPos, flip);
 
-        // Paint debugging oxygen level.
-        let pro = Math.floor(state.oxygen.productionRate * 100) / 100;
-        let con = Math.floor(state.oxygen.consumptionRate * 100) / 100;
-        drawText(canvas, newPos.plus(-17, -30), "P: " + pro);
-        drawText(canvas, newPos.plus(-17, -42), "C: " + con);
-
         // Extra debug displays.
+        if (state.debugSettings.showOxygenDetails){
+            // Paint debugging oxygen level.
+            let pro = Math.floor(state.oxygen.productionRate * 100) / 100;
+            let con = Math.floor(state.oxygen.consumptionRate * 100) / 100;
+            drawText(canvas, newPos.plus(-17, -30), "P: " + pro);
+            drawText(canvas, newPos.plus(-17, -42), "C: " + con);
+        }
         if (state.debugSettings.showCollisionRects) {
             outlineRect(canvas, shiftRect(this.collisionRect(), shift.x, shift.y), Colour.COLLISION_RECT);
         }

@@ -8,26 +8,30 @@ const Instruction = ({ resetBoard }: IInstructionProps) => (
     <Heading as="h6" size="lg">
       How to Play
     </Heading>
-    <Heading as="h5" size="sm" mt={1}>
-    NOTE: Start the game by pressing <Kbd>d</Kbd>
-    </Heading>
     <Flex flexDirection="row" mt={3}>
       <Flex flexDirection={"column"}>
         <span>
-          <Kbd>w</Kbd> Move Up
+          <Kbd>w</Kbd> Move up
         </span>
         <span>
-          <Kbd>a</Kbd> Move Left
+          <Kbd>a</Kbd> Move left
         </span>
         <span>
-          <Kbd>s</Kbd> Move Down
+          <Kbd>s</Kbd> Move down
         </span>
         <span>
-          <Kbd>d</Kbd> Move Right
+          <Kbd>d</Kbd> Move right
         </span>
-      </Flex>
-      <Flex flexDirection="column">
+        <span>
+          <Kbd>e</Kbd> Pick up item
+        </span>
+        <span>
+          <Kbd>f</Kbd> Interact
+        </span>
+        <br/>
+        <span>
         <Button onClick={() => resetBoard()}>Reset game</Button>
+        </span>
       </Flex>
     </Flex>
   </Box>

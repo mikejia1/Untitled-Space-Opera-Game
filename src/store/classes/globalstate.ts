@@ -321,6 +321,7 @@ export function initialGameState(gameStartTime: number): IGlobalState {
     randomCabinFeverAllowed: false,     // No random cabin fever, initially.
     lastNPCDeath: 0,                    // Dummy value for initialization.
     debugSettings: {
+      showOxygenDetails:  false,    // Oxygen details appear above gardeners head.
       showCollisionRects: false,    // Collision rectangles for colliders.
       showPositionRects: false,     // Position rectangles for paintables.
       showWateringRects: false,     // Watering interaction rectangles for plants.
