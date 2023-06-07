@@ -63,11 +63,11 @@ export class BigEarth implements Paintable {
         drawClippedImage(
             canvas,
             this.image,
-            frame * EARTH_SIZE, 0,                      // Top-left corner of frame in source
-            EARTH_SIZE, EARTH_SIZE,                     // Size of frame in source
-            dest.x, dest.y,                             // Position of sprite on canvas
-            sz, sz,                                     // Sprite size on canvas
-            clipRect);                                  // Paint only what's inside this rectangle
+            frame * EARTH_SIZE, 0,        // Top-left corner of frame in source
+            EARTH_SIZE, EARTH_SIZE,       // Size of frame in source
+            dest.x, dest.y,               // Position of sprite on canvas
+            sz, sz,                       // Sprite size on canvas
+            clipRect);                    // Paint only what's inside this rectangle
 
         // Thin blue ring of atmosphere.
         for (let i = 0; i < 3; i++) {
