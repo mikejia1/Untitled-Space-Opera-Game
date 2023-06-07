@@ -46,6 +46,13 @@ export class AnimEvent {
         this.finished = false;
         this.payload = payload;
     }
+
+    // Return a copy of the AnimEvent that has a different start time but is otherwise identical.
+    changeTime(newStartTime: number): AnimEvent {
+      let newOne = new AnimEvent(this.event, newStartTime, this.payload);
+      newOne.finished = this.finished;
+      return newOne;
+    }
 }
 
 export const SUPERNOVA_DELAY = FPS*300;

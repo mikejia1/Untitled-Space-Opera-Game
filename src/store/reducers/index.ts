@@ -40,7 +40,7 @@ import { updatePortalState } from "../../entities/portal";
 import { GameScreen, updateAsteroids } from "../../scene";
 import { getEvents } from "../classes/eventschedule";
 // All actions/index.ts setters are handled here
-const gameReducer = (state = initialGameState(), action: any) => {
+const gameReducer = (state = initialGameState(computeCurrentFrame()), action: any) => {
   switch (action.type) {
     case RIGHT:                                   return newKeyDown(state, Direction.Right);
     case LEFT:                                    return newKeyDown(state, Direction.Left);
@@ -55,7 +55,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
     case USE_ITEM:                                return utiliseItem(state);
     case STOP_WATERING:                           return ceaseWatering(state);
     case TOGGLE_FREEZE:                           return toggleDrawStateFreeze(state);
-    case RESET:                                   return initialGameState();
+    case RESET:                                   return initialGameState(computeCurrentFrame());
     case RESET_SCORE:                             return { ...state, score: 0 };
     case INCREMENT_SCORE:                         return { ...state, score: state.score + 1 };
     case TOGGLE_GAME_AUDIO:                       return toggleGameAudio(state);
@@ -74,7 +74,7 @@ const gameReducer = (state = initialGameState(), action: any) => {
 
 function anyKeyDown(state: IGlobalState): IGlobalState {
   if (state.gameover && state.currentFrame - state.gameoverFrame > GAMEOVER_RESTART_TIME ) {
-    return initialGameState();
+    return initialGameState(computeCurrentFrame());
   }
 
   // In INTRO screen / view, pressing any key begins the ship/planet shit that will lead into PLAY screen / view.
@@ -183,10 +183,12 @@ function updateGameScreen(state: IGlobalState): IGlobalState {
   switch (state.gameScreen) {
     case GameScreen.INTRO:
       if (introShipShiftValue(state) <= 0) {    // If the transition from INTRO to PLAY is done
+        let now = state.currentFrame;           // The current time. Official beginning of game.
         return {
           ...state,
           gameScreen: GameScreen.PLAY,          // Switch GameScreen to PLAY.
-          pendingEvents: getEvents(state),      // Schedule the full game AnimEvents.
+          gameStartTime: now,                   // The game officially begins now.
+          pendingEvents: getEvents(now),        // Schedule the full game AnimEvents.
           bigEarth: null,                       // Get rid of the big Earth.
         };
       } else return state;

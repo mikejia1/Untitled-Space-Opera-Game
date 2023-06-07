@@ -94,6 +94,7 @@ import ast11 from "../images/drifting_planets/asteroid_11_256px_20f.png";
 
 // Interface for full game state object.
 export interface IGlobalState {
+    gameStartTime: number;              // The time (epoch frame number) at which the game started.
     gameScreen: GameScreen;             // The current GameScreen being shown (see enum comments).
     introShipShiftStart: number;        // Time at which ship begins to shift up at end of intro.
     outroShipShiftStart: number;        // Time at which ship begins to shift down at beginning of outro.
@@ -161,7 +162,7 @@ export interface IGlobalState {
   }
 
  // Generate the game starting state.
-export function initialGameState(): IGlobalState {
+export function initialGameState(gameStartTime: number): IGlobalState {
   // Ensure all colliders get a unique ID.
   let colliderId = 0;
 
@@ -197,6 +198,7 @@ export function initialGameState(): IGlobalState {
   colliderId++;
 
   let incomplete = {
+    gameStartTime: gameStartTime,           // Record the game start time. This is needed for certain elapsed-time calculations.
     gameScreen: GameScreen.INTRO,           // Begin in intro screen.
     introShipShiftStart: Number.MAX_VALUE,  // Shifting ship to normal position at end of intro hasn't started yet.
     outroShipShiftStart: Number.MAX_VALUE,  // Shifting ship to special low position at beginning of outro hasn't started yet.
@@ -340,7 +342,6 @@ export function initialGameState(): IGlobalState {
   // Populate the pending events and the asteroids.
   return {
     ...incomplete,
-    //pendingEvents: getEvents(withoutEvents),  // Commented out when GameScreen enum and INTRO were introduced.
     asteroids: initialAsteroids(incomplete, NUM_ASTEROIDS),
     bigEarth: initialBigEarth(incomplete),
   };

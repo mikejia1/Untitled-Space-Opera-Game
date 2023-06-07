@@ -7,34 +7,90 @@ import { PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_STOP, PULSE_SUBTLE } fro
 import { gridOfCats } from "../../entities/cat";
 import { blackHoleDialog, catInvasionDialog, scorchingStarDialog } from "../../scene/npcscript";
 
-const CAT_INVASION_1 =            FPS *  50;    // 00:50
+const CAT_INVASION_1 =            FPS *  45;    // 00:45
 // Scorching star takes 770 frames
 const SCORCHING_STAR_1 =          FPS *  80;    // 01:20
 // Mindflayer takes 1290 frames
 const MIND_FLAYER =               FPS * 120;    // 02:00
-const CAT_INVASION_2 =            FPS * 190;    // 03:10
+const CAT_INVASION_2 =            FPS * 185;    // 03:05
 const SCORCHING_STAR_2 =          FPS * 230;    // 03:50
-const BLACKHOLE_SUPERNOVA =       FPS * 280;    // 04:40
-const CAT_INVASION_3 =            FPS * 320;    // 05:20
+const BLACKHOLE_SUPERNOVA =       FPS * 264;    // 04:24
+const CAT_INVASION_3 =            FPS * 315;    // 05:15
 const SUCCESS_OUTRO =             FPS * 360;    // 06:00
 
-export function getEvents(state: IGlobalState): AnimEvent[] {
+export function getEvents(startTime: number): AnimEvent[] {
     return [
-        //...createDriftingPlanetEvents(state),
-        ...creatCatInvasionLevel1(CAT_INVASION_1), 
-        ...createScorchingStarEvent(SCORCHING_STAR_1),
-        ...createMindFlayerEvent(MIND_FLAYER),
-        ...creatCatInvasionLevel2(CAT_INVASION_2), 
-        ...createScorchingStarEvent(SCORCHING_STAR_2),
-        ...createSupernovaEvents(BLACKHOLE_SUPERNOVA),
-        ...creatCatInvasionLevel3(CAT_INVASION_3),
-        ...creatSuccessOutro(SUCCESS_OUTRO),
+        //...createDriftingPlanetEvents(state, startTime),
+        ...creatCatInvasionLevel1(CAT_INVASION_1, startTime),
+        ...createScorchingStarEvent(SCORCHING_STAR_1, startTime),
+        ...createMindFlayerEvent(MIND_FLAYER, startTime),
+        ...creatCatInvasionLevel2(CAT_INVASION_2, startTime),
+        ...createScorchingStarEvent(SCORCHING_STAR_2, startTime),
+        ...createSupernovaEvents(BLACKHOLE_SUPERNOVA, startTime),
+        ...creatCatInvasionLevel3(CAT_INVASION_3, startTime),
+        ...creatSuccessOutro(SUCCESS_OUTRO, startTime),
     ];
+}
+
+// Generate a new event schedule that lets the player resume from their last checkpoint.
+export function newEventsFromCheckpointOnward(oldGameStartTime: number, gameResumeTime: number, gardenerDeathTime: number): AnimEvent[] {
+  // Regenerate the original schedule of events.
+  let oldSchedule: AnimEvent[] = getEvents(oldGameStartTime);
+
+  // Determine the checkpoint time, based on when the player died.
+  let checkpoint: number = findCheckpoint(oldGameStartTime, gardenerDeathTime);
+
+  // Keep only events that fall on or after the checkpoint.
+  let filtered: AnimEvent[] = checkpointFilter(checkpoint, oldSchedule);
+
+  // Shift all event times so they begin five seconds after the game resumes.
+  let newSchedule: AnimEvent[] = shiftEvents(gameResumeTime, filtered);
+
+  return newSchedule;
+}
+
+// Given a resume-game time and a list of AnimEvents, return all the events,
+// time-shifted so that the earliest one is at game-resume time + 5 seconds.
+export function shiftEvents(gameResumeTime: number, events: AnimEvent[]): AnimEvent[] {
+  let minTime: number = Number.MAX_VALUE;
+  for (let i = 0; i < events.length; i++) {
+    minTime = Math.min(minTime, events[i].startTime);
   }
+  let shift = gameResumeTime - minTime + (5 * FPS);
+  let newEvents: AnimEvent[] = [];
+  for (let i = 0; i < events.length; i++) {
+    newEvents = [...newEvents, events[i].changeTime(events[i].startTime + shift)];
+  }
+  return newEvents;
+}
+
+// Given state and a newly-generated event schedule, return only the events on or after the gardener death checkpoint.
+export function checkpointFilter(checkpoint: number, events: AnimEvent[]): AnimEvent[] {
+  let filtered: AnimEvent[] = [];
+  for (let i = 0; i < events.length; i++) {
+    let e = events[i];
+    if (e.startTime < checkpoint) continue;
+    filtered = [...filtered, e];
+  }
+  return filtered;
+}
+
+// Given a game start time and a time of death, find the time of the first AnimEvent
+// of the "big" event (like a cat invasion) that most recently started when time of death was reached.
+function findCheckpoint(gameStartTime: number, deathTime: number): number {
+  let elapsed = deathTime - gameStartTime;
+  if (elapsed < SCORCHING_STAR_1)                 return gameStartTime + CAT_INVASION_1;
+  if (elapsed < MIND_FLAYER)                      return gameStartTime + SCORCHING_STAR_1;
+  if (elapsed < CAT_INVASION_2)                   return gameStartTime + MIND_FLAYER;
+  if (elapsed < SCORCHING_STAR_2)                 return gameStartTime + CAT_INVASION_2;
+  if (elapsed < BLACKHOLE_SUPERNOVA)              return gameStartTime + SCORCHING_STAR_2;
+  if (elapsed < CAT_INVASION_3)                   return gameStartTime + BLACKHOLE_SUPERNOVA;
+  return gameStartTime + CAT_INVASION_3;
+}
   
-  // Schedule *all* the planets that will drift by.
-  function createDriftingPlanetEvents(state: IGlobalState): AnimEvent[] {
-    let t = computeCurrentFrame();
+// Schedule *all* the planets that will drift by.
+function createDriftingPlanetEvents(state: IGlobalState, startTime: number): AnimEvent[] {
+    let t = startTime;//computeCurrentFrame();
     let dp = AnimEventType.DRIFT_PLANET;
     let tmpls: Map<PlanetType, Planet> = state.planets;
     // Planet spin speeds.
@@ -109,104 +165,104 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
 
   // Technically, we don't need a special event type for this, but it's in line with having types for all the major events.
   // i.e. this is equivalent to a DRIFT_PLANET event with the right payload.
-  function createScorchingStarEvent(delay: number): AnimEvent[] {
+  function createScorchingStarEvent(delay: number, startTime: number): AnimEvent[] {
     return [
-        new AnimEvent(AnimEventType.SCORCHING_STAR_SLINGSHOT, computeCurrentFrame() + delay),
-        new AnimEvent(AnimEventType.DIALOG, computeCurrentFrame() + delay + 500, scorchingStarDialog)
+        new AnimEvent(AnimEventType.SCORCHING_STAR_SLINGSHOT, startTime/*computeCurrentFrame()*/ + delay),
+        new AnimEvent(AnimEventType.DIALOG, startTime/*computeCurrentFrame()*/ + delay + 500, scorchingStarDialog)
     ];
   }
 
-  function createMindFlayerEvent(delay: number): AnimEvent[] {
-    let f = computeCurrentFrame();
+  function createMindFlayerEvent(delay: number, startTime: number): AnimEvent[] {
+    let f = startTime;//computeCurrentFrame();
     let time = f + delay;
     let mindFlayer: AnimEvent = new AnimEvent(AnimEventType.MIND_FLAYER_PLANET, time);
     return [mindFlayer, ];
   }
 
   // Set up the timed schedule for cat invasion event. 
-  function creatCatInvasionLevel1(delay: number): AnimEvent[] {
-    let f = computeCurrentFrame();
+  function creatCatInvasionLevel1(delay: number, startTime: number): AnimEvent[] {
+    let f = startTime;//computeCurrentFrame();
     let time = f + delay;
-    let asteroidsStart: AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_BEGIN,  time - (5 * FPS));
-    let dialog:         AnimEvent = new AnimEvent(AnimEventType.DIALOG,           time - (5 * FPS),         catInvasionDialog);
-    let shake1:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_SUBTLE);
-    let shake2:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (2.5 * FPS),       SHAKER_MILD);
-    let shake3:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),       SHAKER_SUBTLE);
-    let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time,                     SHAKER_NO_SHAKE);
-    let enterPortal:    AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
-    let enterCats:      AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 2, 1));
-    let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (3 * FPS));
+    let asteroidsStart: AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_BEGIN,  time + (0 * FPS));
+    let dialog:         AnimEvent = new AnimEvent(AnimEventType.DIALOG,           time + (0 * FPS),         catInvasionDialog);
+    let shake1:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (2 * FPS),         SHAKER_SUBTLE);
+    let shake2:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (2.5 * FPS),       SHAKER_MILD);
+    let shake3:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (4.5 * FPS),       SHAKER_SUBTLE);
+    let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (5 * FPS),         SHAKER_NO_SHAKE);
+    let enterPortal:    AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time + (5 * FPS));
+    let enterCats:      AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION,     time + (6.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 2, 1));
+    let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (8 * FPS));
     return [asteroidsStart, dialog, shake1, shake2, shake3, shakeStop, enterPortal, enterCats, asteroidsEnd ];
   }
   
   // Set up the timed schedule for cat invasion event. 
-  function creatCatInvasionLevel2(delay: number): AnimEvent[] {
-    let f = computeCurrentFrame();
+  function creatCatInvasionLevel2(delay: number, startTime: number): AnimEvent[] {
+    let f = startTime;//computeCurrentFrame();
     let time = f + delay;
-    let asteroidsStart: AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_BEGIN,  time - (5 * FPS));
-    let dialog:         AnimEvent = new AnimEvent(AnimEventType.DIALOG,           time - (5 * FPS),         catInvasionDialog);
-    let shake1:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),         SHAKER_SUBTLE);
-    let shake2:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_MILD);
-    let shake3:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (0.5 * FPS),       SHAKER_SUBTLE);
-    let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time,                     SHAKER_NO_SHAKE);
-    let enterPortal:    AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
-    let enterCats:      AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 3, 2));
-    let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (3 * FPS));
+    let asteroidsStart: AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_BEGIN,  time + (0 * FPS));
+    let dialog:         AnimEvent = new AnimEvent(AnimEventType.DIALOG,           time + (0 * FPS),         catInvasionDialog);
+    let shake1:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (1 * FPS),         SHAKER_SUBTLE);
+    let shake2:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (2 * FPS),         SHAKER_MILD);
+    let shake3:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (4.5 * FPS),       SHAKER_SUBTLE);
+    let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (5 * FPS),         SHAKER_NO_SHAKE);
+    let enterPortal:    AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time + (5 * FPS));
+    let enterCats:      AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION,     time + (6.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 3, 2));
+    let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (8 * FPS));
     return [asteroidsStart, dialog, shake1, shake2, shake3, shakeStop, enterPortal, enterCats, asteroidsEnd ];
   }
   
   // Set up the timed schedule for cat invasion event. 
-  function creatCatInvasionLevel3(delay: number): AnimEvent[] {
-    let f = computeCurrentFrame();
+  function creatCatInvasionLevel3(delay: number, startTime: number): AnimEvent[] {
+    let f = startTime;//computeCurrentFrame();
     let time = f + delay;
-    let asteroidsStart: AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_BEGIN,  time - (5 * FPS));
-    let dialog:         AnimEvent = new AnimEvent(AnimEventType.DIALOG,           time - (5 * FPS),         catInvasionDialog);
-    let shake1:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (5 * FPS),         SHAKER_SUBTLE);
-    let shake2:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (4 * FPS),         SHAKER_MILD);
-    let shake3:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time - (3 * FPS),         SHAKER_MEDIUM);
-    let enterPortal:    AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time);
-    let shake4:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + 1,                 SHAKER_MILD);
-    let enterCats:      AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION,     time + (1.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 10, 3));
-    let shake5:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + 1.5,               SHAKER_MILD);
-    let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + 2,                 SHAKER_NO_SHAKE);
-    let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (3 * FPS));
+    let asteroidsStart: AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_BEGIN,  time + (0 * FPS));
+    let dialog:         AnimEvent = new AnimEvent(AnimEventType.DIALOG,           time + (0 * FPS),         catInvasionDialog);
+    let shake1:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (0 * FPS),         SHAKER_SUBTLE);
+    let shake2:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (1 * FPS),         SHAKER_MILD);
+    let shake3:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (2 * FPS),         SHAKER_MEDIUM);
+    let enterPortal:    AnimEvent = new AnimEvent(AnimEventType.OPEN_CAT_PORTAL,  time + (5 * FPS));
+    let shake4:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (5 * FPS) + 1,     SHAKER_MILD);
+    let enterCats:      AnimEvent = new AnimEvent(AnimEventType.CAT_INVASION,     time + (6.2 * FPS),       gridOfCats(new Coord(380, 245), 20, 10, 3));
+    let shake5:         AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (5 * FPS) + 1.5,   SHAKER_MILD);
+    let shakeStop:      AnimEvent = new AnimEvent(AnimEventType.SHAKE,            time + (5 * FPS) + 2,     SHAKER_NO_SHAKE);
+    let asteroidsEnd:   AnimEvent = new AnimEvent(AnimEventType.ASTEROIDS_END,    time + (8 * FPS));
     return [asteroidsStart, dialog, shake1, shake2, shake3, enterPortal, shake4, enterCats, shake5, shakeStop, asteroidsEnd ];
   }
 
   // Set up the event that ends GameScreen.PLAY and transitions to GameScreen.OUTRO.
-  function creatSuccessOutro(delay: number): AnimEvent[] {
-    let f = computeCurrentFrame();
+  function creatSuccessOutro(delay: number, startTime: number): AnimEvent[] {
+    let f = startTime;//computeCurrentFrame();
     let time = f + delay;
     let outroTrigger: AnimEvent = new AnimEvent(AnimEventType.OUTRO_TRIGGER, time);
     return [outroTrigger];
   }
   
   // Setup the timed schedule of all events associated with a dangerous supernova encounter.
-  function createSupernovaEvents(delay: number): AnimEvent[] {
-      let f = computeCurrentFrame();
-      let enterBH:    AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_APPEARS,   f + delay - (16 * FPS));
-      let pulse1:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (16 * FPS),     PULSE_SUBTLE);
-      let alarm1:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay - (15 * FPS),     0);
-      let alarm2:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay - (15 * FPS),     1);
-      let alarm3:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay - (15 * FPS),     2);
-      let dialog1:    AnimEvent = new AnimEvent(AnimEventType.DIALOG,               f + delay - (14 * FPS),     blackHoleDialog);
-      let shake1:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (15 * FPS),     SHAKER_SUBTLE);
-      let pulse2:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (12 * FPS),     PULSE_MILD);
-      let shake2:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (11 * FPS),     SHAKER_MILD);
-      let dialog2:    AnimEvent = new AnimEvent(AnimEventType.DIALOG,               f + delay - (9 * FPS),      blackHoleDialog);
-      let pulse3:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (8 * FPS),      PULSE_MEDIUM);
-      let shake3:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (7 * FPS),      SHAKER_MEDIUM);
-      let shake4:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay - (3 * FPS),      SHAKER_INTENSE);
-      let pulse5:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (0.2 * FPS),    PULSE_MEDIUM);
-      let pulse4:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay - (1.15 * FPS),   PULSE_INTENSE);
-      let supernova:  AnimEvent = new AnimEvent(AnimEventType.IMPACT,               f + delay);
-      let shake5:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay,                  SHAKER_MEDIUM);
-      let shake6:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (1 * FPS),      SHAKER_MILD);
-      let pulse6:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (2 * FPS),      PULSE_MILD);
-      let shake7:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (2 * FPS),      SHAKER_SUBTLE);
-      let pulse7:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (3 * FPS),      PULSE_SUBTLE);
-      let shakeStop:  AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (3 * FPS),      SHAKER_NO_SHAKE);
-      let pulseStop:  AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (4 * FPS),      PULSE_STOP);
+  function createSupernovaEvents(delay: number, startTime: number): AnimEvent[] {
+      let f = startTime;//computeCurrentFrame();
+      let enterBH:    AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_APPEARS,   f + delay + (0 * FPS));
+      let pulse1:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (0 * FPS),     PULSE_SUBTLE);
+      let alarm1:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay + (1 * FPS),     0);
+      let alarm2:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay + (1 * FPS),     1);
+      let alarm3:     AnimEvent = new AnimEvent(AnimEventType.ALARM,                f + delay + (1 * FPS),     2);
+      let dialog1:    AnimEvent = new AnimEvent(AnimEventType.DIALOG,               f + delay + (2 * FPS),     blackHoleDialog);
+      let shake1:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (1 * FPS),     SHAKER_SUBTLE);
+      let pulse2:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (4 * FPS),     PULSE_MILD);
+      let shake2:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (5 * FPS),     SHAKER_MILD);
+      let dialog2:    AnimEvent = new AnimEvent(AnimEventType.DIALOG,               f + delay + (7 * FPS),     blackHoleDialog);
+      let pulse3:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (8 * FPS),     PULSE_MEDIUM);
+      let shake3:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (9 * FPS),     SHAKER_MEDIUM);
+      let shake4:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (13 * FPS),    SHAKER_INTENSE);
+      let pulse5:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (15.8 * FPS),  PULSE_MEDIUM);
+      let pulse4:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (14.85 * FPS), PULSE_INTENSE);
+      let supernova:  AnimEvent = new AnimEvent(AnimEventType.IMPACT,               f + delay + (16 * FPS));
+      let shake5:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (16 * FPS),    SHAKER_MEDIUM);
+      let shake6:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (17 * FPS),    SHAKER_MILD);
+      let pulse6:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (18 * FPS),    PULSE_MILD);
+      let shake7:     AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (18 * FPS),    SHAKER_SUBTLE);
+      let pulse7:     AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (19 * FPS),    PULSE_SUBTLE);
+      let shakeStop:  AnimEvent = new AnimEvent(AnimEventType.SHAKE,                f + delay + (19 * FPS),    SHAKER_NO_SHAKE);
+      let pulseStop:  AnimEvent = new AnimEvent(AnimEventType.BLACK_HOLE_PULSE,     f + delay + (20 * FPS),    PULSE_STOP);
   
       return [
         enterBH,                                                            // Black hole instantiation.
