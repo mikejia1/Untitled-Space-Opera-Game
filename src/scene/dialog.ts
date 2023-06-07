@@ -48,7 +48,7 @@ export class Dialog implements Paintable {
         else {
             newLines = this.lines;
         }
-        if(this.lines.length == 1) drawText(canvas, base.plus(26, 9), newLines[0]);
+        if (this.lines.length === 1) drawText(canvas, base.plus(26, 9), newLines[0]);
         else newLines.forEach((line, index) => drawText(canvas, base.plus(26, 3 + index * 12), line));
     }
 }
@@ -76,9 +76,9 @@ export function activeDialogLines(state: IGlobalState) : Set <string> {
 export function feedDialog(state: IGlobalState, lines: string[], npcId: number) : Dialog [] {
     let randomIndices : number[] = generateRandomIndices(lines.length);
     let activeLines : Set<string> = activeDialogLines(state);
-    for(let i = 0; i < lines.length; i++){
-        if(state.usedDialogs.has(lines[randomIndices[i]]) || activeLines.has(lines[randomIndices[i]])) continue;
-        if(lines[randomIndices[i]] == undefined){
+    for (let i = 0; i < lines.length; i++){
+        if (state.usedDialogs.has(lines[randomIndices[i]]) || activeLines.has(lines[randomIndices[i]])) continue;
+        if (lines[randomIndices[i]] === undefined){
             console.log("undefined dialog" + randomIndices[i]);
             continue;
         }
@@ -88,7 +88,7 @@ export function feedDialog(state: IGlobalState, lines: string[], npcId: number) 
 }
 
 export function updateDialogState(state : IGlobalState) : IGlobalState {
-    if (state.dialogs.length == 0) return state;
+    if (state.dialogs.length === 0) return state;
     let dialogs : Dialog[] = state.dialogs;
     dialogs[0].skipAnimation = state.currentFrame - dialogs[0].startFrame > dialogs[0].totalChars || dialogs[0].skipAnimation;
     let usedDialogs = state.usedDialogs;

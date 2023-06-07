@@ -1,16 +1,13 @@
-import { monitorEventLoopDelay } from "perf_hooks";
-import { gridOfCats } from "../../entities/cat";
 import { Portal } from "../../entities/portal";
 import { ShieldButton } from "../../entities/shieldbutton";
 import { INTER_SLAT_DELAY } from "../../entities/shielddoor";
 import { CausaMortis } from "../../entities/skeleton";
-import { BlackHole, GameScreen, NUM_ASTEROIDS, PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_SUBTLE } from "../../scene";
+import { BlackHole, GameScreen, NUM_ASTEROIDS } from "../../scene";
 import { Planet, PlanetType } from "../../scene/planet";
-import { Coord, SHAKER_INTENSE, SHAKER_MEDIUM, SHAKER_MILD, SHAKER_NO_SHAKE, SHAKER_SUBTLE, computeCurrentFrame, randomInt } from "../../utils";
+import { Coord, SHAKER_NO_SHAKE, computeCurrentFrame, randomInt } from "../../utils";
 import { CANVAS_WIDTH, DRIFTER_COUNT, FPS } from "../../utils/constants";
 import { IGlobalState } from "./globalstate";
 import { feedDialog } from "../../scene/dialog";
-import { catInvasionDialog } from "../../scene/npcscript";
 
 // An enum for event types.
 
@@ -93,7 +90,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     }
     // Process event and add to active events. 
     newActiveEvents = [...newActiveEvents, event];
-    if (event.event == AnimEventType.IMPACT){
+    if (event.event === AnimEventType.IMPACT){
       // If IMPACT occurs without all shield doors being closed, trigger GAMEOVER event.
       if (!state.shieldDoors.allDoorsClosed()) {
         gardener.dieOf(CausaMortis.Incineration, state.currentFrame);
@@ -116,16 +113,16 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         ];
       }
     }
-    if (event.event == AnimEventType.DIALOG) {
+    if (event.event === AnimEventType.DIALOG) {
       // payload is a list of potential npc strings.
       dialogs = feedDialog(state, event.payload, state.npcs[0].id);
     }
-    if (event.event == AnimEventType.MIND_FLAYER_PLANET) {
+    if (event.event === AnimEventType.MIND_FLAYER_PLANET) {
       newDrifters = slingshotMindFlayerPlanet(state, newDrifters);
       event.finished = true;
       randomCabinFeverAllowed = true;
     }
-    if (event.event == AnimEventType.OPEN_CAT_PORTAL) {
+    if (event.event === AnimEventType.OPEN_CAT_PORTAL) {
       portal = new Portal(state.currentFrame, 140);
       event.finished = true;
     }
@@ -139,13 +136,13 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         }
         event.finished = true;
     }
-    if (event.event == AnimEventType.ALARM) {
+    if (event.event === AnimEventType.ALARM) {
         if (event.payload !== null) {
             newShieldButtons[event.payload] = newShieldButtons[event.payload].startAlarm(state);
         }
         event.finished = true;
     }
-    if (event.event == AnimEventType.EARLY_OPEN_SHIELD) {
+    if (event.event === AnimEventType.EARLY_OPEN_SHIELD) {
         if (event.payload !== null) {
             newShield = newShield.openDoorEarly(event.payload);
         }
@@ -157,7 +154,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         }
         event.finished = true;
     }
-    if (event.event == AnimEventType.BLACK_HOLE_APPEARS) {
+    if (event.event === AnimEventType.BLACK_HOLE_APPEARS) {
       console.log("Handling BLACK_HOLE_APPEARS event");
       let offCentre = randomInt(-75, 75);
       newBlackHole = new BlackHole(
@@ -207,7 +204,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         event.finished = true;
     }
     // This event should only ever triggered via the Gardener update method.
-    if (event.event == AnimEventType.GAMEOVER_REPLAY_FRAME){
+    if (event.event === AnimEventType.GAMEOVER_REPLAY_FRAME){
         console.log("GAME OVER");
         gameover = true;
         gameoverFrame = state.currentFrame;

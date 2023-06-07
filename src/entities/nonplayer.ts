@@ -2,8 +2,8 @@ import { Collider, ColliderType, IGlobalState, Lifeform, activateAirlockButton, 
 import {
     BACKGROUND_HEIGHT, BACKGROUND_WIDTH, Colour, Direction, NPC_H_PIXEL_SPEED,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, NPC_V_PIXEL_SPEED, computeBackgroundShift,
-    outlineRect, positionRect, randomDirection, shiftForTile, shiftRect,
-    Coord, Rect, randomInt, ALL_DIRECTIONS, directionOfFirstRelativeToSecond,
+    outlineRect, positionRect, shiftForTile, shiftRect,
+    Coord, Rect, randomInt, directionOfFirstRelativeToSecond,
     computeCurrentFrame, FPS, oppositeDirection, rectanglesOverlap, randLeftOrRight,
     EJECTION_SHRINK_RATE,
     Dir8,
@@ -20,7 +20,7 @@ import { Tile } from '../scene';
 import { CausaMortis, Death } from './skeleton';
 import { orbittingMindFlayerPlanet } from '../scene/planet';
 import { cabinFeverDialog, movingToAirlockDialog, contemplatingDeathDialog } from '../scene/npcscript';
-import { Dialog, feedDialog } from '../scene/dialog';
+import { feedDialog } from '../scene/dialog';
 import { AirlockState } from './airlock';
 
 // Probability of cabin fever, per NPC, per frame. 5 in 10,000.
@@ -369,8 +369,8 @@ export class NonPlayer implements Lifeform, Collider {
     oxygenConsumption(): number {
         // On-screen NPCs in non-normal mental state consume non-normal amounts of oxygen.
         if (!this.isOffScreen) {
-            if (this.mentalState == MentalState.Frazzled)   return 0.5;
-            if (this.mentalState == MentalState.Scared)     return 2;
+            if (this.mentalState === MentalState.Frazzled)   return 0.5;
+            if (this.mentalState === MentalState.Scared)     return 2;
         }
         // An off-screen or normal NPC consumes oxygen at usual rate.
         return 1;
@@ -606,19 +606,19 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
         // Decrement the suicide countdowns (only frazzled NPCs will do this).
         newNPC = newNPC.decrementSuicideCountdowns();
 
-        if(newNPC.hasCabinFever) { 
+        if (newNPC.hasCabinFever) { 
             atLeastOneNPCFrazzled = true;
             crazyNPCId = newNPC.id;
         }
-        if(newNPC.hasReachedAirLockButton){
+        if (newNPC.hasReachedAirLockButton){
             atLeastOneNPCAtAirlock =true;}
-        if(newNPC.hasCabinFever && newNPC.suicideCountdown == 0) {
+        if (newNPC.hasCabinFever && newNPC.suicideCountdown === 0) {
             atLeastOneNPCMovingToAirlock = true;}
 
         // If NPC is trying to push air lock button, and is close enough to do so, push it and head toward the air lock.
         if (newNPC.readyToPushAirLockButton
             && rectanglesOverlap(newNPC.collisionRect(), state.airlockButton.interactionRect())
-            && state.airlock.state == AirlockState.CLOSED) {
+            && state.airlock.state === AirlockState.CLOSED) {
             newNPC = newNPC.headTowardAirLockDoom();
             atLeastOneNPCPushingAirLockButton = true;
         }

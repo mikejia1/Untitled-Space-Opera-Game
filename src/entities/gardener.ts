@@ -2,8 +2,9 @@ import { IGlobalState, Collider, Interactable, ColliderType, playBumpSound, getB
 import {
     Direction, Colour, shiftForTile, shiftRect, positionRect, outlineRect,
     ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH,
-    computeBackgroundShift, GARDENER_V_PIXEL_SPEED, GARDENER_H_PIXEL_SPEED, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
-    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas, directionsToDir8, rectanglesOverlap, SHAKE_CAP, stretchRect, FPS, SHAKER_NO_SHAKE,
+    computeBackgroundShift, GARDENER_DH_PIXEL_SPEED, GARDENER_DV_PIXEL_SPEED,
+    Coord, Rect, GardenerDirection, EJECTION_SHRINK_RATE, dir8ToDeltas,
+    directionsToDir8, rectanglesOverlap, SHAKE_CAP, stretchRect, FPS, SHAKER_NO_SHAKE,
 } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Tile } from '../scene';
@@ -14,12 +15,6 @@ import { Plant } from './plant';
 
 // The height of the gardener in pixels.
 export const GARDENER_HEIGHT = 20;
-
-// Max length factor when stretching the water part of the watering sprites.
-const MAX_WATER_STRETCH = 3;
-
-// Controls water pulsing speed. Larger number is faster.
-const WATER_PULSE_SPEED = 0.4;
 
 // The gardener who tends the garden.
 export class Gardener implements Lifeform, Collider, Interactable {
@@ -100,7 +95,6 @@ export class Gardener implements Lifeform, Collider, Interactable {
         else this.paintWalking(canvas, state, shift, newPos, flip);
 
         // Paint debugging oxygen level.
-        let oxy = state.oxygen.level;
         let pro = Math.floor(state.oxygen.productionRate * 100) / 100;
         let con = Math.floor(state.oxygen.consumptionRate * 100) / 100;
         drawText(canvas, newPos.plus(-17, -30), "P: " + pro);
@@ -214,7 +208,6 @@ export class Gardener implements Lifeform, Collider, Interactable {
         let dest = flip
             ? new Coord((newPos.x * -1) - 14, newPos.y - 18)
             : new Coord(newPos.x - 3, newPos.y - 18);
-        let xScale = flip ? -1 : 1;
         dest = dest.toIntegers();
         canvas.save();
         canvas.scale(flip ? -1 : 1, 1);

@@ -1,10 +1,9 @@
 import { shiftForTile, 
     computeBackgroundShift, drawClippedImage, Coord,
-    CANVAS_RECT, randomInt, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, STARFIELD_RECT, FPS, DRIFTER_COUNT, CANVAS_WIDTH, clampRemap, SPECIAL_SHIP_SHIFT_TIME } from '../utils';
+    CANVAS_RECT, CANVAS_WIDTH, clampRemap, SPECIAL_SHIP_SHIFT_TIME } from '../utils';
 import { MAP_TILE_SIZE } from '../store/data/positions';
 import { Paintable, IGlobalState } from '../store/classes';
 import { GameScreen, Tile } from '../scene';
-import { INCREMENT_SCORE } from '../store/actions';
 
 // Size of a single frame of big Earth in the sprite sheet.
 const EARTH_SIZE = 512;

@@ -1,4 +1,3 @@
-import { GameScreen } from "../scene";
 import { IGlobalState } from "../store/classes";
 import { MentalState, NonPlayer } from "./nonplayer";
 import { MAX_PLANT_HEALTH, Plant } from "./plant";
@@ -41,16 +40,16 @@ export function updateOxygenState(state : IGlobalState): IGlobalState {
 // Max pp == 0.008, with 32 plants max output == 0.256, 
 // Realistically just max output is 0.18 since plants dehydrate after watering. 
 function oxygenOutput(plant : Plant): number {
-    let bonus = (plant.health == MAX_PLANT_HEALTH && plant.growthStage == 4) ? 3 : 0;
+    let bonus = (plant.health === MAX_PLANT_HEALTH && plant.growthStage === 4) ? 3 : 0;
     return (plant.growthStage + bonus) * 0.001;
 }
 
 // 10 npcs, max consumption == 0.25
 function oxygenConsumption(npc : NonPlayer): number {
-    if(npc.mentalState == MentalState.Frazzled){
+    if (npc.mentalState === MentalState.Frazzled){
         return 0.02;
     }
-    if(npc.mentalState == MentalState.Scared){
+    if (npc.mentalState === MentalState.Scared){
         return 0.02;
     }
     return 0.015;

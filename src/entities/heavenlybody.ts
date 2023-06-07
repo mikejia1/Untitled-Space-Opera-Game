@@ -1,8 +1,8 @@
 import { BigEarth, BlackHole, GameScreen } from "../scene";
-import { Planet, currentlySlingshottingPlanet, orbittingScorchingStar } from "../scene/planet";
+import { Planet, currentlySlingshottingPlanet } from "../scene/planet";
 import { IGlobalState } from "../store/classes";
-import { DEHYDRATION_TIME, DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, INITIAL_DOWNWARD_STARFIELD_DRIFT, MAX_DRIFTERS, SHAKER_NO_SHAKE, SHAKER_SUBTLE, SPECIAL_SHIP_SHIFT_TIME, clampRemap, introShipShiftValue, outroShipShiftValue, randomInt } from "../utils";
-import { Plant } from "./plant";
+import { DOWNWARD_STARFIELD_DRIFT, DRIFTER_COUNT, INITIAL_DOWNWARD_STARFIELD_DRIFT,
+    SHAKER_NO_SHAKE, SHAKER_SUBTLE, SPECIAL_SHIP_SHIFT_TIME, clampRemap } from "../utils";
 
 export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
     const f = state.currentFrame;
@@ -18,13 +18,11 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
 
         // Update starfield drift speed at end of GameScreen.INTRO and at beginning of GameScreen.OUTRO.
         if (state.gameScreen === GameScreen.INTRO) {
-            let n = introShipShiftValue(state);
             newDriftSpeed = clampRemap(
                 state.currentFrame,                                                                     // Drift speed changes linearly with time.
                 state.introShipShiftStart, state.introShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1,     // This time range maps to the drift speed range, below.
                 INITIAL_DOWNWARD_STARFIELD_DRIFT, DOWNWARD_STARFIELD_DRIFT);                            // This is the drift speed range.
         } else if (state.gameScreen === GameScreen.OUTRO) {
-            let n = outroShipShiftValue(state);
             newDriftSpeed = clampRemap(
                 state.currentFrame,                                                                     // Drift speed changes linearly with time.
                 state.outroShipShiftStart, state.outroShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1,     // This time range maps to the drift speed range, below.
@@ -66,6 +64,7 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
        newDriftSpeed = len;
        newDriftAngle = angle;
     }
+    /*
     // If we're currently slingshotting around a star, the light can get so intense that it shrivels the plants.
     if ((sling != null) && (sling.planetType === 6)) {
         // Current progress getting into orbit around the star. Range [0.0, 1.0].
@@ -81,6 +80,7 @@ export function updateHeavenlyBodyState(state: IGlobalState): IGlobalState {
         // Light intensity could be a function of (progressMovingIntoOrbit - progressMovingOutOfOrbit), for example.
         //console.log(debug);   // When this was uncommented, I could see states transitioning properly.
     }
+    */
 
     // If we're currently doing a slingshot maneuver, let's shake the ship. Just a little.
     let newShaker = state.screenShaker;
