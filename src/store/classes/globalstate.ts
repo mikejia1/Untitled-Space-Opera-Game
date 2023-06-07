@@ -47,6 +47,7 @@ import spacegardenimpact    from "../images/space_garden_impact.png";
 import airlockrailing       from "../images/air_lock_railing.png";
 
 // Other images.
+import titleImg             from "../images/title.png";
 import gameoverImg          from "../images/gameover.png";
 import replayPrompt         from "../images/replay_prompt.png";
 import blackHoleImg         from "../images/drifting_planets/planet_black_hole_256px_30f.png";
@@ -136,6 +137,7 @@ export interface IGlobalState {
     coinImage: any;                     // The coin image.
     gameOverImage: any,                 // The game over image
     replayImage: any,                   // The replay prompt image
+    titleImage: any,                    // The title image
     blackHoleImage: any,                // Images containing animation frames for the black hole
     bigEarthImage: any,                 // Sprite sheet source image for the big INTRO / OUTRO Earth{like} planet.
     uiImages: any,                      // Images containing UI elements
@@ -222,7 +224,7 @@ export function initialGameState(): IGlobalState {
     currentFrame: 0,
     gameoverFrame: 0,
     activeEvents: [],
-    dialogs: welcomeDialog(npcs),
+    dialogs: [],
     usedDialogs: new Set<string>(),
     lastDialogInteraction: 0,
     statusBar: new StatusBar(),
@@ -279,6 +281,7 @@ export function initialGameState(): IGlobalState {
     },
     coinImage:          loadImage("Coin image", coinimage),
     gameOverImage:      loadImage("Game over", gameoverImg),
+    titleImage:         loadImage("Title", titleImg),
     replayImage:        loadImage("Replay prompt", replayPrompt),
     blackHoleImage:     loadImage("Black hole", blackHoleImg),
     asteroidImages: [
@@ -487,7 +490,7 @@ function gridOfNPCs(colliderId: number, pos: Coord, spacing: number, cols: numbe
 
 // Default gardener starting state.
 function initialGardener(colliderId: number): Gardener {
-  return new Gardener(colliderId, new Coord(200, 220), GardenerDirection.Right, false, false, false, null);
+  return new Gardener(colliderId, new Coord(188, 150), GardenerDirection.Right, false, false, false, null);
 }
 
 // Create watering can for start of game.
@@ -510,12 +513,4 @@ export function activateAirlockButton(globalState: IGlobalState): IGlobalState {
     airlockButton: airlockButton,
     airlock: airlock,
   };
-}
-
-export function welcomeDialog(npcs : NonPlayer[]): Dialog[] {
-  let dialogs : Dialog[] = [];
-  dialogs = [...dialogs, new Dialog(tutorialDialog[0], computeCurrentFrame() + 5*FPS, npcs[0].id)];
-  dialogs = [...dialogs, new Dialog(tutorialDialog[1], computeCurrentFrame() + 5*FPS, npcs[1].id)];
-  dialogs = [...dialogs, new Dialog(tutorialDialog[2], computeCurrentFrame() + 5*FPS, npcs[2].id)];
-  return dialogs;
 }

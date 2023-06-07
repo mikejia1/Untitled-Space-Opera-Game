@@ -632,17 +632,17 @@ export function updateNPCState(state: IGlobalState) : IGlobalState {
     // Trigger crazy NPC dialog.
     if(atLeastOneNPCAtAirlock){
         if(state.currentFrame > state.lastDialogInteraction + 2 * FPS){
-            dialog = feedDialog(state, contemplatingDeathDialog, crazyNPCId);
+            dialog = feedDialog(state, contemplatingDeathDialog, crazyNPCId, dialog);
         }
     }
     else if(atLeastOneNPCMovingToAirlock){
         if(state.currentFrame > state.lastDialogInteraction + 2 * FPS){
-            dialog = feedDialog(state, movingToAirlockDialog, crazyNPCId);
+            dialog = feedDialog(state, movingToAirlockDialog, crazyNPCId, dialog);
         }
     }
     else if(atLeastOneNPCFrazzled){
         if(state.currentFrame > state.lastDialogInteraction + 2 * FPS){
-            dialog = feedDialog(state, cabinFeverDialog, crazyNPCId);
+            dialog = feedDialog(state, cabinFeverDialog, crazyNPCId, dialog);
         }
     }
 

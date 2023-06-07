@@ -57,12 +57,12 @@ export class Dialog implements Paintable {
 function generateRandomIndices(length : number) : number[] {
     let used = new Set<number>();
     let indices : number[] = [];
-    while(indices.length < length - 1){
+    do{
         let i = Math.floor(Math.random() * length);
         if(used.has(i)) continue;
         indices = [...indices, i];
         used.add(i); 
-    }
+    }while(indices.length < length - 1);
     return indices;
 }
 
@@ -73,16 +73,19 @@ export function activeDialogLines(state: IGlobalState) : Set <string> {
 }
 
 // feed a random line from list to use as dialog. Returns new list of dialog.
-export function feedDialog(state: IGlobalState, lines: string[], npcId: number) : Dialog [] {
+export function feedDialog(state: IGlobalState, lines: string[], npcId: number, currDialogs: Dialog[]) : Dialog [] {
     let randomIndices : number[] = generateRandomIndices(lines.length);
-    let activeLines : Set<string> = activeDialogLines(state);
+    let activeLines : Set<string> = new Set<string>();
+    currDialogs.forEach((dialog) => activeLines.add(dialog.text));
     for (let i = 0; i < lines.length; i++){
-        if (state.usedDialogs.has(lines[randomIndices[i]]) || activeLines.has(lines[randomIndices[i]])) continue;
-        if (lines[randomIndices[i]] === undefined){
-            console.log("undefined dialog" + randomIndices[i]);
+        if (state.usedDialogs.has(lines[randomIndices[i]]) || activeLines.has(lines[randomIndices[i]])) {
             continue;
         }
-        return [...state.dialogs, new Dialog(lines[randomIndices[i]], state.currentFrame, npcId)];
+        if (lines[randomIndices[i]] === undefined){
+            console.log("undefined dialog " + randomIndices[i]);
+            continue;
+        }
+        return [...currDialogs, new Dialog(lines[randomIndices[i]], state.currentFrame, npcId)];
     }
     return state.dialogs;
 }

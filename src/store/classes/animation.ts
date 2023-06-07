@@ -115,7 +115,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     }
     if (event.event === AnimEventType.DIALOG) {
       // payload is a list of potential npc strings.
-      dialogs = feedDialog(state, event.payload, state.npcs[0].id);
+      dialogs = feedDialog(state, event.payload, state.npcs[0].id, dialogs);
     }
     if (event.event === AnimEventType.MIND_FLAYER_PLANET) {
       newDrifters = slingshotMindFlayerPlanet(state, newDrifters);

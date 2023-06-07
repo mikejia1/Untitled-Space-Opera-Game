@@ -5,8 +5,9 @@ import { Planet, PlanetType } from "../../scene/planet";
 import { IGlobalState } from "./globalstate";
 import { PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_STOP, PULSE_SUBTLE } from "../../scene";
 import { gridOfCats } from "../../entities/cat";
-import { blackHoleDialog, catInvasionDialog, scorchingStarDialog } from "../../scene/npcscript";
+import { blackHoleDialog, catInvasionDialog, scorchingStarDialog, tutorialDialog } from "../../scene/npcscript";
 
+const WELCOME_DIALOG =            FPS *   2;    // 00:00
 const CAT_INVASION_1 =            FPS *  50;    // 00:50
 // Scorching star takes 770 frames
 const SCORCHING_STAR_1 =          FPS *  80;    // 01:20
@@ -21,6 +22,7 @@ const SUCCESS_OUTRO =             FPS * 360;    // 06:00
 export function getEvents(state: IGlobalState): AnimEvent[] {
     return [
         //...createDriftingPlanetEvents(state),
+        ...createWelcomeDialogEvents(WELCOME_DIALOG),
         ...creatCatInvasionLevel1(CAT_INVASION_1), 
         ...createScorchingStarEvent(SCORCHING_STAR_1),
         ...createMindFlayerEvent(MIND_FLAYER),
@@ -32,6 +34,15 @@ export function getEvents(state: IGlobalState): AnimEvent[] {
     ];
   }
   
+function createWelcomeDialogEvents(delay : number): AnimEvent[] {
+  let time = computeCurrentFrame() + delay;
+  return [
+    new AnimEvent(AnimEventType.DIALOG, time, [tutorialDialog[0]]),
+    new AnimEvent(AnimEventType.DIALOG, time, [tutorialDialog[1]]),
+    new AnimEvent(AnimEventType.DIALOG, time, [tutorialDialog[2]]),
+  ];
+}
+
   // Schedule *all* the planets that will drift by.
   function createDriftingPlanetEvents(state: IGlobalState): AnimEvent[] {
     let t = computeCurrentFrame();
