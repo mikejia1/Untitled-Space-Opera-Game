@@ -2,11 +2,11 @@ import { IGlobalState } from '../store/classes';
 import { Coord } from '../utils';
 
 export enum CausaMortis {
-    Asphyxiation, // Oxygen ran out
-    Laceration,   // Cat attack
-    Incineration, // Black hole or explosion
-    Ejection,     // Airlock opened
-    Liquification, // Cat melts when watered
+    Asphyxiation = "Asphyxiation", // Oxygen ran out
+    Laceration = "Laceration",   // Cat attack
+    Incineration = "Incineration", // Black hole or explosion
+    Ejection = "Ejection",     // Airlock opened
+    Liquification = "Liquification", // Cat melts when watered
 }
 
 export interface Death {

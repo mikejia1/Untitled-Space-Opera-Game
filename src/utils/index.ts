@@ -11,6 +11,7 @@ import {
 import { drawAnimationEvent } from "./drawevent";
 import { Lifeform } from "../store/classes/lifeform";
 import { Planet, currentlySlingshottingPlanet, orbittingMindFlayerPlanet } from "../scene/planet";
+import { drawCenteredText } from "./drawtext";
 
 export * from './coord';
 export * from './constants';
@@ -168,11 +169,8 @@ function drawTitleAssets(state: IGlobalState, canvas: CanvasRenderingContext2D):
       Math.floor((CANVAS_WIDTH - state.titleImage.width)/2), // X position of top-left corner on canvas
       80,                                                      // Y position of top-left corner on canvas
   );
-  canvas.drawImage(
-      state.replayImage,                                      // Sprite source image
-      Math.floor((CANVAS_WIDTH - state.replayImage.width)/2), // X position of top-left corner on canvas
-      ((state.currentFrame % 30) > 15) ? 240 : 242,           // Y position of top-left corner on canvas
-  );
+  let posY = ((state.currentFrame % 30) > 15) ? 240 : 242;
+  drawCenteredText(canvas, posY, "press any key to begin", "rgba(255,255,255,1)");
   canvas.restore();
 }
 

@@ -7,7 +7,7 @@ import { PULSE_INTENSE, PULSE_MEDIUM, PULSE_MILD, PULSE_STOP, PULSE_SUBTLE } fro
 import { gridOfCats } from "../../entities/cat";
 import { blackHoleDialog, catInvasionDialog, scorchingStarDialog, tutorialDialog } from "../../scene/npcscript";
 
-const WELCOME_DIALOG =            FPS *   2;    // 00:00
+const WELCOME_DIALOG =            FPS *   0;    // 00:00
 const CAT_INVASION_1 =            FPS *  50;    // 00:50
 // Scorching star takes 770 frames
 const SCORCHING_STAR_1 =          FPS *  80;    // 01:20
