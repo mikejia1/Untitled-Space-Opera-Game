@@ -69,6 +69,19 @@ export class BigEarth implements Paintable {
             sz, sz,                                     // Sprite size on canvas
             clipRect);                                  // Paint only what's inside this rectangle
 
+        // Thin blue ring of atmosphere.
+        for (let i = 0; i < 3; i++) {
+            let alpha = 0.1 + (i * 0.1);
+            canvas.strokeStyle = `rgba(51,204,255,${alpha})`;  // Set stroke colour to transparent blue.
+            canvas.lineWidth = 20 - (i * 4);                    // Set stroke thickness.
+            canvas.beginPath();
+            canvas.arc(               // Draw a circle.
+                cntr.x, cntr.y,       // Centre of circle.
+                sz * 0.502,           // Radius of the circle.
+                0, 2 * Math.PI);      // Start and end angles.
+            canvas.stroke();
+        }
+
         canvas.restore();
     }
 
