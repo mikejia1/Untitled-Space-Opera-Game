@@ -13,6 +13,8 @@ export class StatusBar implements Paintable {
     flashPosX: number;
     // Coins that have yet to be added to the total.
     newCoins: number;
+    // Coins that have yet to be subtracted from the total.
+    lostCoins: number;
 
     constructor() {
         this.pos = new Coord(0, 0);
@@ -20,6 +22,7 @@ export class StatusBar implements Paintable {
         this.totalCoins = 0;
         this.flashPosX = 0;
         this.newCoins = 0;
+        this.lostCoins = 0;
     }
 
     getMeterColor(state: IGlobalState) : string {
@@ -102,12 +105,18 @@ export class StatusBar implements Paintable {
     
     updateStatusBarState(state : IGlobalState) : IGlobalState {
         this.flashPosX += FLASH_SPEED;
-        if(this.flashPosX > 270){
+        if (this.flashPosX > 270) {
             this.flashPosX = - FLASH_SPEED * 24 * 4;
         }
-        if(state.currentFrame % 2 == 0 && this.newCoins > 0){
-            this.totalCoins++;
-            this.newCoins--;
+        let waiting = (this.newCoins > 0) || (this.lostCoins > 0);
+        if (state.currentFrame % 2 == 0 && waiting) {
+            if (this.newCoins > 0) {
+                this.totalCoins++;
+                this.newCoins--;
+            } else {
+                this.totalCoins--;
+                this.lostCoins--;
+            }
         }
         return {...state, statusBar: this };
     }

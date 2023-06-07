@@ -1,7 +1,8 @@
 import { paintSkeletonDeath } from "../entities/skeleton";
+import { GameScreen } from "../scene";
 import { AnimEvent, AnimEventType, IGlobalState } from "../store/classes";
 import { MAP_TILE_SIZE, H_TILE_COUNT, V_TILE_COUNT } from "../store/data/positions";
-import { CANVAS_WIDTH, CANVAS_HEIGHT, FPS, GardenerDirection, Dir8 } from "./constants";
+import { CANVAS_WIDTH, CANVAS_HEIGHT, FPS, GardenerDirection, Dir8, GAME_RESUME_COST } from "./constants";
 import { Coord } from "./coord";
 import { drawCenteredText, drawText } from "./drawtext";
 
@@ -69,24 +70,26 @@ function drawImpactEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, can
   function drawGameoverEvent(anim: AnimEvent, state: IGlobalState, shift: Coord, canvas: CanvasRenderingContext2D): void {
     const frameCount = state.currentFrame - anim.startTime;
     // FADE TO BLACK
-    if (frameCount > 3.5*FPS){
+    if (frameCount > 3.5*FPS) {
         let opacity = Math.min((frameCount - 2.5*FPS)/2, 18)/18;
         canvas.fillStyle = "rgba(0, 0, 0, " + opacity + ")";
         canvas.fillRect(0,0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        //draw game over text
-        
-        if (frameCount > 4*FPS){
+
+        // Draw game over text
+        if (frameCount > 4*FPS) {
             canvas.drawImage(
                 state.gameOverImage,                                      // Sprite source image
                 Math.floor((CANVAS_WIDTH - state.gameOverImage.width)/2), // X position of top-left corner on canvas
                 160,                                                      // Y position of top-left corner on canvas
             );
         }
-        if (frameCount > 5*FPS){
+        if (frameCount > 5*FPS) {
           let text = "Cause of death: " + state.gardener.death?.cause.toString();
           drawCenteredText(canvas, 190, text,  "rgba(255,255,255,1)");
 
-          let text2 = "PRESS ANY KEY TO RESTART";
+          let text2: string;
+          if (state.gameScreen === GameScreen.CONTINUE) text2 = `PRESS ANY KEY TO RESUME FOR ${GAME_RESUME_COST} COINS`;
+          else text2 = "PRESS ANY KEY TO RESTART";
           drawCenteredText(canvas, ((frameCount % 30) > 15) ? 220 : 222, text2,  "rgba(255,255,255,1)");
         }
     }

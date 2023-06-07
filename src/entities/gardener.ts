@@ -307,8 +307,10 @@ export function updateGardenerMoveState(state: IGlobalState): IGlobalState {
                 pendingEvents:
                     [
                         ...state.pendingEvents,
-                        new AnimEvent(AnimEventType.GAMEOVER_REPLAY_FRAME, state.currentFrame),
-                        new AnimEvent(AnimEventType.SHAKE, state.currentFrame, SHAKER_NO_SHAKE)]
+                        new AnimEvent(AnimEventType.GAMEOVER_REPLAY_FRAME,  state.currentFrame),                    // Display game over screen.
+                        new AnimEvent(AnimEventType.SHAKE,                  state.currentFrame, SHAKER_NO_SHAKE),   // Turn off screen shake.
+                        new AnimEvent(AnimEventType.RESUME_GAME_CHECK,      state.currentFrame),                    // Check for possibility of game resuming.
+                    ],
             }
         }
         else return state;

@@ -96,3 +96,6 @@ export const SPECIAL_SHIP_SHIFT = 170;
 // The amount of time (in frames) required to shift the shift from
 // normal position to SPECIAL_SHIP_SHIFT position.
 export const SPECIAL_SHIP_SHIFT_TIME = 100;
+
+// The number of coins that will be lost if the player resumes from last checkpoint after dying.
+export const GAME_RESUME_COST = 100;

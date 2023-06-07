@@ -5,7 +5,7 @@ import { CausaMortis } from "../../entities/skeleton";
 import { BlackHole, GameScreen, NUM_ASTEROIDS } from "../../scene";
 import { Planet, PlanetType } from "../../scene/planet";
 import { Coord, SHAKER_NO_SHAKE, computeCurrentFrame, randomInt } from "../../utils";
-import { CANVAS_WIDTH, DRIFTER_COUNT, FPS } from "../../utils/constants";
+import { CANVAS_WIDTH, DRIFTER_COUNT, FPS, GAME_RESUME_COST } from "../../utils/constants";
 import { IGlobalState } from "./globalstate";
 import { feedDialog } from "../../scene/dialog";
 
@@ -28,6 +28,7 @@ export enum AnimEventType {
     ASTEROIDS_BEGIN,            // Begin flying through an asteroid swarm / field.
     ASTEROIDS_END,              // No more new asteroids - i.e. we start coming out of the swarm / field.
     OUTRO_TRIGGER,              // Transition from GameScreen.PLAY to GameScreen.OUTRO. Player has completed the game.
+    RESUME_GAME_CHECK,          // The player has died, check to see if they're perma-dead or if they can resume.
 }
 
 // Interface for one-off event animations.
@@ -211,13 +212,19 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
         event.finished = true;
     }
     // This event should only ever triggered via the Gardener update method.
-    if (event.event === AnimEventType.GAMEOVER_REPLAY_FRAME){
+    if (event.event === AnimEventType.GAMEOVER_REPLAY_FRAME) {
         console.log("GAME OVER");
         gameover = true;
         gameoverFrame = state.currentFrame;
         // Clear remaining events.
         newPendingEvents = [];
         triggeredEvents = [];
+    }
+    // Player has died. Check to see if they're perma-dead or if they have the option to resume.
+    if (event.event === AnimEventType.RESUME_GAME_CHECK) {
+        console.log("Checking for possibility to continue from last checkpoint");
+        if (playerCanResume(state)) newGameScreen = GameScreen.CONTINUE;
+        else newGameScreen = GameScreen.GAME_OVER;
     }
   }
   return {
@@ -247,6 +254,11 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     asteroids: newAsteroids,
     asteroidsStillGoing: newAsteroidsStillGoing,
   };
+}
+
+// Check whether the player has enough coins to resume game from last checkpoint.
+function playerCanResume(state: IGlobalState): boolean {
+  return state.score >= GAME_RESUME_COST;
 }
 
 // Find an unused slot in the drifters array and insert a given drifter.

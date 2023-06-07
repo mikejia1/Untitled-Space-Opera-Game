@@ -1,6 +1,6 @@
 import { AnimEvent, Collider, ColliderType } from './';
 import { Gardener, NonPlayer, WateringCan, Plant, INITIAL_PLANT_HEALTH, Airlock, AirlockState, randomOffScreenPos } from '../../entities';
-import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, INITIAL_DOWNWARD_STARFIELD_DRIFT } from '../../utils';
+import { Coord, Shaker, Direction, FPS, GardenerDirection, computeCurrentFrame, tileRect, worldBoundaryColliders, SHAKER_NO_SHAKE, DRIFTER_COUNT, INITIAL_DOWNWARD_STARFIELD_DRIFT, GAME_RESUME_COST } from '../../utils';
 import { V_TILE_COUNT, H_TILE_COUNT, collisions, plants, buttons, ladders, MAP_TILE_SIZE } from "../data/positions";
 import { Asteroid, BigEarth, BlackHole, EARTH_DRIFT_AWAY_DISTANCE, GameScreen, InvisibleCollider, NUM_ASTEROIDS, tutorialDialog } from "../../scene";
 import { Planet, PlanetType, makePlanet } from '../../scene/planet';
@@ -92,6 +92,7 @@ import ast8  from "../images/drifting_planets/asteroid_08_256px_20f.png";
 import ast9  from "../images/drifting_planets/asteroid_09_256px_20f.png";
 import ast10 from "../images/drifting_planets/asteroid_10_256px_20f.png";
 import ast11 from "../images/drifting_planets/asteroid_11_256px_20f.png";
+import { newEventsFromCheckpointOnward } from './eventschedule';
 
 // Interface for full game state object.
 export interface IGlobalState {
@@ -347,6 +348,26 @@ export function initialGameState(gameStartTime: number): IGlobalState {
     ...incomplete,
     asteroids: initialAsteroids(incomplete, NUM_ASTEROIDS),
     bigEarth: initialBigEarth(incomplete),
+  };
+}
+
+// Generate a new global state that immediately resumes game play at last checkpoint.
+export function resumeGameState(state: IGlobalState): IGlobalState {
+  if (state.gardener.death === null) return state;  // Just making compiler happy. Will never happen.
+  let oldStartTime = state.gameStartTime;
+  let resumeTime = computeCurrentFrame();
+  let schedule = newEventsFromCheckpointOnward(oldStartTime, resumeTime, state.gardener.death.time);
+  let newState = initialGameState(oldStartTime);
+  let newStatusBar = state.statusBar;
+  newStatusBar.lostCoins = GAME_RESUME_COST;
+  return {
+    ...newState,
+    gameScreen:           GameScreen.PLAY,                  // Skip the intro and go right to PLAY mode.
+    pendingEvents:        schedule,                         // New event schedule based on the checkpoint.
+    score:                state.score - GAME_RESUME_COST,   // Score is preserved, minus cost of resuming.
+    statusBar:            newStatusBar,                     // Status bar will tick downward to reach new lower score.
+    bigEarth:             null,                             // Clear away the initial big earth. Not needed.
+    introShipShiftStart:  state.introShipShiftStart,        // Keeping this avoids intro-earth related problems.
   };
 }
 

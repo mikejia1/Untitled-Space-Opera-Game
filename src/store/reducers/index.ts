@@ -2,7 +2,7 @@
 // They are responsible for processing all game logic.
 
 import { Direction, computeCurrentFrame, introShipShiftValue, rectanglesOverlap, unitVector } from "../../utils";
-import { GAMEOVER_RESTART_TIME, IGlobalState, activateAirlockButton, allCollidersFromState, initialGameState, secondHomeEarth, updateAnimEventState } from "../classes";
+import { GAMEOVER_RESTART_TIME, IGlobalState, activateAirlockButton, allCollidersFromState, initialGameState, resumeGameState, secondHomeEarth, updateAnimEventState } from "../classes";
 import { MentalState, NonPlayer, Plant, ShieldButton, updateAirlockState, updateGardenerMoveState, updateNPCState, updatePlantState } from '../../entities';
 import { Cat, updateCatState } from "../../entities/cat";
 import { updateHeavenlyBodyState } from "../../entities/heavenlybody";
@@ -74,7 +74,8 @@ const gameReducer = (state = initialGameState(computeCurrentFrame()), action: an
 
 function anyKeyDown(state: IGlobalState): IGlobalState {
   if (state.gameover && state.currentFrame - state.gameoverFrame > GAMEOVER_RESTART_TIME ) {
-    return initialGameState(computeCurrentFrame());
+    if (state.gameScreen === GameScreen.GAME_OVER) return initialGameState(computeCurrentFrame());
+    return resumeGameState(state);
   }
 
   // In INTRO screen / view, pressing any key begins the ship/planet shit that will lead into PLAY screen / view.
