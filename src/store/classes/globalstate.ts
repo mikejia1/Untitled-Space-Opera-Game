@@ -100,6 +100,7 @@ export interface IGlobalState {
     gameScreen: GameScreen;             // The current GameScreen being shown (see enum comments).
     introShipShiftStart: number;        // Time at which ship begins to shift up at end of intro.
     outroShipShiftStart: number;        // Time at which ship begins to shift down at beginning of outro.
+    outroFadeToBlackStart: number;      // Time at which the outro will begin fading to black.
     gameover: boolean;                  // Is the game over?
     gardener: Gardener;                 // The gardener tending the garden. Controlled by the player.
     keysPressed: Direction[];           // The movement keys currently pressed by the player.
@@ -201,10 +202,11 @@ export function initialGameState(gameStartTime: number): IGlobalState {
   colliderId++;
 
   let incomplete = {
-    gameStartTime: gameStartTime,           // Record the game start time. This is needed for certain elapsed-time calculations.
-    gameScreen: GameScreen.INTRO,           // Begin in intro screen.
-    introShipShiftStart: Number.MAX_VALUE,  // Shifting ship to normal position at end of intro hasn't started yet.
-    outroShipShiftStart: Number.MAX_VALUE,  // Shifting ship to special low position at beginning of outro hasn't started yet.
+    gameStartTime: gameStartTime,             // Record the game start time. This is needed for certain elapsed-time calculations.
+    gameScreen: GameScreen.INTRO,             // Begin in intro screen.
+    introShipShiftStart: Number.MAX_VALUE,    // Shifting ship to normal position at end of intro hasn't started yet.
+    outroShipShiftStart: Number.MAX_VALUE,    // Shifting ship to special low position at beginning of outro hasn't started yet.
+    outroFadeToBlackStart: Number.MAX_VALUE,  // Fading to black after outro hasn't started yet.
     gameover: false,
     gardener: gardener,
     keysPressed: [],

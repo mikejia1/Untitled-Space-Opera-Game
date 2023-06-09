@@ -5,7 +5,7 @@ import { CausaMortis } from "../../entities/skeleton";
 import { BlackHole, GameScreen, NUM_ASTEROIDS } from "../../scene";
 import { Planet, PlanetType } from "../../scene/planet";
 import { Coord, SHAKER_NO_SHAKE, computeCurrentFrame, randomInt } from "../../utils";
-import { CANVAS_WIDTH, DRIFTER_COUNT, FPS, GAME_RESUME_COST } from "../../utils/constants";
+import { CANVAS_WIDTH, DRIFTER_COUNT, FPS, GAME_RESUME_COST, OUTRO_FADE_TO_BLACK_WAIT } from "../../utils/constants";
 import { IGlobalState } from "./globalstate";
 import { feedDialog } from "../../scene/dialog";
 
@@ -61,6 +61,7 @@ export const SUPERNOVA_DELAY = FPS*300;
 export function updateAnimEventState(state: IGlobalState) : IGlobalState {
   let newGameScreen = state.gameScreen;
   let newOutroShipShiftStart = state.outroShipShiftStart;
+  let newOutroFadeToBlackStart = state.outroFadeToBlackStart;
   let newPlants = state.plants;
   let newShield = state.shieldDoors;
   let newShaker = state.screenShaker;
@@ -207,8 +208,9 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     }
     if (event.event === AnimEventType.OUTRO_TRIGGER) {
         console.log("The ship and crew have made it to their new home.");
-        newGameScreen = GameScreen.OUTRO;               // Switch to GameScreen.OUTRO.
-        newOutroShipShiftStart = state.currentFrame;    // Begin shifting the ship down and entering orbit of big Earth (II).
+        newGameScreen = GameScreen.OUTRO;                                         // Switch to GameScreen.OUTRO.
+        newOutroShipShiftStart = state.currentFrame;                              // Begin shifting the ship down and entering orbit of big Earth (II).
+        newOutroFadeToBlackStart = state.currentFrame + OUTRO_FADE_TO_BLACK_WAIT; // Set the time when a fade to black should begin.
         event.finished = true;
     }
     // This event should only ever triggered via the Gardener update method.
@@ -231,6 +233,7 @@ export function updateAnimEventState(state: IGlobalState) : IGlobalState {
     ...state,
     gameScreen: newGameScreen,
     outroShipShiftStart: newOutroShipShiftStart,
+    outroFadeToBlackStart: newOutroFadeToBlackStart,
     gardener : gardener,
     npcs: npcs,
     cats: cats,

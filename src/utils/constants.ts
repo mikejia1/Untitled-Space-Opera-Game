@@ -99,3 +99,7 @@ export const SPECIAL_SHIP_SHIFT_TIME = 100;
 
 // The number of coins that will be lost if the player resumes from last checkpoint after dying.
 export const GAME_RESUME_COST = 100;
+
+// Start time and duration of the fade to black after the outro.
+export const OUTRO_FADE_TO_BLACK_WAIT = 200;
+export const OUTRO_FADE_TO_BLACK_DURATION = 100;

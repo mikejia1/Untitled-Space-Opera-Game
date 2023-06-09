@@ -17,12 +17,13 @@ const CAT_INVASION_2 =            FPS * 185;    // 03:05
 const SCORCHING_STAR_2 =          FPS * 230;    // 03:50
 const BLACKHOLE_SUPERNOVA =       FPS * 264;    // 04:24
 const CAT_INVASION_3 =            FPS * 315;    // 05:15
-const SUCCESS_OUTRO =             FPS * 360;    // 06:00
+const SUCCESS_OUTRO =             20;//FPS * 360;    // 06:00
 
 export function getEvents(startTime: number): AnimEvent[] {
     return [
         //...createDriftingPlanetEvents(state, startTime),
         ...createWelcomeDialogEvents(WELCOME_DIALOG, startTime),
+        /*
         ...creatCatInvasionLevel1(CAT_INVASION_1, startTime),
         ...createScorchingStarEvent(SCORCHING_STAR_1, startTime),
         ...createMindFlayerEvent(MIND_FLAYER, startTime),
@@ -30,6 +31,7 @@ export function getEvents(startTime: number): AnimEvent[] {
         ...createScorchingStarEvent(SCORCHING_STAR_2, startTime),
         ...createSupernovaEvents(BLACKHOLE_SUPERNOVA, startTime),
         ...creatCatInvasionLevel3(CAT_INVASION_3, startTime),
+        */
         ...creatSuccessOutro(SUCCESS_OUTRO, startTime),
     ];
 }

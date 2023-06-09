@@ -3,7 +3,7 @@ import { H_TILE_COUNT, MAP_TILE_SIZE, V_TILE_COUNT } from "../store/data/positio
 import { TypedPriorityQueue } from "./priorityqueue";
 import {
   BACKGROUND_WIDTH, BACKGROUND_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT, Direction, ALL_DIRECTIONS,
-  ALL_DIR8S, Colour, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, FPS, Dir8, SPECIAL_SHIP_SHIFT_TIME, SPECIAL_SHIP_SHIFT,
+  ALL_DIR8S, Colour, ENTITY_RECT_HEIGHT, ENTITY_RECT_WIDTH, FPS, Dir8, SPECIAL_SHIP_SHIFT_TIME, SPECIAL_SHIP_SHIFT, OUTRO_FADE_TO_BLACK_WAIT, OUTRO_FADE_TO_BLACK_DURATION,
  } from "./constants";
  import { Coord } from './coord';
  import { Rect } from './rect';
@@ -11,7 +11,7 @@ import {
 import { drawAnimationEvent } from "./drawevent";
 import { Lifeform } from "../store/classes/lifeform";
 import { Planet, currentlySlingshottingPlanet, orbittingMindFlayerPlanet } from "../scene/planet";
-import { drawCenteredText } from "./drawtext";
+import { drawCenteredText, drawText } from "./drawtext";
 
 export * from './coord';
 export * from './constants';
@@ -152,6 +152,11 @@ export const drawState = (
     drawTitleAssets(state, canvas);
   }
 
+  // Fade to black and show text at end of GameScreen.OUTRO.
+  if (state.gameScreen === GameScreen.OUTRO) {
+    drawOutroFadeAndText(state, canvas);
+  }
+
   // Extra debug display.
   if (state.debugSettings.showCollisionRects) {
     state.invisibleColliders.forEach(ic => outlineRect(canvas, shiftForVisibleRect(ic.collisionRect(), shift), Colour.COLLISION_RECT));
@@ -159,6 +164,61 @@ export const drawState = (
 
   canvas.restore();
 };
+
+function drawOutroFadeAndText(state: IGlobalState, canvas: CanvasRenderingContext2D): void {
+  let alpha = outroFadeToBlackValue(state);
+  if (alpha > 0) {
+    canvas.save();
+    canvas.fillStyle = `rgb(0,0,0,${alpha})`;
+    canvas.fillRect(CANVAS_RECT.a.x, CANVAS_RECT.a.y, CANVAS_RECT.b.x - CANVAS_RECT.a.x + 1, CANVAS_RECT.b.y - CANVAS_RECT.a.y + 1);
+    canvas.restore();
+    if (alpha > 0.8) {
+      let bright = clampRemap(alpha, 0.8, 1.0, 0, 255);
+      let score = state.statusBar.totalCoins + state.statusBar.newCoins - state.statusBar.lostCoins;
+      drawCenteredText(canvas, 15, `YOUR SCORE: ${score}`, `rgb(${bright},${bright},${bright},1)`);
+      drawCenteredText(canvas, 50, "CONGRATULATIONS!", `rgb(50,${bright},50,1)`);
+      if (alpha > 0.99) {
+        let message: string[] = [
+          "To the ship's gardener:",
+          "",
+          "I commend you for your exceptional work on starship",
+          "Odysseus. Your dedication was outstanding, and your",
+          "heroic efforts in saving the ship and crew from",
+          "disasters were truly remarkable. Your green thumb",
+          "created an oasis, providing solace to the crew. Your",
+          "resourcefulness and quick thinking were awe-inspiring.",
+          "You protected us with bravery and ingenuity.",
+          "",
+          "On behalf of the crew and organization, I extend deep",
+          "gratitude for your bravery. Please accept this",
+          "commendation as a token of our immense admiration and",
+          "appreciation.",
+          "",
+          "",
+          "PRESS ANY KEY TO PLAY AGAIN",
+        ];
+        let speed = 30;
+        for (let i = 0; i < message.length; i++) {
+          let lumi = clampRemap(
+            state.currentFrame,
+            state.outroFadeToBlackStart + OUTRO_FADE_TO_BLACK_DURATION + (i * speed),
+            state.outroFadeToBlackStart + OUTRO_FADE_TO_BLACK_DURATION + 100 + (i * speed),
+            0,
+            255);
+          lumi = Math.floor(Math.min(255, lumi * 2));
+          let y = 100 + (i * 15);
+          if (i !== (message.length - 1)) {
+            let c = `rgb(${lumi},${lumi},${lumi},1)`;
+            drawText(canvas, new Coord(20, y), message[i], c);
+          } else {
+            let c = `rgb(${lumi},50,50,1)`;
+            drawCenteredText(canvas, y, message[i], c);
+          }
+        }
+      }
+    }
+  }
+}
 
 function drawTitleAssets(state: IGlobalState, canvas: CanvasRenderingContext2D): void {
   let opacity = Math.max(introShipShiftValue(state)*2 -1 , 0);
@@ -249,6 +309,12 @@ export function introShipShiftValue(state: IGlobalState): number {
 // 0 for no shift. 1 for fully downward shifted.
 export function outroShipShiftValue(state: IGlobalState): number {
   let n = clampRemap(state.currentFrame, state.outroShipShiftStart, state.outroShipShiftStart + SPECIAL_SHIP_SHIFT_TIME - 1, 0, 1);
+  return Math.max(0, Math.min(1, n));
+}
+
+// How far along (between 0 and 1) is the post-outro fade to black.
+export function outroFadeToBlackValue(state: IGlobalState): number {
+  let n = clampRemap(state.currentFrame, state.outroFadeToBlackStart, state.outroFadeToBlackStart + OUTRO_FADE_TO_BLACK_DURATION - 1, 0, 1);
   return Math.max(0, Math.min(1, n));
 }
 
