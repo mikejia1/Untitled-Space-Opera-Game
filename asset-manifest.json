@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/galactic-greenthumb/static/css/main.35e39109.css",
-    "main.js": "/galactic-greenthumb/static/js/main.259b795a.js",
+    "main.css": "/galactic-greenthumb/static/css/main.0ef5e5ea.css",
+    "main.js": "/galactic-greenthumb/static/js/main.a331ac80.js",
     "static/media/airlockalarm.mp3": "/galactic-greenthumb/static/media/airlockalarm.57cec664f2a62f881b97.mp3",
     "static/media/planet_wet_256px_60f.png": "/galactic-greenthumb/static/media/planet_wet_256px_60f.9be4ffa58f664977576a.png",
     "static/media/big_earth_512px_32f.png": "/galactic-greenthumb/static/media/big_earth_512px_32f.668f6aaf09b8ab81d199.png",
@@ -32,11 +32,11 @@
     "static/media/space_garden_impact.png": "/galactic-greenthumb/static/media/space_garden_impact.59c65a2f7dcf6f932513.png",
     "static/media/space_garden.png": "/galactic-greenthumb/static/media/space_garden.bfa7a986c32b3a2f2aec.png",
     "index.html": "/galactic-greenthumb/index.html",
-    "main.35e39109.css.map": "/galactic-greenthumb/static/css/main.35e39109.css.map",
-    "main.259b795a.js.map": "/galactic-greenthumb/static/js/main.259b795a.js.map"
+    "main.0ef5e5ea.css.map": "/galactic-greenthumb/static/css/main.0ef5e5ea.css.map",
+    "main.a331ac80.js.map": "/galactic-greenthumb/static/js/main.a331ac80.js.map"
   },
   "entrypoints": [
-    "static/css/main.35e39109.css",
-    "static/js/main.259b795a.js"
+    "static/css/main.0ef5e5ea.css",
+    "static/js/main.a331ac80.js"
   ]
 }
